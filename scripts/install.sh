@@ -37,103 +37,79 @@ echo ""
 
 mkdir -p "$INSTALL_DIR"
 
-if [ ! -d "$Q3_RESOURCES" ]; then
-    mkdir -p "$Q3_RESOURCES"
-fi
-
+mkdir -p "$Q3_RESOURCES"
 cd "$Q3_RESOURCES"
 
-if [ ! -d "baseq3" ]; then
-    mkdir -p baseq3
-fi
-
-cd baseq3
+TEMP_DIR="$Q3_RESOURCES/.temp"
+mkdir -p "$TEMP_DIR"
 
 echo "════════════════════════════════════════════════════════════"
-echo "  Step 1/5: Downloading baseq3 resources..."
+echo "  Step 1/5: Downloading and extracting baseq3 resources..."
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-if [ ! -f "pak0.pk3" ]; then
-    echo "→ Downloading pak0.pk3..."
-    curl -L --progress-bar $pak0 > pak0.pk3
-    echo "✓ pak0.pk3 downloaded"
-else
-    echo "✓ pak0.pk3 already exists"
-fi
-
-for i in {1..8}; do
-    if [ ! -f "pak$i.pk3" ]; then
+if [ ! -f ".installed" ]; then
+    for i in {0..8}; do
         echo "→ Downloading pak$i.pk3..."
-        curl -L --progress-bar "${pak/@/$i}" > "pak$i.pk3"
-        echo "✓ pak$i.pk3 downloaded"
-    else
-        echo "✓ pak$i.pk3 already exists"
-    fi
-done
+        if [ $i -eq 0 ]; then
+            curl -L --progress-bar $pak0 > "$TEMP_DIR/pak$i.pk3"
+        else
+            curl -L --progress-bar "${pak/@/$i}" > "$TEMP_DIR/pak$i.pk3"
+        fi
+        echo "→ Extracting pak$i.pk3..."
+        unzip -q -o "$TEMP_DIR/pak$i.pk3" -d "$Q3_RESOURCES"
+        rm -f "$TEMP_DIR/pak$i.pk3"
+        echo "✓ pak$i.pk3 processed"
+    done
 
-if [ ! -f "xcsv_hires.pk3" ]; then
     echo "→ Downloading High Resolution Pack..."
-    curl -L --progress-bar $hi_res > xcsv_hires.zip
-    unzip -q -o xcsv_hires.zip
-    rm -f xcsv_hires.zip
+    curl -L --progress-bar $hi_res > "$TEMP_DIR/xcsv_hires.zip"
+    unzip -q -o "$TEMP_DIR/xcsv_hires.zip" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/xcsv_hires.zip"
     echo "✓ High Resolution Pack installed"
-else
-    echo "✓ High Resolution Pack already exists"
-fi
 
-if [ ! -f "pak9hqq37test20181106.pk3" ]; then
     echo "→ Downloading Extra Pack Resolutions..."
-    curl -L --progress-bar $xpr > pak9hqq37test20181106.pk3
+    curl -L --progress-bar $xpr > "$TEMP_DIR/pak9hqq37test20181106.pk3"
+    unzip -q -o "$TEMP_DIR/pak9hqq37test20181106.pk3" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/pak9hqq37test20181106.pk3"
     echo "✓ Extra Pack Resolutions installed"
-else
-    echo "✓ Extra Pack Resolutions already exists"
-fi
 
-if [ ! -f "quake3-live-soundpack.pk3" ]; then
     echo "→ Downloading Quake3 Live Soundpack..."
-    curl -L --progress-bar $q3_ls > quake3-live-soundpack.pk3
+    curl -L --progress-bar $q3_ls > "$TEMP_DIR/quake3-live-soundpack.pk3"
+    unzip -q -o "$TEMP_DIR/quake3-live-soundpack.pk3" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/quake3-live-soundpack.pk3"
     echo "✓ Quake3 Live Soundpack installed"
-else
-    echo "✓ Quake3 Live Soundpack already exists"
-fi
 
-if [ ! -f "pakxy01Tv5.pk3" ]; then
     echo "→ Downloading HD Weapons..."
-    curl -L --progress-bar $hd_weapons > pakxy01Tv5.pk3
+    curl -L --progress-bar $hd_weapons > "$TEMP_DIR/pakxy01Tv5.pk3"
+    unzip -q -o "$TEMP_DIR/pakxy01Tv5.pk3" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/pakxy01Tv5.pk3"
     echo "✓ HD Weapons installed"
-else
-    echo "✓ HD Weapons already exists"
-fi
 
-if [ ! -f "zpack-weapons.pk3" ]; then
     echo "→ Downloading ZPack Weapons..."
-    curl -L --progress-bar $zpack_weapons > zpack-weapons.pk3
+    curl -L --progress-bar $zpack_weapons > "$TEMP_DIR/zpack-weapons.pk3"
+    unzip -q -o "$TEMP_DIR/zpack-weapons.pk3" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/zpack-weapons.pk3"
     echo "✓ ZPack Weapons installed"
-else
-    echo "✓ ZPack Weapons already exists"
-fi
 
-if [ ! -f "cpma-mappack-full.pk3" ] && [ ! -d "maps" ]; then
     echo "→ Downloading CPMA Map-Pack..."
-    curl -L --progress-bar $mappack > cpma-mappack-full.zip
-    unzip -q -o -d . cpma-mappack-full.zip
-    rm -f cpma-mappack-full.zip
+    curl -L --progress-bar $mappack > "$TEMP_DIR/cpma-mappack-full.zip"
+    unzip -q -o "$TEMP_DIR/cpma-mappack-full.zip" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/cpma-mappack-full.zip"
     echo "✓ CPMA Map-Pack installed"
-else
-    echo "✓ CPMA Map-Pack already exists"
-fi
 
-cd "$Q3_RESOURCES"
-
-if [ ! -d "cpma" ]; then
     echo "→ Downloading CPMA Mod..."
-    curl -L --progress-bar $cpma > cpma.zip
-    unzip -q -o cpma.zip
-    rm -f cpma.zip
+    curl -L --progress-bar $cpma > "$TEMP_DIR/cpma.zip"
+    unzip -q -o "$TEMP_DIR/cpma.zip" -d "$Q3_RESOURCES"
+    rm -f "$TEMP_DIR/cpma.zip"
     echo "✓ CPMA Mod installed"
+    
+    rm -rf "$TEMP_DIR"
+    touch ".installed"
+    echo ""
+    echo "✓ All resources extracted to: $Q3_RESOURCES"
 else
-    echo "✓ CPMA Mod already exists"
+    echo "✓ Resources already installed (found .installed marker)"
 fi
 
 echo ""
@@ -142,35 +118,39 @@ echo "  Step 2/5: Converting textures to PNG..."
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-cd "$INSTALL_DIR"
+cd "$Q3_RESOURCES"
 
-if command -v sips &> /dev/null || command -v convert &> /dev/null; then
-    count=0
-    
-    for ext in tga jpg jpeg; do
-        while IFS= read -r -d '' file; do
-            png_file="${file%.*}.png"
-            
-            if [ ! -f "$png_file" ]; then
-                if command -v sips &> /dev/null; then
-                    sips -s format png "$file" --out "$png_file" > /dev/null 2>&1
-                elif command -v convert &> /dev/null; then
-                    convert "$file" "$png_file" 2>/dev/null
-                fi
+if [ ! -f ".converted" ]; then
+    if command -v sips &> /dev/null || command -v convert &> /dev/null; then
+        count=0
+        
+        for ext in tga jpg jpeg; do
+            while IFS= read -r -d '' file; do
+                png_file="${file%.*}.png"
                 
-                if [ $? -eq 0 ]; then
-                    echo "✓ Converted: $(basename "$file") → $(basename "$png_file")"
-                    ((count++))
+                if [ ! -f "$png_file" ]; then
+                    if command -v sips &> /dev/null; then
+                        sips -s format png "$file" --out "$png_file" > /dev/null 2>&1
+                    elif command -v convert &> /dev/null; then
+                        convert "$file" "$png_file" 2>/dev/null
+                    fi
+                    
+                    if [ $? -eq 0 ]; then
+                        echo "✓ Converted: $(basename "$file")"
+                        ((count++))
+                    fi
                 fi
-            fi
-        done < <(find "$Q3_RESOURCES" -name "*.$ext" -type f -print0)
-    done
-    
-    echo ""
-    echo "✓ Converted $count texture files to PNG"
+            done < <(find "$Q3_RESOURCES" -name "*.$ext" -type f -print0)
+        done
+        
+        touch ".converted"
+        echo ""
+        echo "✓ Converted $count texture files to PNG"
+    else
+        echo "⚠ Neither 'sips' nor 'convert' found, skipping texture conversion"
+    fi
 else
-    echo "⚠ Warning: Neither 'sips' nor 'convert' (ImageMagick) found"
-    echo "  Textures will not be converted. Install ImageMagick to enable conversion."
+    echo "✓ Textures already converted (found .converted marker)"
 fi
 
 echo ""
