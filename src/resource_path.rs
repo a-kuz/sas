@@ -53,5 +53,3 @@ pub fn get_resource_path(relative_path: &str) -> String {
     let full_path = base.join(relative_path);
     full_path.to_string_lossy().to_string()
 }
-
-
