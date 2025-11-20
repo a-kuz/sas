@@ -49,13 +49,26 @@ impl App {
         loop {
             clear_background(BLACK);
 
-            if is_key_pressed(KeyCode::GraveAccent) || is_key_pressed(KeyCode::F12) {
+            let mut should_toggle_console = is_key_pressed(KeyCode::GraveAccent) || is_key_pressed(KeyCode::F12);
+            
+            if !should_toggle_console {
+                let char_input = get_char_pressed();
+                if let Some(ch) = char_input {
+                    if ch == '`' || ch == '~' || ch == 'ё' || ch == 'Ё' {
+                        should_toggle_console = true;
+                    }
+                }
+            }
+            
+            if should_toggle_console {
                 self.console.toggle();
                 if self.console.is_open() {
                     #[cfg(not(target_os = "macos"))]
                     set_cursor_grab(false);
                     show_mouse(true);
                 } else if self.game_loop.is_some() {
+                    #[cfg(target_os = "macos")]
+                    crate::input::center_mouse_cursor();
                     mouse_delta_position();
                     let show_cursor = cvar::get_cvar_bool("m_show_cursor");
                     show_mouse(show_cursor);
@@ -128,70 +141,72 @@ impl App {
                     self.console.paste_from_clipboard();
                 }
                 
-                let chars: Vec<char> = get_keys_pressed()
-                    .iter()
-                    .filter_map(|&key| {
-                        if ctrl {
-                            return None;
-                        }
-                        
-                        let ch = match key {
-                            KeyCode::Space => Some(' '),
-                            KeyCode::A => Some(if shift { 'A' } else { 'a' }),
-                            KeyCode::B => Some(if shift { 'B' } else { 'b' }),
-                            KeyCode::C => Some(if shift { 'C' } else { 'c' }),
-                            KeyCode::D => Some(if shift { 'D' } else { 'd' }),
-                            KeyCode::E => Some(if shift { 'E' } else { 'e' }),
-                            KeyCode::F => Some(if shift { 'F' } else { 'f' }),
-                            KeyCode::G => Some(if shift { 'G' } else { 'g' }),
-                            KeyCode::H => Some(if shift { 'H' } else { 'h' }),
-                            KeyCode::I => Some(if shift { 'I' } else { 'i' }),
-                            KeyCode::J => Some(if shift { 'J' } else { 'j' }),
-                            KeyCode::K => Some(if shift { 'K' } else { 'k' }),
-                            KeyCode::L => Some(if shift { 'L' } else { 'l' }),
-                            KeyCode::M => Some(if shift { 'M' } else { 'm' }),
-                            KeyCode::N => Some(if shift { 'N' } else { 'n' }),
-                            KeyCode::O => Some(if shift { 'O' } else { 'o' }),
-                            KeyCode::P => Some(if shift { 'P' } else { 'p' }),
-                            KeyCode::Q => Some(if shift { 'Q' } else { 'q' }),
-                            KeyCode::R => Some(if shift { 'R' } else { 'r' }),
-                            KeyCode::S => Some(if shift { 'S' } else { 's' }),
-                            KeyCode::T => Some(if shift { 'T' } else { 't' }),
-                            KeyCode::U => Some(if shift { 'U' } else { 'u' }),
-                            KeyCode::V => Some(if shift { 'V' } else { 'v' }),
-                            KeyCode::W => Some(if shift { 'W' } else { 'w' }),
-                            KeyCode::X => Some(if shift { 'X' } else { 'x' }),
-                            KeyCode::Y => Some(if shift { 'Y' } else { 'y' }),
-                            KeyCode::Z => Some(if shift { 'Z' } else { 'z' }),
-                            KeyCode::Key0 | KeyCode::Kp0 => Some(if shift { ')' } else { '0' }),
-                            KeyCode::Key1 | KeyCode::Kp1 => Some(if shift { '!' } else { '1' }),
-                            KeyCode::Key2 | KeyCode::Kp2 => Some(if shift { '@' } else { '2' }),
-                            KeyCode::Key3 | KeyCode::Kp3 => Some(if shift { '#' } else { '3' }),
-                            KeyCode::Key4 | KeyCode::Kp4 => Some(if shift { '$' } else { '4' }),
-                            KeyCode::Key5 | KeyCode::Kp5 => Some(if shift { '%' } else { '5' }),
-                            KeyCode::Key6 | KeyCode::Kp6 => Some(if shift { '^' } else { '6' }),
-                            KeyCode::Key7 | KeyCode::Kp7 => Some(if shift { '&' } else { '7' }),
-                            KeyCode::Key8 | KeyCode::Kp8 => Some(if shift { '*' } else { '8' }),
-                            KeyCode::Key9 | KeyCode::Kp9 => Some(if shift { '(' } else { '9' }),
-                            KeyCode::Period => Some(if shift { '>' } else { '.' }),
-                            KeyCode::Minus => Some(if shift { '_' } else { '-' }),
-                            KeyCode::Slash => Some(if shift { '?' } else { '/' }),
-                            KeyCode::Backslash => Some(if shift { '|' } else { '\\' }),
-                            KeyCode::Semicolon => Some(if shift { ':' } else { ';' }),
-                            KeyCode::Apostrophe => Some(if shift { '"' } else { '\'' }),
-                            KeyCode::Comma => Some(if shift { '<' } else { ',' }),
-                            KeyCode::Equal => Some(if shift { '+' } else { '=' }),
-                            KeyCode::LeftBracket => Some(if shift { '{' } else { '[' }),
-                            KeyCode::RightBracket => Some(if shift { '}' } else { ']' }),
-                            KeyCode::GraveAccent => Some(if shift { '~' } else { '`' }),
-                            _ => None,
-                        };
-                        ch
-                    })
-                    .collect();
-                
-                for ch in chars {
-                    self.console.handle_character(ch);
+                if !should_toggle_console {
+                    let chars: Vec<char> = get_keys_pressed()
+                        .iter()
+                        .filter_map(|&key| {
+                            if ctrl {
+                                return None;
+                            }
+                            
+                            let ch = match key {
+                                KeyCode::Space => Some(' '),
+                                KeyCode::A => Some(if shift { 'A' } else { 'a' }),
+                                KeyCode::B => Some(if shift { 'B' } else { 'b' }),
+                                KeyCode::C => Some(if shift { 'C' } else { 'c' }),
+                                KeyCode::D => Some(if shift { 'D' } else { 'd' }),
+                                KeyCode::E => Some(if shift { 'E' } else { 'e' }),
+                                KeyCode::F => Some(if shift { 'F' } else { 'f' }),
+                                KeyCode::G => Some(if shift { 'G' } else { 'g' }),
+                                KeyCode::H => Some(if shift { 'H' } else { 'h' }),
+                                KeyCode::I => Some(if shift { 'I' } else { 'i' }),
+                                KeyCode::J => Some(if shift { 'J' } else { 'j' }),
+                                KeyCode::K => Some(if shift { 'K' } else { 'k' }),
+                                KeyCode::L => Some(if shift { 'L' } else { 'l' }),
+                                KeyCode::M => Some(if shift { 'M' } else { 'm' }),
+                                KeyCode::N => Some(if shift { 'N' } else { 'n' }),
+                                KeyCode::O => Some(if shift { 'O' } else { 'o' }),
+                                KeyCode::P => Some(if shift { 'P' } else { 'p' }),
+                                KeyCode::Q => Some(if shift { 'Q' } else { 'q' }),
+                                KeyCode::R => Some(if shift { 'R' } else { 'r' }),
+                                KeyCode::S => Some(if shift { 'S' } else { 's' }),
+                                KeyCode::T => Some(if shift { 'T' } else { 't' }),
+                                KeyCode::U => Some(if shift { 'U' } else { 'u' }),
+                                KeyCode::V => Some(if shift { 'V' } else { 'v' }),
+                                KeyCode::W => Some(if shift { 'W' } else { 'w' }),
+                                KeyCode::X => Some(if shift { 'X' } else { 'x' }),
+                                KeyCode::Y => Some(if shift { 'Y' } else { 'y' }),
+                                KeyCode::Z => Some(if shift { 'Z' } else { 'z' }),
+                                KeyCode::Key0 | KeyCode::Kp0 => Some(if shift { ')' } else { '0' }),
+                                KeyCode::Key1 | KeyCode::Kp1 => Some(if shift { '!' } else { '1' }),
+                                KeyCode::Key2 | KeyCode::Kp2 => Some(if shift { '@' } else { '2' }),
+                                KeyCode::Key3 | KeyCode::Kp3 => Some(if shift { '#' } else { '3' }),
+                                KeyCode::Key4 | KeyCode::Kp4 => Some(if shift { '$' } else { '4' }),
+                                KeyCode::Key5 | KeyCode::Kp5 => Some(if shift { '%' } else { '5' }),
+                                KeyCode::Key6 | KeyCode::Kp6 => Some(if shift { '^' } else { '6' }),
+                                KeyCode::Key7 | KeyCode::Kp7 => Some(if shift { '&' } else { '7' }),
+                                KeyCode::Key8 | KeyCode::Kp8 => Some(if shift { '*' } else { '8' }),
+                                KeyCode::Key9 | KeyCode::Kp9 => Some(if shift { '(' } else { '9' }),
+                                KeyCode::Period => Some(if shift { '>' } else { '.' }),
+                                KeyCode::Minus => Some(if shift { '_' } else { '-' }),
+                                KeyCode::Slash => Some(if shift { '?' } else { '/' }),
+                                KeyCode::Backslash => Some(if shift { '|' } else { '\\' }),
+                                KeyCode::Semicolon => Some(if shift { ':' } else { ';' }),
+                                KeyCode::Apostrophe => Some(if shift { '"' } else { '\'' }),
+                                KeyCode::Comma => Some(if shift { '<' } else { ',' }),
+                                KeyCode::Equal => Some(if shift { '+' } else { '=' }),
+                                KeyCode::LeftBracket => Some(if shift { '{' } else { '[' }),
+                                KeyCode::RightBracket => Some(if shift { '}' } else { ']' }),
+                                KeyCode::GraveAccent => Some(if shift { '~' } else { '`' }),
+                                _ => None,
+                            };
+                            ch
+                        })
+                        .collect();
+                    
+                    for ch in chars {
+                        self.console.handle_character(ch);
+                    }
                 }
             }
 
@@ -209,13 +224,21 @@ impl App {
                     
                     self.game_loop = Some(game_loop);
                     self.menu_state = None;
-                    mouse_delta_position();
+                    
                     let show_cursor = cvar::get_cvar_bool("m_show_cursor");
                     show_mouse(show_cursor);
                     let grab_mouse = cvar::get_cvar_bool("m_grab");
                     if grab_mouse {
                         set_cursor_grab(true);
                     }
+                    
+                    #[cfg(target_os = "macos")]
+                    {
+                        next_frame().await;
+                        crate::input::center_mouse_cursor();
+                    }
+                    
+                    mouse_delta_position();
                     self.ignore_mouse_delta_for_one_frame = true;
                 } else {
                     menu_state.render();
@@ -223,7 +246,6 @@ impl App {
             } else if let Some(game_loop) = &mut self.game_loop {
                 if !self.console.is_open() {
                     if self.was_console_open {
-                        mouse_delta_position();
                         let show_cursor = cvar::get_cvar_bool("m_show_cursor");
                         show_mouse(show_cursor);
                         #[cfg(not(target_os = "macos"))]
@@ -231,6 +253,9 @@ impl App {
                             let grab_mouse = cvar::get_cvar_bool("m_grab");
                             set_cursor_grab(grab_mouse);
                         }
+                        #[cfg(target_os = "macos")]
+                        crate::input::center_mouse_cursor();
+                        mouse_delta_position();
                         self.ignore_mouse_delta_for_one_frame = true;
                         self.was_console_open = false;
                     }

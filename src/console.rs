@@ -242,18 +242,24 @@ impl Console {
     }
     
     pub fn copy_to_clipboard(&self) {
-        if let Ok(mut clipboard) = arboard::Clipboard::new() {
-            let _ = clipboard.set_text(&self.input_line);
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                let _ = clipboard.set_text(&self.input_line);
+            }
         }
     }
     
     pub fn paste_from_clipboard(&mut self) {
-        if let Ok(mut clipboard) = arboard::Clipboard::new() {
-            if let Ok(text) = clipboard.get_text() {
-                for ch in text.chars() {
-                    if ch.is_ascii() && !ch.is_control() {
-                        self.input_line.insert(self.cursor_pos, ch);
-                        self.cursor_pos += 1;
+        #[cfg(not(target_arch = "wasm32"))]
+        {
+            if let Ok(mut clipboard) = arboard::Clipboard::new() {
+                if let Ok(text) = clipboard.get_text() {
+                    for ch in text.chars() {
+                        if ch.is_ascii() && !ch.is_control() {
+                            self.input_line.insert(self.cursor_pos, ch);
+                            self.cursor_pos += 1;
+                        }
                     }
                 }
             }
