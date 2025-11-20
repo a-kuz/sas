@@ -28,4 +28,4 @@ windows_release
 .cursor
 release_builds/
 release_package
-sas_windows.zip
+sas_windows.zip.DS_Store
