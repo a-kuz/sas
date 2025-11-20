@@ -50,6 +50,23 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        if !std::path::Path::new("q3-resources").exists() {
+            let resource_base = sas::resource_path::get_resource_base_path();
+            if resource_base.exists() && resource_base != std::path::PathBuf::from("q3-resources") {
+                #[cfg(unix)]
+                {
+                    let _ = std::os::unix::fs::symlink(&resource_base, "q3-resources");
+                }
+                #[cfg(windows)]
+                {
+                    let _ = std::os::windows::fs::symlink_dir(&resource_base, "q3-resources");
+                }
+            }
+        }
+    }
+    
     show_mouse(false);
     
     let mut app = App::new();
