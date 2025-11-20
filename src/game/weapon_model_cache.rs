@@ -1,5 +1,6 @@
 use crate::game::md3::MD3Model;
 use crate::game::weapon::Weapon;
+use crate::resource_path::get_resource_path;
 use macroquad::prelude::*;
 use std::collections::HashMap;
 
@@ -18,27 +19,29 @@ impl WeaponModelCache {
         Self { models: HashMap::new() }
     }
 
-    fn weapon_path(weapon: Weapon) -> &'static str {
-        match weapon {
-            Weapon::Gauntlet => "q3-resources/models/weapons2/gauntlet/gauntlet.md3",
-            Weapon::MachineGun => "q3-resources/models/weapons2/machinegun/machinegun.md3",
-            Weapon::Shotgun => "q3-resources/models/weapons2/shotgun/shotgun.md3",
-            Weapon::GrenadeLauncher => "q3-resources/models/weapons2/grenadel/grenadel.md3",
-            Weapon::RocketLauncher => "q3-resources/models/weapons2/rocketl/rocketl.md3",
-            Weapon::Lightning => "q3-resources/models/weapons2/lightning/lightning.md3",
-            Weapon::Railgun => "q3-resources/models/weapons2/railgun/railgun.md3",
-            Weapon::Plasmagun => "q3-resources/models/weapons2/plasma/plasma.md3",
-            Weapon::BFG => "q3-resources/models/weapons2/bfg/bfg.md3",
-        }
+    fn weapon_path(weapon: Weapon) -> String {
+        let relative = match weapon {
+            Weapon::Gauntlet => "models/weapons2/gauntlet/gauntlet.md3",
+            Weapon::MachineGun => "models/weapons2/machinegun/machinegun.md3",
+            Weapon::Shotgun => "models/weapons2/shotgun/shotgun.md3",
+            Weapon::GrenadeLauncher => "models/weapons2/grenadel/grenadel.md3",
+            Weapon::RocketLauncher => "models/weapons2/rocketl/rocketl.md3",
+            Weapon::Lightning => "models/weapons2/lightning/lightning.md3",
+            Weapon::Railgun => "models/weapons2/railgun/railgun.md3",
+            Weapon::Plasmagun => "models/weapons2/plasma/plasma.md3",
+            Weapon::BFG => "models/weapons2/bfg/bfg.md3",
+        };
+        get_resource_path(relative)
     }
     
-    fn extra_paths(weapon: Weapon) -> Vec<&'static str> {
-        match weapon {
+    fn extra_paths(weapon: Weapon) -> Vec<String> {
+        let relatives: Vec<&str> = match weapon {
             Weapon::MachineGun => vec![
-                "q3-resources/models/weapons2/machinegun/machinegun_barrel.md3",
+                "models/weapons2/machinegun/machinegun_barrel.md3",
             ],
             _ => Vec::new(),
-        }
+        };
+        relatives.iter().map(|p| get_resource_path(p)).collect()
     }
 
     fn weapon_textures(weapon: Weapon) -> Vec<&'static str> {
@@ -119,7 +122,7 @@ impl WeaponModelCache {
                 };
 
                 for texture_path in Self::weapon_textures(weapon) {
-                    let full_path = format!("q3-resources/{}", texture_path);
+                    let full_path = get_resource_path(texture_path);
                     if let Some(texture) = super::skin_loader::load_texture_file(&full_path).await {
                         println!("[Weapon] ✓ Loaded texture {}", texture_path);
 

@@ -13,6 +13,7 @@ pub mod hud_scoreboard;
 pub mod app;
 pub mod cvar;
 pub mod console;
+pub mod resource_path;
 
 #[cfg(feature = "profiler")]
 pub mod profiler;
