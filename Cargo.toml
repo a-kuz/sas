@@ -44,6 +44,7 @@ lazy_static = "1.4"
 bincode = "1.3"
 byteorder = "1.5"
 arboard = "3.3"
+image = "0.24"
 
 [profile.release]
 opt-level = 3
@@ -58,3 +59,8 @@ name = "SAS III"
 bundle_identifier = "com.kuznetsov.sas3"
 version = "0.0.1"
 minimum_os_version = "13.0"
+
+[package.metadata.bundle]
+name = "SAS III"
+identifier = "com.kuznetsov.sas3"
+icon = ["assets/icon.icns", "assets/icon.ico"]

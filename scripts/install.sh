@@ -6,8 +6,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 Q3_RESOURCES="$PROJECT_ROOT/q3-resources"
 
-GITHUB_REPO="alexkuznetsov/sas"
+GITHUB_REPO="a-kuz/sas"
 GAME_BINARY="sas"
+
 
 declare -r pak0="https://github.com/nrempel/q3-server/raw/master/baseq3/pak0.pk3"
 declare -r pak="https://github.com/diegoulloao/ioquake3-mac-install/raw/master/dependencies/baseq3/pak@.pk3"
@@ -23,23 +24,14 @@ echo "╔═══════════════════════�
 echo "║         SAS (Shoot and Strafe) Installer                  ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
-
-read -p "Do you own a legal copy of Quake 3 Arena? (yes/no): " answer
-
-case ${answer:0:1} in
-    y|Y|д|Д )
-        echo ""
-        echo "✓ Great! Proceeding with installation..."
-        echo ""
-    ;;
-    * )
-        echo ""
-        echo "✗ You need to own a legal copy of Quake 3 Arena to play this game."
-        echo "  Please purchase it and try again later."
-        echo ""
-        exit 1
-    ;;
-esac
+echo "This installer will:"
+echo "  • Download Quake 3 Arena resources (baseq3)"
+echo "  • Convert textures to PNG format"
+echo "  • Download and build SAS game"
+echo "  • Launch the game"
+echo ""
+echo "⚠  Note: You must own a legal copy of Quake 3 Arena."
+echo ""
 
 if [ ! -d "$Q3_RESOURCES" ]; then
     mkdir -p "$Q3_RESOURCES"
@@ -214,9 +206,13 @@ if command -v gh &> /dev/null; then
             gh release download "$LATEST_RELEASE" --repo "$GITHUB_REPO" --pattern "$ASSET_PATTERN" --clobber 2>/dev/null || true
             
             if ls *tar.gz 1> /dev/null 2>&1; then
-                tar -xzf *.tar.gz
+                tar -xzf *.tar.gz 2>/dev/null || tar -xzf *.tar.gz --no-same-owner 2>/dev/null || true
                 rm -f *.tar.gz
-                echo "✓ Game binary downloaded and extracted"
+                if [ -f "$GAME_BINARY" ]; then
+                    echo "✓ Game binary downloaded and extracted"
+                else
+                    echo "⚠ Extraction failed, will build from source"
+                fi
             else
                 echo "⚠ No matching release found, will build from source"
             fi
@@ -237,6 +233,19 @@ echo ""
 cd "$PROJECT_ROOT"
 
 if [ ! -f "$GAME_BINARY" ] && [ ! -f "target/release/$GAME_BINARY" ]; then
+    if [ ! -f "Cargo.toml" ]; then
+        echo "→ Cloning repository..."
+        
+        if command -v git &> /dev/null; then
+            git clone "https://github.com/$GITHUB_REPO.git" sas-source
+            cd sas-source
+            echo "✓ Repository cloned"
+        else
+            echo "✗ Git not found. Cannot clone repository."
+            exit 1
+        fi
+    fi
+    
     echo "→ Building game from source..."
     
     if command -v cargo &> /dev/null; then
@@ -250,7 +259,12 @@ if [ ! -f "$GAME_BINARY" ] && [ ! -f "target/release/$GAME_BINARY" ]; then
             exit 1
         fi
     else
-        echo "✗ Cargo not found. Please install Rust toolchain."
+        echo "✗ Cargo not found."
+        echo ""
+        echo "Please install Rust toolchain:"
+        echo "  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+        echo ""
+        echo "Or wait for GitHub Actions to build releases (check: https://github.com/$GITHUB_REPO/releases)"
         exit 1
     fi
 else
@@ -270,12 +284,21 @@ if [ -f "$GAME_BINARY" ]; then
     echo "✓ Starting SAS (Shoot and Strafe)..."
     echo ""
     ./"$GAME_BINARY"
-elif [ -f "target/release/$GAME_BINARY" ]; then
+elif [ -f "sas-source/$GAME_BINARY" ]; then
+    cd sas-source
+    chmod +x "$GAME_BINARY"
     echo "✓ Starting SAS (Shoot and Strafe)..."
     echo ""
-    cargo run --release
+    ./"$GAME_BINARY"
+elif [ -f "sas-source/target/release/$GAME_BINARY" ]; then
+    cd sas-source
+    chmod +x "target/release/$GAME_BINARY"
+    echo "✓ Starting SAS (Shoot and Strafe)..."
+    echo ""
+    ./target/release/"$GAME_BINARY"
 else
     echo "✗ Game binary not found"
     exit 1
 fi
+
 
