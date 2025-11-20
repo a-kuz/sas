@@ -1,0 +1,25 @@
+[
+{
+  "name": "test_simple",
+  "base_texture": "q3-resources/textures/base_trim/border11light.png",
+  "stages": [
+    {
+      "texture_path": "q3-resources/textures/base_trim/border11light.glow.png",
+      "blend_mode": "Add",
+      "alpha": 1.0,
+      "scroll_x": 0.0,
+      "scroll_y": 0.0,
+      "scale_x": 1.0,
+      "scale_y": 1.0,
+      "rotate_speed": 0.0,
+      "glow": true,
+      "glow_intensity": 1.0,
+      "wave_func": "Sin",
+      "wave_base": 0.9,
+      "wave_amplitude": 0.1,
+      "wave_frequency": 10.0
+    }
+  ],
+  "surface_light": 500.0
+}
+]

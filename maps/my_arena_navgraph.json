@@ -1,0 +1,5334 @@
+{
+  "nodes": [
+    {
+      "id": 0,
+      "x": 16.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 1,
+      "x": 48.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 2,
+      "x": 48.0,
+      "y": 816.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 3,
+      "x": 48.0,
+      "y": 1056.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 4,
+      "x": 80.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 5,
+      "x": 80.0,
+      "y": 1104.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 6,
+      "x": 112.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 7,
+      "x": 112.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 8,
+      "x": 112.0,
+      "y": 992.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 9,
+      "x": 112.0,
+      "y": 1152.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 10,
+      "x": 144.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 11,
+      "x": 144.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 12,
+      "x": 144.0,
+      "y": 1200.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 13,
+      "x": 176.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 14,
+      "x": 176.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 15,
+      "x": 176.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 16,
+      "x": 208.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 17,
+      "x": 208.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 18,
+      "x": 208.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 19,
+      "x": 240.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 20,
+      "x": 240.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 21,
+      "x": 240.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 22,
+      "x": 272.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 23,
+      "x": 272.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 24,
+      "x": 272.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 25,
+      "x": 304.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 26,
+      "x": 304.0,
+      "y": 848.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 27,
+      "x": 304.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 28,
+      "x": 336.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 29,
+      "x": 336.0,
+      "y": 832.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 30,
+      "x": 336.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 31,
+      "x": 336.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 32,
+      "x": 368.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 33,
+      "x": 368.0,
+      "y": 832.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 34,
+      "x": 368.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 35,
+      "x": 368.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 36,
+      "x": 400.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 37,
+      "x": 400.0,
+      "y": 832.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 38,
+      "x": 400.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 39,
+      "x": 400.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 40,
+      "x": 432.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 41,
+      "x": 432.0,
+      "y": 816.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 42,
+      "x": 432.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 43,
+      "x": 432.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 44,
+      "x": 464.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 45,
+      "x": 464.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 46,
+      "x": 464.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 47,
+      "x": 496.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 48,
+      "x": 496.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 49,
+      "x": 496.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 50,
+      "x": 528.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 51,
+      "x": 528.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 52,
+      "x": 528.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 53,
+      "x": 560.0,
+      "y": 480.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 54,
+      "x": 560.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 55,
+      "x": 560.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 56,
+      "x": 592.0,
+      "y": 496.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 57,
+      "x": 592.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 58,
+      "x": 624.0,
+      "y": 512.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 59,
+      "x": 624.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 60,
+      "x": 656.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 61,
+      "x": 688.0,
+      "y": 432.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 62,
+      "x": 688.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 63,
+      "x": 720.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 64,
+      "x": 752.0,
+      "y": 64.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 65,
+      "x": 752.0,
+      "y": 864.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 66,
+      "x": 752.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 67,
+      "x": 784.0,
+      "y": 64.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 68,
+      "x": 784.0,
+      "y": 864.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 69,
+      "x": 784.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 70,
+      "x": 816.0,
+      "y": 48.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 71,
+      "x": 816.0,
+      "y": 864.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 72,
+      "x": 816.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 73,
+      "x": 848.0,
+      "y": 64.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 74,
+      "x": 848.0,
+      "y": 880.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 75,
+      "x": 848.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 76,
+      "x": 880.0,
+      "y": 16.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 77,
+      "x": 880.0,
+      "y": 880.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 78,
+      "x": 880.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 79,
+      "x": 912.0,
+      "y": 16.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 80,
+      "x": 912.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 81,
+      "x": 944.0,
+      "y": 928.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 82,
+      "x": 944.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 83,
+      "x": 944.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 84,
+      "x": 976.0,
+      "y": 208.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 85,
+      "x": 976.0,
+      "y": 928.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 86,
+      "x": 976.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 87,
+      "x": 1008.0,
+      "y": 208.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 88,
+      "x": 1008.0,
+      "y": 992.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 89,
+      "x": 1008.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 90,
+      "x": 1040.0,
+      "y": 992.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 91,
+      "x": 1040.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 92,
+      "x": 1072.0,
+      "y": 1040.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 93,
+      "x": 1072.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 94,
+      "x": 1104.0,
+      "y": 1040.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 95,
+      "x": 1104.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 96,
+      "x": 1136.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 97,
+      "x": 1168.0,
+      "y": 1072.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 98,
+      "x": 1168.0,
+      "y": 1232.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 99,
+      "x": 1200.0,
+      "y": 1072.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 100,
+      "x": 1200.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 101,
+      "x": 1232.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 102,
+      "x": 1264.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 103,
+      "x": 1296.0,
+      "y": 800.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 104,
+      "x": 1296.0,
+      "y": 1072.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 105,
+      "x": 1296.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 106,
+      "x": 1328.0,
+      "y": 800.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 107,
+      "x": 1328.0,
+      "y": 1072.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 108,
+      "x": 1328.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 109,
+      "x": 1360.0,
+      "y": 800.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 110,
+      "x": 1360.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 111,
+      "x": 1392.0,
+      "y": 800.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 112,
+      "x": 1392.0,
+      "y": 1056.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 113,
+      "x": 1392.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 114,
+      "x": 1424.0,
+      "y": 800.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 115,
+      "x": 1424.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 116,
+      "x": 1456.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 117,
+      "x": 1488.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 118,
+      "x": 1520.0,
+      "y": 1248.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 119,
+      "x": 1552.0,
+      "y": 1168.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 120,
+      "x": 1584.0,
+      "y": 1088.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 121,
+      "x": 1616.0,
+      "y": 1008.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 122,
+      "x": 1648.0,
+      "y": 928.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 123,
+      "x": 1680.0,
+      "y": 896.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 124,
+      "x": 1712.0,
+      "y": 672.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 125,
+      "x": 1744.0,
+      "y": 672.0,
+      "node_type": "Ground"
+    },
+    {
+      "id": 126,
+      "x": 546.23047,
+      "y": 889.8457,
+      "node_type": "JumpPad"
+    },
+    {
+      "id": 127,
+      "x": 960.625,
+      "y": 659.9707,
+      "node_type": "JumpPad"
+    },
+    {
+      "id": 128,
+      "x": 1505.75,
+      "y": 1135.0957,
+      "node_type": "JumpPad"
+    },
+    {
+      "id": 129,
+      "x": 632.39453,
+      "y": 1124.8594,
+      "node_type": "JumpPad"
+    },
+    {
+      "id": 130,
+      "x": 821.25,
+      "y": 540.9082,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 131,
+      "x": 821.25,
+      "y": 540.9082,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 132,
+      "x": 1397.875,
+      "y": 812.5957,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 133,
+      "x": 1098.625,
+      "y": 804.7207,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 134,
+      "x": 1098.625,
+      "y": 804.7207,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 135,
+      "x": 798.5,
+      "y": 506.7832,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 136,
+      "x": 1033.875,
+      "y": 741.7207,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 137,
+      "x": 1293.75,
+      "y": 1110.5332,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 138,
+      "x": 1311.8555,
+      "y": 417.7207,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 139,
+      "x": 122.58203,
+      "y": 811.5469,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 140,
+      "x": 545.3711,
+      "y": 855.6328,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 141,
+      "x": 217.82422,
+      "y": 1204.1523,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 142,
+      "x": 529.8867,
+      "y": 1204.3711,
+      "node_type": "ItemLocation"
+    },
+    {
+      "id": 143,
+      "x": 796.9453,
+      "y": 1185.3086,
+      "node_type": "ItemLocation"
+    }
+  ],
+  "edges": [
+    {
+      "from": 132,
+      "to": 109,
+      "edge_type": "Walk",
+      "cost": 39.9145
+    },
+    {
+      "from": 109,
+      "to": 132,
+      "edge_type": "Walk",
+      "cost": 39.9145
+    },
+    {
+      "from": 132,
+      "to": 111,
+      "edge_type": "Walk",
+      "cost": 13.898466
+    },
+    {
+      "from": 111,
+      "to": 132,
+      "edge_type": "Walk",
+      "cost": 13.898466
+    },
+    {
+      "from": 132,
+      "to": 114,
+      "edge_type": "Walk",
+      "cost": 29.002886
+    },
+    {
+      "from": 114,
+      "to": 132,
+      "edge_type": "Walk",
+      "cost": 29.002886
+    },
+    {
+      "from": 0,
+      "to": 1,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 0,
+      "to": 4,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 1,
+      "to": 0,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 1,
+      "to": 4,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 1,
+      "to": 6,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 4,
+      "to": 0,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 4,
+      "to": 1,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 4,
+      "to": 6,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 4,
+      "to": 10,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 6,
+      "to": 1,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 6,
+      "to": 4,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 6,
+      "to": 10,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 6,
+      "to": 13,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 7,
+      "to": 11,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 7,
+      "to": 14,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 10,
+      "to": 4,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 10,
+      "to": 6,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 10,
+      "to": 13,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 10,
+      "to": 16,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 11,
+      "to": 7,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 11,
+      "to": 14,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 11,
+      "to": 17,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 13,
+      "to": 6,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 13,
+      "to": 10,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 13,
+      "to": 16,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 13,
+      "to": 19,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 14,
+      "to": 7,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 14,
+      "to": 11,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 14,
+      "to": 17,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 14,
+      "to": 20,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 15,
+      "to": 18,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 15,
+      "to": 21,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 16,
+      "to": 10,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 16,
+      "to": 13,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 16,
+      "to": 19,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 16,
+      "to": 22,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 17,
+      "to": 11,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 17,
+      "to": 14,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 17,
+      "to": 20,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 17,
+      "to": 23,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 18,
+      "to": 15,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 18,
+      "to": 21,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 18,
+      "to": 24,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 19,
+      "to": 13,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 19,
+      "to": 16,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 19,
+      "to": 22,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 19,
+      "to": 25,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 20,
+      "to": 14,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 20,
+      "to": 17,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 20,
+      "to": 23,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 20,
+      "to": 26,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 21,
+      "to": 15,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 21,
+      "to": 18,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 21,
+      "to": 24,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 21,
+      "to": 27,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 22,
+      "to": 16,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 22,
+      "to": 19,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 22,
+      "to": 25,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 22,
+      "to": 28,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 23,
+      "to": 17,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 23,
+      "to": 20,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 23,
+      "to": 26,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 23,
+      "to": 29,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 24,
+      "to": 18,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 24,
+      "to": 21,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 24,
+      "to": 27,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 24,
+      "to": 31,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 25,
+      "to": 19,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 25,
+      "to": 22,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 25,
+      "to": 28,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 25,
+      "to": 32,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 26,
+      "to": 20,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 26,
+      "to": 23,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 26,
+      "to": 29,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 26,
+      "to": 33,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 27,
+      "to": 21,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 27,
+      "to": 24,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 27,
+      "to": 31,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 27,
+      "to": 35,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 28,
+      "to": 22,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 28,
+      "to": 25,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 28,
+      "to": 32,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 28,
+      "to": 36,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 29,
+      "to": 23,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 29,
+      "to": 26,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 29,
+      "to": 33,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 29,
+      "to": 37,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 30,
+      "to": 34,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 30,
+      "to": 38,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 31,
+      "to": 24,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 31,
+      "to": 27,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 31,
+      "to": 35,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 31,
+      "to": 39,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 32,
+      "to": 25,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 32,
+      "to": 28,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 32,
+      "to": 36,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 32,
+      "to": 40,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 33,
+      "to": 26,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 33,
+      "to": 29,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 33,
+      "to": 37,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 33,
+      "to": 41,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 34,
+      "to": 30,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 34,
+      "to": 38,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 34,
+      "to": 42,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 35,
+      "to": 27,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 35,
+      "to": 31,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 35,
+      "to": 39,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 35,
+      "to": 43,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 36,
+      "to": 28,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 36,
+      "to": 32,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 36,
+      "to": 40,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 36,
+      "to": 44,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 37,
+      "to": 29,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 37,
+      "to": 33,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 37,
+      "to": 41,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 38,
+      "to": 30,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 38,
+      "to": 34,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 38,
+      "to": 42,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 38,
+      "to": 45,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 39,
+      "to": 31,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 39,
+      "to": 35,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 39,
+      "to": 43,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 39,
+      "to": 46,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 40,
+      "to": 32,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 40,
+      "to": 36,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 40,
+      "to": 44,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 40,
+      "to": 47,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 41,
+      "to": 33,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 41,
+      "to": 37,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 42,
+      "to": 34,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 42,
+      "to": 38,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 42,
+      "to": 45,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 42,
+      "to": 48,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 43,
+      "to": 35,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 43,
+      "to": 39,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 43,
+      "to": 46,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 43,
+      "to": 49,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 44,
+      "to": 36,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 44,
+      "to": 40,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 44,
+      "to": 47,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 44,
+      "to": 50,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 45,
+      "to": 38,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 45,
+      "to": 42,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 45,
+      "to": 48,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 45,
+      "to": 51,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 46,
+      "to": 39,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 46,
+      "to": 43,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 46,
+      "to": 49,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 46,
+      "to": 52,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 47,
+      "to": 40,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 47,
+      "to": 44,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 47,
+      "to": 50,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 47,
+      "to": 53,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 48,
+      "to": 42,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 48,
+      "to": 45,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 48,
+      "to": 51,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 48,
+      "to": 54,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 49,
+      "to": 43,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 49,
+      "to": 46,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 49,
+      "to": 52,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 49,
+      "to": 55,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 50,
+      "to": 44,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 50,
+      "to": 47,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 50,
+      "to": 53,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 50,
+      "to": 56,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 51,
+      "to": 45,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 51,
+      "to": 48,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 51,
+      "to": 54,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 52,
+      "to": 46,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 52,
+      "to": 49,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 52,
+      "to": 55,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 52,
+      "to": 57,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 53,
+      "to": 47,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 53,
+      "to": 50,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 53,
+      "to": 56,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 54,
+      "to": 48,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 54,
+      "to": 51,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 55,
+      "to": 49,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 55,
+      "to": 52,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 55,
+      "to": 57,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 55,
+      "to": 59,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 56,
+      "to": 50,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 56,
+      "to": 53,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 57,
+      "to": 52,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 57,
+      "to": 55,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 57,
+      "to": 59,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 57,
+      "to": 60,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 59,
+      "to": 55,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 59,
+      "to": 57,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 59,
+      "to": 60,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 59,
+      "to": 62,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 60,
+      "to": 57,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 60,
+      "to": 59,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 60,
+      "to": 62,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 60,
+      "to": 63,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 62,
+      "to": 59,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 62,
+      "to": 60,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 62,
+      "to": 63,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 62,
+      "to": 66,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 63,
+      "to": 60,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 63,
+      "to": 62,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 63,
+      "to": 66,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 63,
+      "to": 69,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 64,
+      "to": 67,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 64,
+      "to": 70,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 65,
+      "to": 68,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 65,
+      "to": 71,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 66,
+      "to": 62,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 66,
+      "to": 63,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 66,
+      "to": 69,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 66,
+      "to": 72,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 67,
+      "to": 64,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 67,
+      "to": 70,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 67,
+      "to": 73,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 68,
+      "to": 65,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 68,
+      "to": 71,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 69,
+      "to": 63,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 69,
+      "to": 66,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 69,
+      "to": 72,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 69,
+      "to": 75,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 70,
+      "to": 64,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 70,
+      "to": 67,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 70,
+      "to": 73,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 71,
+      "to": 65,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 71,
+      "to": 68,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 72,
+      "to": 66,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 72,
+      "to": 69,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 72,
+      "to": 75,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 72,
+      "to": 78,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 73,
+      "to": 67,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 73,
+      "to": 70,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 75,
+      "to": 69,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 75,
+      "to": 72,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 75,
+      "to": 78,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 75,
+      "to": 80,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 78,
+      "to": 72,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 78,
+      "to": 75,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 78,
+      "to": 80,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 78,
+      "to": 83,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 80,
+      "to": 75,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 80,
+      "to": 78,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 80,
+      "to": 83,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 80,
+      "to": 86,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 83,
+      "to": 78,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 83,
+      "to": 80,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 83,
+      "to": 86,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 83,
+      "to": 89,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 84,
+      "to": 87,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 86,
+      "to": 80,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 86,
+      "to": 83,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 86,
+      "to": 89,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 86,
+      "to": 91,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 87,
+      "to": 84,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 89,
+      "to": 83,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 89,
+      "to": 86,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 89,
+      "to": 91,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 89,
+      "to": 93,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 91,
+      "to": 86,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 91,
+      "to": 89,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 91,
+      "to": 93,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 91,
+      "to": 95,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 93,
+      "to": 89,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 93,
+      "to": 91,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 93,
+      "to": 95,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 93,
+      "to": 96,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 95,
+      "to": 91,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 95,
+      "to": 93,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 95,
+      "to": 96,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 95,
+      "to": 98,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 96,
+      "to": 93,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 96,
+      "to": 95,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 96,
+      "to": 98,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 96,
+      "to": 100,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 97,
+      "to": 99,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 98,
+      "to": 95,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 98,
+      "to": 96,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 98,
+      "to": 100,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 98,
+      "to": 101,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 99,
+      "to": 97,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 100,
+      "to": 96,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 100,
+      "to": 98,
+      "edge_type": "Walk",
+      "cost": 35.77709
+    },
+    {
+      "from": 100,
+      "to": 101,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 100,
+      "to": 102,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 101,
+      "to": 98,
+      "edge_type": "Walk",
+      "cost": 65.96969
+    },
+    {
+      "from": 101,
+      "to": 100,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 101,
+      "to": 102,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 101,
+      "to": 105,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 102,
+      "to": 100,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 102,
+      "to": 101,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 102,
+      "to": 105,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 102,
+      "to": 108,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 103,
+      "to": 106,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 103,
+      "to": 109,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 105,
+      "to": 101,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 105,
+      "to": 102,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 105,
+      "to": 108,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 105,
+      "to": 110,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 106,
+      "to": 103,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 106,
+      "to": 109,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 106,
+      "to": 111,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 108,
+      "to": 102,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 108,
+      "to": 105,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 108,
+      "to": 110,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 108,
+      "to": 113,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 109,
+      "to": 103,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 109,
+      "to": 106,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 109,
+      "to": 111,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 109,
+      "to": 114,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 110,
+      "to": 105,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 110,
+      "to": 108,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 110,
+      "to": 113,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 110,
+      "to": 115,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 111,
+      "to": 106,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 111,
+      "to": 109,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 111,
+      "to": 114,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 113,
+      "to": 108,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 113,
+      "to": 110,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 113,
+      "to": 115,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 113,
+      "to": 116,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 114,
+      "to": 109,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 114,
+      "to": 111,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 115,
+      "to": 110,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 115,
+      "to": 113,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 115,
+      "to": 116,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 115,
+      "to": 117,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 116,
+      "to": 113,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 116,
+      "to": 115,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 116,
+      "to": 117,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 116,
+      "to": 118,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 117,
+      "to": 115,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 117,
+      "to": 116,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 117,
+      "to": 118,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 118,
+      "to": 116,
+      "edge_type": "Walk",
+      "cost": 64.0
+    },
+    {
+      "from": 118,
+      "to": 117,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 124,
+      "to": 125,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 125,
+      "to": 124,
+      "edge_type": "Walk",
+      "cost": 32.0
+    },
+    {
+      "from": 5,
+      "to": 45,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 7,
+      "to": 139,
+      "edge_type": "Jump",
+      "cost": 45.549603
+    },
+    {
+      "from": 11,
+      "to": 139,
+      "edge_type": "Jump",
+      "cost": 50.73545
+    },
+    {
+      "from": 14,
+      "to": 139,
+      "edge_type": "Jump",
+      "cost": 77.604935
+    },
+    {
+      "from": 15,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 427.87918
+    },
+    {
+      "from": 18,
+      "to": 12,
+      "edge_type": "Jump",
+      "cost": 96.0
+    },
+    {
+      "from": 18,
+      "to": 141,
+      "edge_type": "Jump",
+      "cost": 53.921707
+    },
+    {
+      "from": 21,
+      "to": 141,
+      "edge_type": "Jump",
+      "cost": 58.96364
+    },
+    {
+      "from": 22,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 502.51212
+    },
+    {
+      "from": 24,
+      "to": 141,
+      "edge_type": "Jump",
+      "cost": 83.63606
+    },
+    {
+      "from": 25,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 464.38608
+    },
+    {
+      "from": 26,
+      "to": 29,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 27,
+      "to": 141,
+      "edge_type": "Jump",
+      "cost": 116.02754
+    },
+    {
+      "from": 28,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 426.3092
+    },
+    {
+      "from": 31,
+      "to": 141,
+      "edge_type": "Jump",
+      "cost": 151.25777
+    },
+    {
+      "from": 31,
+      "to": 69,
+      "edge_type": "Jump",
+      "cost": 537.94275
+    },
+    {
+      "from": 32,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 388.296
+    },
+    {
+      "from": 35,
+      "to": 12,
+      "edge_type": "Jump",
+      "cost": 274.9022
+    },
+    {
+      "from": 35,
+      "to": 69,
+      "edge_type": "Jump",
+      "cost": 499.56912
+    },
+    {
+      "from": 36,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 350.36713
+    },
+    {
+      "from": 37,
+      "to": 41,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 39,
+      "to": 12,
+      "edge_type": "Jump",
+      "cost": 312.55334
+    },
+    {
+      "from": 39,
+      "to": 69,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 40,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 312.55334
+    },
+    {
+      "from": 42,
+      "to": 3,
+      "edge_type": "Jump",
+      "cost": 462.39725
+    },
+    {
+      "from": 43,
+      "to": 12,
+      "edge_type": "Jump",
+      "cost": 350.36713
+    },
+    {
+      "from": 43,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 128.60335
+    },
+    {
+      "from": 44,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 274.9022
+    },
+    {
+      "from": 46,
+      "to": 12,
+      "edge_type": "Jump",
+      "cost": 388.296
+    },
+    {
+      "from": 46,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 94.82689
+    },
+    {
+      "from": 47,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 237.49089
+    },
+    {
+      "from": 49,
+      "to": 12,
+      "edge_type": "Jump",
+      "cost": 426.3092
+    },
+    {
+      "from": 49,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 66.291626
+    },
+    {
+      "from": 50,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 200.4539
+    },
+    {
+      "from": 52,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 52.40362
+    },
+    {
+      "from": 52,
+      "to": 141,
+      "edge_type": "Jump",
+      "cost": 375.91162
+    },
+    {
+      "from": 52,
+      "to": 80,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 53,
+      "to": 61,
+      "edge_type": "Jump",
+      "cost": 164.04488
+    },
+    {
+      "from": 55,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 63.614613
+    },
+    {
+      "from": 55,
+      "to": 83,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 56,
+      "to": 53,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 57,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 91.085785
+    },
+    {
+      "from": 57,
+      "to": 86,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 58,
+      "to": 56,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 59,
+      "to": 142,
+      "edge_type": "Jump",
+      "cost": 124.48108
+    },
+    {
+      "from": 59,
+      "to": 89,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 60,
+      "to": 91,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 62,
+      "to": 93,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 63,
+      "to": 95,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 65,
+      "to": 41,
+      "edge_type": "Jump",
+      "cost": 388.296
+    },
+    {
+      "from": 66,
+      "to": 69,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 68,
+      "to": 41,
+      "edge_type": "Jump",
+      "cost": 426.3092
+    },
+    {
+      "from": 69,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 58.143295
+    },
+    {
+      "from": 71,
+      "to": 41,
+      "edge_type": "Jump",
+      "cost": 464.38608
+    },
+    {
+      "from": 72,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 60.515804
+    },
+    {
+      "from": 74,
+      "to": 71,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 75,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 83.0229
+    },
+    {
+      "from": 78,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 114.335304
+    },
+    {
+      "from": 80,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 149.00148
+    },
+    {
+      "from": 81,
+      "to": 77,
+      "edge_type": "Jump",
+      "cost": 96.0
+    },
+    {
+      "from": 83,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 185.1471
+    },
+    {
+      "from": 85,
+      "to": 77,
+      "edge_type": "Jump",
+      "cost": 128.79752
+    },
+    {
+      "from": 86,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 222.05083
+    },
+    {
+      "from": 89,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 259.3893
+    },
+    {
+      "from": 94,
+      "to": 90,
+      "edge_type": "Jump",
+      "cost": 96.0
+    },
+    {
+      "from": 95,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 372.70126
+    },
+    {
+      "from": 96,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 410.70544
+    },
+    {
+      "from": 98,
+      "to": 143,
+      "edge_type": "Jump",
+      "cost": 448.777
+    },
+    {
+      "from": 100,
+      "to": 98,
+      "edge_type": "Jump",
+      "cost": 42.932507
+    },
+    {
+      "from": 101,
+      "to": 75,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 102,
+      "to": 78,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 105,
+      "to": 80,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 108,
+      "to": 83,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 110,
+      "to": 86,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 112,
+      "to": 121,
+      "edge_type": "Jump",
+      "cost": 274.9022
+    },
+    {
+      "from": 113,
+      "to": 89,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 115,
+      "to": 91,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 116,
+      "to": 93,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 117,
+      "to": 95,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 118,
+      "to": 96,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 120,
+      "to": 99,
+      "edge_type": "Jump",
+      "cost": 461.19986
+    },
+    {
+      "from": 122,
+      "to": 123,
+      "edge_type": "Jump",
+      "cost": 54.3058
+    },
+    {
+      "from": 8,
+      "to": 3,
+      "edge_type": "FallOff",
+      "cost": 54.3058
+    },
+    {
+      "from": 8,
+      "to": 141,
+      "edge_type": "FallOff",
+      "cost": 142.24858
+    },
+    {
+      "from": 30,
+      "to": 141,
+      "edge_type": "FallOff",
+      "cost": 99.420715
+    },
+    {
+      "from": 41,
+      "to": 140,
+      "edge_type": "FallOff",
+      "cost": 72.05939
+    },
+    {
+      "from": 54,
+      "to": 129,
+      "edge_type": "FallOff",
+      "cost": 48.742687
+    },
+    {
+      "from": 58,
+      "to": 65,
+      "edge_type": "FallOff",
+      "cost": 224.73024
+    },
+    {
+      "from": 61,
+      "to": 58,
+      "edge_type": "FallOff",
+      "cost": 61.469997
+    },
+    {
+      "from": 61,
+      "to": 135,
+      "edge_type": "FallOff",
+      "cost": 80.05623
+    },
+    {
+      "from": 64,
+      "to": 61,
+      "edge_type": "FallOff",
+      "cost": 224.11427
+    },
+    {
+      "from": 65,
+      "to": 129,
+      "edge_type": "FallOff",
+      "cost": 172.18336
+    },
+    {
+      "from": 74,
+      "to": 81,
+      "edge_type": "FallOff",
+      "cost": 64.39876
+    },
+    {
+      "from": 77,
+      "to": 81,
+      "edge_type": "FallOff",
+      "cost": 48.0
+    },
+    {
+      "from": 81,
+      "to": 143,
+      "edge_type": "FallOff",
+      "cost": 177.81961
+    },
+    {
+      "from": 81,
+      "to": 88,
+      "edge_type": "FallOff",
+      "cost": 54.3058
+    },
+    {
+      "from": 82,
+      "to": 78,
+      "edge_type": "FallOff",
+      "cost": 94.54904
+    },
+    {
+      "from": 82,
+      "to": 89,
+      "edge_type": "FallOff",
+      "cost": 94.54904
+    },
+    {
+      "from": 85,
+      "to": 143,
+      "edge_type": "FallOff",
+      "cost": 188.08665
+    },
+    {
+      "from": 85,
+      "to": 88,
+      "edge_type": "FallOff",
+      "cost": 42.932507
+    },
+    {
+      "from": 88,
+      "to": 82,
+      "edge_type": "FallOff",
+      "cost": 69.226585
+    },
+    {
+      "from": 88,
+      "to": 92,
+      "edge_type": "FallOff",
+      "cost": 48.0
+    },
+    {
+      "from": 90,
+      "to": 78,
+      "edge_type": "FallOff",
+      "cost": 173.06647
+    },
+    {
+      "from": 90,
+      "to": 92,
+      "edge_type": "FallOff",
+      "cost": 34.613293
+    },
+    {
+      "from": 94,
+      "to": 86,
+      "edge_type": "FallOff",
+      "cost": 138.45317
+    },
+    {
+      "from": 94,
+      "to": 97,
+      "edge_type": "FallOff",
+      "cost": 42.932507
+    },
+    {
+      "from": 99,
+      "to": 137,
+      "edge_type": "FallOff",
+      "cost": 60.816063
+    },
+    {
+      "from": 103,
+      "to": 99,
+      "edge_type": "FallOff",
+      "cost": 173.06647
+    },
+    {
+      "from": 104,
+      "to": 137,
+      "edge_type": "FallOff",
+      "cost": 23.159304
+    },
+    {
+      "from": 104,
+      "to": 101,
+      "edge_type": "FallOff",
+      "cost": 112.36512
+    },
+    {
+      "from": 104,
+      "to": 115,
+      "edge_type": "FallOff",
+      "cost": 130.57413
+    },
+    {
+      "from": 107,
+      "to": 137,
+      "edge_type": "FallOff",
+      "cost": 30.932722
+    },
+    {
+      "from": 107,
+      "to": 113,
+      "edge_type": "FallOff",
+      "cost": 112.36512
+    },
+    {
+      "from": 112,
+      "to": 137,
+      "edge_type": "FallOff",
+      "cost": 67.421776
+    },
+    {
+      "from": 112,
+      "to": 128,
+      "edge_type": "FallOff",
+      "cost": 83.12804
+    },
+    {
+      "from": 114,
+      "to": 122,
+      "edge_type": "FallOff",
+      "cost": 154.79535
+    },
+    {
+      "from": 122,
+      "to": 121,
+      "edge_type": "FallOff",
+      "cost": 51.697582
+    },
+    {
+      "from": 124,
+      "to": 122,
+      "edge_type": "FallOff",
+      "cost": 158.32726
+    },
+    {
+      "from": 8,
+      "to": 30,
+      "edge_type": "JumpDown",
+      "cost": 194.96379
+    },
+    {
+      "from": 9,
+      "to": 35,
+      "edge_type": "JumpDown",
+      "cost": 218.72649
+    },
+    {
+      "from": 12,
+      "to": 39,
+      "edge_type": "JumpDown",
+      "cost": 208.3689
+    },
+    {
+      "from": 23,
+      "to": 126,
+      "edge_type": "JumpDown",
+      "cost": 221.92383
+    },
+    {
+      "from": 26,
+      "to": 126,
+      "edge_type": "JumpDown",
+      "cost": 196.6547
+    },
+    {
+      "from": 29,
+      "to": 126,
+      "edge_type": "JumpDown",
+      "cost": 174.43481
+    },
+    {
+      "from": 30,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 132.56096
+    },
+    {
+      "from": 30,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 238.94212
+    },
+    {
+      "from": 33,
+      "to": 126,
+      "edge_type": "JumpDown",
+      "cost": 149.90605
+    },
+    {
+      "from": 34,
+      "to": 24,
+      "edge_type": "JumpDown",
+      "cost": 149.27237
+    },
+    {
+      "from": 34,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 213.56119
+    },
+    {
+      "from": 37,
+      "to": 126,
+      "edge_type": "JumpDown",
+      "cost": 125.80486
+    },
+    {
+      "from": 38,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 172.8433
+    },
+    {
+      "from": 38,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 188.23956
+    },
+    {
+      "from": 41,
+      "to": 140,
+      "edge_type": "JumpDown",
+      "cost": 96.079185
+    },
+    {
+      "from": 42,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 194.91559
+    },
+    {
+      "from": 42,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 163.00494
+    },
+    {
+      "from": 45,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 217.76152
+    },
+    {
+      "from": 45,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 137.90509
+    },
+    {
+      "from": 48,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 241.16138
+    },
+    {
+      "from": 48,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 113.029785
+    },
+    {
+      "from": 51,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 264.96838
+    },
+    {
+      "from": 51,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 88.56846
+    },
+    {
+      "from": 54,
+      "to": 141,
+      "edge_type": "JumpDown",
+      "cost": 289.082
+    },
+    {
+      "from": 54,
+      "to": 129,
+      "edge_type": "JumpDown",
+      "cost": 64.99025
+    },
+    {
+      "from": 58,
+      "to": 127,
+      "edge_type": "JumpDown",
+      "cost": 294.16916
+    },
+    {
+      "from": 61,
+      "to": 56,
+      "edge_type": "JumpDown",
+      "cost": 92.30212
+    },
+    {
+      "from": 65,
+      "to": 81,
+      "edge_type": "JumpDown",
+      "cost": 161.90862
+    },
+    {
+      "from": 68,
+      "to": 30,
+      "edge_type": "JumpDown",
+      "cost": 400.7034
+    },
+    {
+      "from": 68,
+      "to": 81,
+      "edge_type": "JumpDown",
+      "cost": 137.86021
+    },
+    {
+      "from": 71,
+      "to": 34,
+      "edge_type": "JumpDown",
+      "cost": 400.7034
+    },
+    {
+      "from": 71,
+      "to": 81,
+      "edge_type": "JumpDown",
+      "cost": 114.48669
+    },
+    {
+      "from": 74,
+      "to": 42,
+      "edge_type": "JumpDown",
+      "cost": 372.08173
+    },
+    {
+      "from": 74,
+      "to": 81,
+      "edge_type": "JumpDown",
+      "cost": 85.86501
+    },
+    {
+      "from": 77,
+      "to": 45,
+      "edge_type": "JumpDown",
+      "cost": 372.08173
+    },
+    {
+      "from": 77,
+      "to": 85,
+      "edge_type": "JumpDown",
+      "cost": 85.86501
+    },
+    {
+      "from": 81,
+      "to": 90,
+      "edge_type": "JumpDown",
+      "cost": 92.30212
+    },
+    {
+      "from": 82,
+      "to": 75,
+      "edge_type": "JumpDown",
+      "cost": 138.45317
+    },
+    {
+      "from": 82,
+      "to": 91,
+      "edge_type": "JumpDown",
+      "cost": 138.45317
+    },
+    {
+      "from": 85,
+      "to": 92,
+      "edge_type": "JumpDown",
+      "cost": 118.01017
+    },
+    {
+      "from": 88,
+      "to": 94,
+      "edge_type": "JumpDown",
+      "cost": 85.86501
+    },
+    {
+      "from": 90,
+      "to": 97,
+      "edge_type": "JumpDown",
+      "cost": 120.75496
+    },
+    {
+      "from": 94,
+      "to": 137,
+      "edge_type": "JumpDown",
+      "cost": 161.94814
+    },
+    {
+      "from": 97,
+      "to": 143,
+      "edge_type": "JumpDown",
+      "cost": 310.3757
+    },
+    {
+      "from": 97,
+      "to": 137,
+      "edge_type": "JumpDown",
+      "cost": 105.2171
+    },
+    {
+      "from": 99,
+      "to": 72,
+      "edge_type": "JumpDown",
+      "cost": 332.80002
+    },
+    {
+      "from": 99,
+      "to": 137,
+      "edge_type": "JumpDown",
+      "cost": 81.08808
+    },
+    {
+      "from": 103,
+      "to": 85,
+      "edge_type": "JumpDown",
+      "cost": 275.72043
+    },
+    {
+      "from": 103,
+      "to": 122,
+      "edge_type": "JumpDown",
+      "cost": 299.64032
+    },
+    {
+      "from": 104,
+      "to": 128,
+      "edge_type": "JumpDown",
+      "cost": 175.22763
+    },
+    {
+      "from": 106,
+      "to": 85,
+      "edge_type": "JumpDown",
+      "cost": 299.64032
+    },
+    {
+      "from": 106,
+      "to": 122,
+      "edge_type": "JumpDown",
+      "cost": 275.72043
+    },
+    {
+      "from": 107,
+      "to": 128,
+      "edge_type": "JumpDown",
+      "cost": 150.89308
+    },
+    {
+      "from": 109,
+      "to": 85,
+      "edge_type": "JumpDown",
+      "cost": 323.81723
+    },
+    {
+      "from": 109,
+      "to": 123,
+      "edge_type": "JumpDown",
+      "cost": 267.27185
+    },
+    {
+      "from": 111,
+      "to": 85,
+      "edge_type": "JumpDown",
+      "cost": 348.19766
+    },
+    {
+      "from": 112,
+      "to": 137,
+      "edge_type": "JumpDown",
+      "cost": 89.8957
+    },
+    {
+      "from": 112,
+      "to": 128,
+      "edge_type": "JumpDown",
+      "cost": 110.83738
+    },
+    {
+      "from": 114,
+      "to": 88,
+      "edge_type": "JumpDown",
+      "cost": 366.53622
+    },
+    {
+      "from": 114,
+      "to": 122,
+      "edge_type": "JumpDown",
+      "cost": 206.3938
+    },
+    {
+      "from": 119,
+      "to": 105,
+      "edge_type": "JumpDown",
+      "cost": 214.5671
+    },
+    {
+      "from": 121,
+      "to": 107,
+      "edge_type": "JumpDown",
+      "cost": 236.02034
+    },
+    {
+      "from": 122,
+      "to": 104,
+      "edge_type": "JumpDown",
+      "cost": 304.25253
+    },
+    {
+      "from": 123,
+      "to": 104,
+      "edge_type": "JumpDown",
+      "cost": 337.9297
+    },
+    {
+      "from": 124,
+      "to": 111,
+      "edge_type": "JumpDown",
+      "cost": 275.72043
+    },
+    {
+      "from": 125,
+      "to": 114,
+      "edge_type": "JumpDown",
+      "cost": 275.72043
+    },
+    {
+      "from": 0,
+      "to": 6,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 1,
+      "to": 10,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 2,
+      "to": 7,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 4,
+      "to": 13,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 6,
+      "to": 0,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 6,
+      "to": 16,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 7,
+      "to": 2,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 7,
+      "to": 17,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 10,
+      "to": 1,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 10,
+      "to": 19,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 11,
+      "to": 2,
+      "edge_type": "JumpGap",
+      "cost": 151.78934
+    },
+    {
+      "from": 11,
+      "to": 20,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 12,
+      "to": 141,
+      "edge_type": "JumpGap",
+      "cost": 110.911354
+    },
+    {
+      "from": 13,
+      "to": 4,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 13,
+      "to": 22,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 14,
+      "to": 2,
+      "edge_type": "JumpGap",
+      "cost": 197.90906
+    },
+    {
+      "from": 14,
+      "to": 23,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 15,
+      "to": 24,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 16,
+      "to": 6,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 16,
+      "to": 25,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 17,
+      "to": 7,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 17,
+      "to": 26,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 18,
+      "to": 27,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 19,
+      "to": 10,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 19,
+      "to": 28,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 20,
+      "to": 11,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 20,
+      "to": 29,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 21,
+      "to": 31,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 22,
+      "to": 13,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 22,
+      "to": 32,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 23,
+      "to": 14,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 23,
+      "to": 33,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 24,
+      "to": 15,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 24,
+      "to": 35,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 25,
+      "to": 16,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 25,
+      "to": 36,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 26,
+      "to": 17,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 26,
+      "to": 37,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 27,
+      "to": 18,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 27,
+      "to": 39,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 28,
+      "to": 19,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 28,
+      "to": 40,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 29,
+      "to": 20,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 29,
+      "to": 41,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 30,
+      "to": 42,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 31,
+      "to": 21,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 31,
+      "to": 43,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 32,
+      "to": 22,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 32,
+      "to": 44,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 33,
+      "to": 23,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 33,
+      "to": 140,
+      "edge_type": "JumpGap",
+      "cost": 268.40787
+    },
+    {
+      "from": 34,
+      "to": 45,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 35,
+      "to": 24,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 35,
+      "to": 46,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 36,
+      "to": 25,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 36,
+      "to": 47,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 37,
+      "to": 26,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 37,
+      "to": 140,
+      "edge_type": "JumpGap",
+      "cost": 220.91934
+    },
+    {
+      "from": 38,
+      "to": 48,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 39,
+      "to": 27,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 39,
+      "to": 49,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 40,
+      "to": 28,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 40,
+      "to": 50,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 41,
+      "to": 29,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 42,
+      "to": 30,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 42,
+      "to": 51,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 43,
+      "to": 31,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 43,
+      "to": 52,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 44,
+      "to": 32,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 44,
+      "to": 53,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 45,
+      "to": 34,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 45,
+      "to": 54,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 46,
+      "to": 35,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 46,
+      "to": 55,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 47,
+      "to": 36,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 47,
+      "to": 56,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 48,
+      "to": 38,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 49,
+      "to": 39,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 49,
+      "to": 57,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 50,
+      "to": 40,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 50,
+      "to": 58,
+      "edge_type": "JumpGap",
+      "cost": 151.78934
+    },
+    {
+      "from": 51,
+      "to": 42,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 52,
+      "to": 43,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 52,
+      "to": 59,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 53,
+      "to": 44,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 53,
+      "to": 58,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 54,
+      "to": 45,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 55,
+      "to": 46,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 55,
+      "to": 60,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 56,
+      "to": 47,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 56,
+      "to": 58,
+      "edge_type": "JumpGap",
+      "cost": 53.665634
+    },
+    {
+      "from": 57,
+      "to": 49,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 57,
+      "to": 62,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 58,
+      "to": 56,
+      "edge_type": "JumpGap",
+      "cost": 53.665634
+    },
+    {
+      "from": 58,
+      "to": 135,
+      "edge_type": "JumpGap",
+      "cost": 261.86694
+    },
+    {
+      "from": 59,
+      "to": 52,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 59,
+      "to": 63,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 60,
+      "to": 55,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 60,
+      "to": 66,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 62,
+      "to": 57,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 62,
+      "to": 69,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 63,
+      "to": 59,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 63,
+      "to": 72,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 64,
+      "to": 73,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 65,
+      "to": 74,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 66,
+      "to": 60,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 66,
+      "to": 75,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 68,
+      "to": 74,
+      "edge_type": "JumpGap",
+      "cost": 98.95453
+    },
+    {
+      "from": 69,
+      "to": 62,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 69,
+      "to": 78,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 70,
+      "to": 76,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 71,
+      "to": 74,
+      "edge_type": "JumpGap",
+      "cost": 53.665634
+    },
+    {
+      "from": 72,
+      "to": 63,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 72,
+      "to": 80,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 73,
+      "to": 64,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 74,
+      "to": 71,
+      "edge_type": "JumpGap",
+      "cost": 53.665634
+    },
+    {
+      "from": 74,
+      "to": 77,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 75,
+      "to": 66,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 75,
+      "to": 83,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 76,
+      "to": 70,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 76,
+      "to": 79,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 77,
+      "to": 74,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 78,
+      "to": 69,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 78,
+      "to": 86,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 79,
+      "to": 76,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 80,
+      "to": 72,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 80,
+      "to": 89,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 81,
+      "to": 85,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 83,
+      "to": 75,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 83,
+      "to": 91,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 85,
+      "to": 81,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 86,
+      "to": 78,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 86,
+      "to": 93,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 88,
+      "to": 90,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 89,
+      "to": 80,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 89,
+      "to": 95,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 90,
+      "to": 88,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 91,
+      "to": 83,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 91,
+      "to": 96,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 92,
+      "to": 94,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 93,
+      "to": 86,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 93,
+      "to": 98,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 94,
+      "to": 92,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 94,
+      "to": 97,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 95,
+      "to": 89,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 95,
+      "to": 100,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 96,
+      "to": 91,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 96,
+      "to": 101,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 97,
+      "to": 94,
+      "edge_type": "JumpGap",
+      "cost": 107.33127
+    },
+    {
+      "from": 97,
+      "to": 104,
+      "edge_type": "JumpGap",
+      "cost": 192.0
+    },
+    {
+      "from": 98,
+      "to": 93,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 98,
+      "to": 102,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 99,
+      "to": 94,
+      "edge_type": "JumpGap",
+      "cost": 151.78934
+    },
+    {
+      "from": 99,
+      "to": 104,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 100,
+      "to": 95,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 100,
+      "to": 105,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 101,
+      "to": 96,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 101,
+      "to": 108,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 102,
+      "to": 98,
+      "edge_type": "JumpGap",
+      "cost": 145.9863
+    },
+    {
+      "from": 102,
+      "to": 110,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 103,
+      "to": 133,
+      "edge_type": "JumpGap",
+      "cost": 296.14716
+    },
+    {
+      "from": 103,
+      "to": 111,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 104,
+      "to": 99,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 104,
+      "to": 107,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 105,
+      "to": 100,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 105,
+      "to": 113,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 106,
+      "to": 132,
+      "edge_type": "JumpGap",
+      "cost": 106.50177
+    },
+    {
+      "from": 107,
+      "to": 104,
+      "edge_type": "JumpGap",
+      "cost": 48.0
+    },
+    {
+      "from": 107,
+      "to": 112,
+      "edge_type": "JumpGap",
+      "cost": 98.95453
+    },
+    {
+      "from": 108,
+      "to": 101,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 108,
+      "to": 115,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 110,
+      "to": 102,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 110,
+      "to": 116,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 111,
+      "to": 103,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 112,
+      "to": 107,
+      "edge_type": "JumpGap",
+      "cost": 98.95453
+    },
+    {
+      "from": 112,
+      "to": 120,
+      "edge_type": "JumpGap",
+      "cost": 291.9726
+    },
+    {
+      "from": 113,
+      "to": 105,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 113,
+      "to": 117,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 114,
+      "to": 106,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 115,
+      "to": 108,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 115,
+      "to": 118,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 116,
+      "to": 110,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 117,
+      "to": 113,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 118,
+      "to": 115,
+      "edge_type": "JumpGap",
+      "cost": 144.0
+    },
+    {
+      "from": 120,
+      "to": 112,
+      "edge_type": "JumpGap",
+      "cost": 291.9726
+    },
+    {
+      "from": 122,
+      "to": 123,
+      "edge_type": "JumpGap",
+      "cost": 67.88225
+    },
+    {
+      "from": 123,
+      "to": 122,
+      "edge_type": "JumpGap",
+      "cost": 67.88225
+    },
+    {
+      "from": 58,
+      "to": 65,
+      "edge_type": "AirControl",
+      "cost": 486.9155
+    },
+    {
+      "from": 61,
+      "to": 68,
+      "edge_type": "AirControl",
+      "cost": 575.29956
+    },
+    {
+      "from": 81,
+      "to": 75,
+      "edge_type": "AirControl",
+      "cost": 414.43704
+    },
+    {
+      "from": 88,
+      "to": 80,
+      "edge_type": "AirControl",
+      "cost": 336.03427
+    },
+    {
+      "from": 140,
+      "to": 126,
+      "edge_type": "Walk",
+      "cost": 34.223682
+    },
+    {
+      "from": 126,
+      "to": 41,
+      "edge_type": "JumpPad",
+      "cost": 68.010635
+    },
+    {
+      "from": 126,
+      "to": 140,
+      "edge_type": "JumpPad",
+      "cost": 17.111841
+    },
+    {
+      "from": 136,
+      "to": 127,
+      "edge_type": "Walk",
+      "cost": 109.76623
+    },
+    {
+      "from": 127,
+      "to": 56,
+      "edge_type": "JumpPad",
+      "cost": 201.7243
+    },
+    {
+      "from": 127,
+      "to": 61,
+      "edge_type": "JumpPad",
+      "cost": 177.69006
+    },
+    {
+      "from": 127,
+      "to": 130,
+      "edge_type": "JumpPad",
+      "cost": 91.653244
+    },
+    {
+      "from": 127,
+      "to": 131,
+      "edge_type": "JumpPad",
+      "cost": 91.653244
+    },
+    {
+      "from": 127,
+      "to": 135,
+      "edge_type": "JumpPad",
+      "cost": 111.524574
+    },
+    {
+      "from": 127,
+      "to": 138,
+      "edge_type": "JumpPad",
+      "cost": 213.33536
+    },
+    {
+      "from": 119,
+      "to": 128,
+      "edge_type": "Walk",
+      "cost": 56.76051
+    },
+    {
+      "from": 120,
+      "to": 128,
+      "edge_type": "Walk",
+      "cost": 91.32945
+    },
+    {
+      "from": 128,
+      "to": 112,
+      "edge_type": "JumpPad",
+      "cost": 69.27336
+    },
+    {
+      "from": 128,
+      "to": 120,
+      "edge_type": "JumpPad",
+      "cost": 45.664726
+    },
+    {
+      "from": 128,
+      "to": 121,
+      "edge_type": "JumpPad",
+      "cost": 84.12547
+    },
+    {
+      "from": 128,
+      "to": 122,
+      "edge_type": "JumpPad",
+      "cost": 125.62215
+    },
+    {
+      "from": 128,
+      "to": 123,
+      "edge_type": "JumpPad",
+      "cost": 147.92719
+    },
+    {
+      "from": 51,
+      "to": 129,
+      "edge_type": "Walk",
+      "cost": 110.71057
+    },
+    {
+      "from": 54,
+      "to": 129,
+      "edge_type": "Walk",
+      "cost": 81.23781
+    },
+    {
+      "from": 142,
+      "to": 129,
+      "edge_type": "Walk",
+      "cost": 129.73036
+    },
+    {
+      "from": 129,
+      "to": 51,
+      "edge_type": "JumpPad",
+      "cost": 55.355286
+    },
+    {
+      "from": 129,
+      "to": 54,
+      "edge_type": "JumpPad",
+      "cost": 40.618904
+    },
+    {
+      "from": 129,
+      "to": 74,
+      "edge_type": "JumpPad",
+      "cost": 163.12712
+    },
+    {
+      "from": 129,
+      "to": 77,
+      "edge_type": "JumpPad",
+      "cost": 174.11533
+    },
+    {
+      "from": 129,
+      "to": 81,
+      "edge_type": "JumpPad",
+      "cost": 184.29025
+    },
+    {
+      "from": 129,
+      "to": 85,
+      "edge_type": "JumpPad",
+      "cost": 198.00146
+    },
+    {
+      "from": 129,
+      "to": 126,
+      "edge_type": "JumpPad",
+      "cost": 125.15558
+    }
+  ]
+}

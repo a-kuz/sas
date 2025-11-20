@@ -1,0 +1,125 @@
+[
+  {
+    "name": "border11light",
+    "base_texture": "q3-resources/textures/base_trim/border11light.png",
+    "stages": [
+      {
+        "texture_path": "q3-resources/textures/base_trim/border11light.glow.png",
+        "blend_mode": "Add",
+        "alpha": 1.0,
+        "scroll_x": 0.0,
+        "scroll_y": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotate_speed": 0.0,
+        "glow": true,
+        "glow_intensity": 1.0,
+        "wave_func": "Sin",
+        "wave_base": 0.9,
+        "wave_amplitude": 0.1,
+        "wave_frequency": 10.0
+      }
+    ],
+    "surface_light": 500.0
+  },
+  {
+    "name": "dooreye_purple",
+    "base_texture": "q3-resources/textures/base_wall/dooreye.png",
+    "stages": [
+      {
+        "texture_path": "q3-resources/textures/base_wall/dooreyelight.png",
+        "blend_mode": "Add",
+        "alpha": 1.0,
+        "scroll_x": 0.0,
+        "scroll_y": 0.0,
+        "scale_x": 1.0,
+        "scale_y": 1.0,
+        "rotate_speed": 0.0,
+        "glow": true,
+        "glow_intensity": 1.0,
+        "wave_func": "Triangle",
+        "wave_base": 0.5,
+        "wave_amplitude": 0.5,
+        "wave_frequency": 0.5
+      }
+    ],
+    "surface_light": 300.0
+  },
+  {
+    "name": "metal_glow",
+    "base_texture": "q3-resources/textures/base_wall/bluemetal2.png",
+    "stages": [
+      {
+        "texture_path": "q3-resources/textures/sfx/proto_zzztpink.png",
+        "blend_mode": "Add",
+        "alpha": 0.3,
+        "scroll_x": 0.5,
+        "scroll_y": 0.2,
+        "scale_x": 2.0,
+        "scale_y": 2.0,
+        "rotate_speed": 0.0,
+        "glow": true,
+        "glow_intensity": 0.6
+      }
+    ],
+    "surface_light": 200.0
+  },
+  {
+    "name": "tech_panel",
+    "base_texture": "q3-resources/textures/base_wall/atechengine_a.png",
+    "stages": [
+      {
+        "texture_path": "q3-resources/textures/sfx/proto_zzzt.png",
+        "blend_mode": "Add",
+        "alpha": 0.4,
+        "scroll_x": 1.0,
+        "scroll_y": 0.5,
+        "scale_x": 1.5,
+        "scale_y": 1.5,
+        "rotate_speed": 30.0,
+        "glow": true,
+        "glow_intensity": 0.8
+      }
+    ],
+    "surface_light": 300.0
+  },
+  {
+    "name": "concrete_detail",
+    "base_texture": "q3-resources/textures/base_wall/concrete_dark.png",
+    "stages": [
+      {
+        "texture_path": "q3-resources/textures/base_wall/concrete_dark.png",
+        "blend_mode": "Filter",
+        "alpha": 0.7,
+        "scroll_x": 0.0,
+        "scroll_y": 0.0,
+        "scale_x": 4.0,
+        "scale_y": 4.0,
+        "rotate_speed": 0.0,
+        "glow": false,
+        "glow_intensity": 0.0
+      }
+    ],
+    "surface_light": 0.0
+  },
+  {
+    "name": "metal_trim",
+    "base_texture": "q3-resources/textures/base_trim/dark_tin2.png",
+    "stages": [
+      {
+        "texture_path": "q3-resources/textures/effects/envmapgold2.png",
+        "blend_mode": "Blend",
+        "alpha": 0.3,
+        "scroll_x": 0.1,
+        "scroll_y": 0.1,
+        "scale_x": 0.5,
+        "scale_y": 0.5,
+        "rotate_speed": 10.0,
+        "glow": false,
+        "glow_intensity": 0.0
+      }
+    ],
+    "surface_light": 0.0
+  }
+]
+
