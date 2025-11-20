@@ -1,0 +1,14 @@
+/Users/alexsandrkuznetsov/ws/sas/target/release/deps/serde-9d36e5bab9e6d653.d: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/alexsandrkuznetsov/ws/sas/target/release/build/serde-46cf366028ac7c8e/out/private.rs
+
+/Users/alexsandrkuznetsov/ws/sas/target/release/deps/libserde-9d36e5bab9e6d653.rlib: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/alexsandrkuznetsov/ws/sas/target/release/build/serde-46cf366028ac7c8e/out/private.rs
+
+/Users/alexsandrkuznetsov/ws/sas/target/release/deps/libserde-9d36e5bab9e6d653.rmeta: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/alexsandrkuznetsov/ws/sas/target/release/build/serde-46cf366028ac7c8e/out/private.rs
+
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/alexsandrkuznetsov/ws/sas/target/release/build/serde-46cf366028ac7c8e/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/alexsandrkuznetsov/ws/sas/target/release/build/serde-46cf366028ac7c8e/out

@@ -1,0 +1,10 @@
+/Users/alexsandrkuznetsov/ws/sas/target/release/deps/dasp_sample-e0aaddc679560a91.d: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/conv.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/ops.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/types.rs
+
+/Users/alexsandrkuznetsov/ws/sas/target/release/deps/libdasp_sample-e0aaddc679560a91.rlib: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/conv.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/ops.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/types.rs
+
+/Users/alexsandrkuznetsov/ws/sas/target/release/deps/libdasp_sample-e0aaddc679560a91.rmeta: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/conv.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/ops.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/types.rs
+
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/lib.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/conv.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/ops.rs:
+/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/dasp_sample-0.11.0/src/types.rs:
