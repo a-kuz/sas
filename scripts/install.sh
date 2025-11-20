@@ -100,9 +100,16 @@ if [ ! -f ".installed" ]; then
 
     echo "→ Downloading CPMA Mod..."
     curl -L --progress-bar $cpma > "$TEMP_DIR/cpma.zip"
-    unzip -q -o "$TEMP_DIR/cpma.zip" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/cpma.zip"
-    echo "✓ CPMA Mod installed"
+    unzip -q -o "$TEMP_DIR/cpma.zip" -d "$TEMP_DIR/cpma_temp"
+    
+    if [ -d "$TEMP_DIR/cpma_temp/cpma" ]; then
+        cp -r "$TEMP_DIR/cpma_temp/cpma/"* "$Q3_RESOURCES/"
+    else
+        cp -r "$TEMP_DIR/cpma_temp/"* "$Q3_RESOURCES/"
+    fi
+    
+    rm -rf "$TEMP_DIR/cpma.zip" "$TEMP_DIR/cpma_temp"
+    echo "✓ CPMA Mod installed (merged into q3-resources)"
     
     rm -rf "$TEMP_DIR"
     touch ".installed"
