@@ -285,14 +285,20 @@ cd "$INSTALL_DIR"
 
 if [ -f "sas-source/$GAME_BINARY" ]; then
     cp "sas-source/$GAME_BINARY" .
+    cp -r sas-source/assets .
+    cp -r sas-source/maps .
     chmod +x "$GAME_BINARY"
 elif [ -f "sas-source/target/release/$GAME_BINARY" ]; then
     cp "sas-source/target/release/$GAME_BINARY" .
+    cp -r sas-source/assets .
+    cp -r sas-source/maps .
     chmod +x "$GAME_BINARY"
 elif [ ! -f "$GAME_BINARY" ]; then
     echo "✗ Game binary not found"
     exit 1
 fi
+
+echo "✓ Game files copied"
 
 APP_DIR="$HOME/Applications/SAS.app"
 mkdir -p "$APP_DIR/Contents/MacOS"
