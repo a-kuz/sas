@@ -121,30 +121,31 @@ echo ""
 cd "$Q3_RESOURCES"
 
 if [ ! -f ".converted" ]; then
-    if command -v sips &> /dev/null || command -v convert &> /dev/null; then
-        echo "→ Converting textures in background..."
+    if command -v sips &> /dev/null; then
+        echo "→ Converting critical textures..."
+        
+        sips -s format png gfx/2d/bigchars.tga --out gfx/2d/bigchars.png > /dev/null 2>&1
+        sips -s format png menu/art/font1_prop.tga --out menu/art/font1_prop.png > /dev/null 2>&1
+        sips -s format png menu/art/font2_prop.tga --out menu/art/font2_prop.png > /dev/null 2>&1
+        
+        echo "✓ Critical textures converted"
+        echo "→ Converting remaining textures in background..."
+        
         (
-            count=0
             for ext in tga jpg jpeg; do
                 while IFS= read -r -d '' file; do
                     png_file="${file%.*}.png"
                     if [ ! -f "$png_file" ]; then
-                        if command -v sips &> /dev/null; then
-                            sips -s format png "$file" --out "$png_file" > /dev/null 2>&1
-                        elif command -v convert &> /dev/null; then
-                            convert "$file" "$png_file" 2>/dev/null
-                        fi
-                        if [ $? -eq 0 ]; then
-                            ((count++))
-                        fi
+                        sips -s format png "$file" --out "$png_file" > /dev/null 2>&1
                     fi
                 done < <(find "$Q3_RESOURCES" -name "*.$ext" -type f -print0 2>/dev/null)
             done
             touch ".converted"
         ) &
-        echo "✓ Texture conversion started in background"
+        
+        echo "✓ Background conversion started"
     else
-        echo "⚠ Neither 'sips' nor 'convert' found, skipping"
+        echo "⚠ sips not found, skipping texture conversion"
     fi
 else
     echo "✓ Textures already converted"
