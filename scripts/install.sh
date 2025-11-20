@@ -304,9 +304,16 @@ APP_DIR="$HOME/Applications/SAS.app"
 mkdir -p "$APP_DIR/Contents/MacOS"
 mkdir -p "$APP_DIR/Contents/Resources"
 
+if [ ! -L "$INSTALL_DIR/q3-resources" ]; then
+    ln -sf "$HOME/Library/Application Support/SAS/q3-resources" "$INSTALL_DIR/q3-resources" 2>/dev/null || true
+fi
+
 cat > "$APP_DIR/Contents/MacOS/sas-launcher" << 'EOF'
 #!/bin/bash
 cd "$HOME/Library/Application Support/SAS"
+if [ ! -e "q3-resources" ]; then
+    ln -sf "$HOME/Library/Application Support/SAS/q3-resources" "q3-resources"
+fi
 ./sas
 EOF
 
