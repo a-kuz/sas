@@ -3,55 +3,56 @@
 
 ![SAS III Logo](assets/logo.png)
 
-Да, это еще один arena shooter. Нет, я не знаю зачем. Да, он написан на Rust. Нет, это не сделало его быстрее.
+Yes, it's another arena shooter. No, I don't know why. Yes, it's written in Rust. No, it didn't make it faster.
 
-### Что это?
+[Русская версия](README.ru.md)
 
-Quake 3-inspired шутер, который пережил уже три итерации и до сих пор не понимает, зачем он существует. Есть боты, есть физика гибов, есть рельсотрон. Чего еще нужно для счастья в 2025?
+### What is this?
 
-### Скриншоты
+A Quake 3-inspired shooter that has survived three iterations and still doesn't understand why it exists. It has bots, gibs physics, and a railgun. What else do you need for happiness in 2025?
+
+### Screenshots
 
 ![Gibs Physics](assets/screenshoots/gibs-physics.jpeg)
-*Физика гибов работает. Это главное.*
+*Gibs physics works. That's what matters.*
 
 ![Rail Gun](assets/screenshoots/rail.jpeg)
-*Рельса есть. Значит, это настоящий арена шутер.*
+*There's a railgun. That means it's a real arena shooter.*
 
 ![Plasma](assets/screenshoots/plasma-light.jpeg)
-*Плазма светится. Красиво же.*
+*Plasma glows. Pretty, right?*
 
-### Запуск
+### Running
 
 ```bash
 cargo run --release
 ```
 
-Или используй один из 47 билд-скриптов в корне проекта. Они все работают. Наверное.
+Or use one of the 47 build scripts in the project root. They all work. Probably.
 
-### Фичи
+### Features
 
-- ✅ Боты с навигационными графами
-- ✅ Сетевая игра (работает в 30% случаев)
-- ✅ Карты в JSON (потому что XML это прошлый век)
-- ✅ Dedicated server (для тех, кто хочет страдать в одиночку)
-- ✅ WASM билд (запускается в браузере, тормозит везде)
-- ✅ iOS поддержка (зачем? не спрашивай)
-- ✅ Map editor (потому что блокнот это слишком мейнстрим)
+- ✅ Bots with navigation graphs
+- ✅ Network play (works 30% of the time)
+- ✅ JSON maps (because XML is so last century)
+- ✅ Dedicated server (for those who want to suffer alone)
+- ✅ WASM build (runs in browser, lags everywhere)
+- ✅ iOS support (why? don't ask)
+- ✅ Map editor (because notepad is too mainstream)
 
-### Системные требования
+### System Requirements
 
-- Rust (последний, какой найдешь)
-- Терпение
-- Ностальгия по 1999-му году
-- Готовность к тому, что ничего не работает с первого раза
+- Rust (latest you can find)
+- Patience
+- Nostalgia for 1999
+- Readiness for nothing to work on the first try
 
-### Лицензия
+### License
 
-Делай что хочешь, я не твоя мама.
+Do whatever you want, I'm not your mom.
 
 ---
 
-*v0.62.0 - версия, в которой мы наконец-то исправили тот баг... или нет*
+*v0.0.1 - the version where we finally fixed that bug... or didn't*
 
 **by Aleksandr Kuznetsov & 3d[Power]**
-
