@@ -128,7 +128,11 @@ if [ ! -f ".converted" ]; then
         sips -s format png menu/art/font1_prop.tga --out menu/art/font1_prop.png > /dev/null 2>&1
         sips -s format png menu/art/font2_prop.tga --out menu/art/font2_prop.png > /dev/null 2>&1
         
-        echo "✓ Critical textures converted"
+        for icon in icons/*.tga; do
+            [ -f "$icon" ] && sips -s format png "$icon" --out "${icon%.tga}.png" > /dev/null 2>&1
+        done
+        
+        echo "✓ Critical textures and icons converted"
         echo "→ Converting remaining textures in background..."
         
         (
