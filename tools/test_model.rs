@@ -108,7 +108,7 @@ fn main() {
         if success {
             println!("\n✓✓✓ Model '{}' is ready to use!", model_name);
             println!("\nTo use this model:");
-            println!("  export NFK_PLAYER_MODEL={}", model_name);
+            println!("  export SAS_PLAYER_MODEL={}", model_name);
             println!("  cargo run");
         } else {
             println!("\n✗✗✗ Model '{}' has issues!", model_name);

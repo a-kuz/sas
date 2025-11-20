@@ -1134,7 +1134,7 @@ fn main() {
     }
 
     println!("=================================");
-    println!("  NFK Dedicated Server");
+    println!("  SAS Dedicated Server");
     println!("=================================");
     println!("Port: {}", config.server_port);
     println!("Max players: {}", config.max_players);

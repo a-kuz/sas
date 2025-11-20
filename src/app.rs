@@ -70,7 +70,7 @@ impl App {
             
             if is_key_pressed(KeyCode::F5) {
                 crate::cvar::save_config();
-                self.console.print("Config saved to nfk_config.cfg\n");
+                self.console.print("Config saved to sas_config.cfg\n");
             }
 
             if self.console.is_open() {

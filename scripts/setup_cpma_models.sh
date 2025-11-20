@@ -240,7 +240,7 @@ echo "════════════════════════�
 echo "Setup complete!"
 echo ""
 echo "To use a model:"
-echo "  export NFK_PLAYER_MODEL=pm"
+echo "  export SAS_PLAYER_MODEL=pm"
 echo "  cargo run"
 echo "═══════════════════════════════════════════════════════════"
 

@@ -1,6 +1,6 @@
 [package]
 name = "sas3"
-version = "0.62.0"
+version = "0.0.1"
 edition = "2021"
 authors = ["Aleksandr Kuznetsov", "3d[Power]"]
 
@@ -30,10 +30,6 @@ name = "test_model"
 path = "tools/test_model.rs"
 
 [[bin]]
-name = "bench_triangle"
-path = "bench_triangle.rs"
-
-[[bin]]
 name = "dedicated_server"
 path = "src/dedicated_server.rs"
 
@@ -60,5 +56,5 @@ opt-level = 1
 [package.metadata.ios]
 name = "SAS III"
 bundle_identifier = "com.kuznetsov.sas3"
-version = "0.62.0"
+version = "0.0.1"
 minimum_os_version = "13.0"

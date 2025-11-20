@@ -68,7 +68,7 @@ impl GameLoop {
     }
 
     async fn setup_players(&mut self) {
-        let env_skin = std::env::var("NFK_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
+        let env_skin = std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
 
         if self.game_state.is_local_multiplayer {
             self.setup_local_multiplayer_players().await;
@@ -717,7 +717,7 @@ impl GameLoop {
             }
             
             if let Some(model) = self.game_state.model_cache.get_mut(&new_model) {
-                let env_skin = std::env::var("NFK_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
+                let env_skin = std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
                 model.load_textures(&new_model, &env_skin).await;
             }
             self.audio.load_player_sounds(&new_model).await;
@@ -871,7 +871,7 @@ impl GameLoop {
         }
         
         if let Some(player_model) = self.game_state.model_cache.get_mut(model) {
-            let env_skin = std::env::var("NFK_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
+            let env_skin = std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
             player_model.load_textures(model, &env_skin).await;
         }
         

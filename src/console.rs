@@ -415,7 +415,7 @@ impl Console {
             }
         } else if cmd == "writeconfig" {
             cvar::save_config();
-            self.print("Config saved to nfk_config.cfg\n");
+            self.print("Config saved to sas_config.cfg\n");
         } else if cmd == "bot_add" || cmd == "addbot" {
             if self.is_connected_to_server {
                 self.server_bot_add_request = true;

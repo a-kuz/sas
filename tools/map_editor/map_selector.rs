@@ -184,7 +184,7 @@ impl MapSelector {
         let cards_per_row = ((screen_width() - padding * 2.0) / (card_width + padding)).floor() as usize;
         let cards_per_row = cards_per_row.max(1);
         
-        draw_text("NFK Map Editor", padding, 50.0, 40.0, WHITE);
+        draw_text("SAS Map Editor", padding, 50.0, 40.0, WHITE);
         
         let scroll = mouse_wheel().1;
         if scroll != 0.0 {

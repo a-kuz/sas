@@ -65,7 +65,7 @@ mod profiler {
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "NFK Map Editor".to_string(),
+        window_title: "SAS Map Editor".to_string(),
         window_width: 1600,
         window_height: 900,
         window_resizable: true,
@@ -80,7 +80,7 @@ async fn main() {
     
     if args.len() > 1 {
         let map_name = args[1].clone();
-    println!("NFK Map Editor");
+    println!("SAS Map Editor");
     println!("Loading map: {}", map_name);
     
     let mut editor = EditorState::new(&map_name);
@@ -96,7 +96,7 @@ async fn main() {
         next_frame().await;
     }
     } else {
-        println!("NFK Map Editor - Map Selector");
+        println!("SAS Map Editor - Map Selector");
         
         let mut selector = MapSelector::new().await;
         let mut previews_loaded = false;
