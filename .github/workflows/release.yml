@@ -10,12 +10,14 @@ on:
         description: 'Version to release (e.g., 0.0.1)'
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
     outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
       version: ${{ steps.get_version.outputs.version }}
     steps:
       - name: Checkout code
@@ -31,14 +33,13 @@ jobs:
           fi
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          release_name: SAS v${{ steps.get_version.outputs.version }}
-          body: |
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create v${{ steps.get_version.outputs.version }} \
+            --repo ${{ github.repository }} \
+            --title "SAS v${{ steps.get_version.outputs.version }}" \
+            --notes '
             Release ${{ steps.get_version.outputs.version }}
 
             ## Installation
@@ -85,8 +86,7 @@ jobs:
             ---
 
             **Built with Rust 🦀**
-          draft: false
-          prerelease: false
+            '
 
   build-macos:
     name: Build macOS
@@ -126,14 +126,13 @@ jobs:
           tar -czf "${PACKAGE_NAME}.tar.gz" "$PACKAGE_NAME"
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./sas-${{ needs.create-release.outputs.version }}-macos-${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64' || 'arm64' }}.tar.gz
-          asset_name: sas-${{ needs.create-release.outputs.version }}-macos-${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64' || 'arm64' }}.tar.gz
-          asset_content_type: application/gzip
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload v${{ needs.create-release.outputs.version }} \
+            sas-${{ needs.create-release.outputs.version }}-macos-${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64' || 'arm64' }}.tar.gz \
+            --repo ${{ github.repository }} \
+            --clobber
 
   build-macos-universal:
     name: Build macOS Universal
@@ -178,14 +177,13 @@ jobs:
           tar -czf "${PACKAGE_NAME}.tar.gz" "$PACKAGE_NAME"
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./sas-${{ needs.create-release.outputs.version }}-macos-universal.tar.gz
-          asset_name: sas-${{ needs.create-release.outputs.version }}-macos-universal.tar.gz
-          asset_content_type: application/gzip
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload v${{ needs.create-release.outputs.version }} \
+            sas-${{ needs.create-release.outputs.version }}-macos-universal.tar.gz \
+            --repo ${{ github.repository }} \
+            --clobber
 
   build-linux:
     name: Build Linux
@@ -223,14 +221,13 @@ jobs:
           tar -czf "${PACKAGE_NAME}.tar.gz" "$PACKAGE_NAME"
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./sas-${{ needs.create-release.outputs.version }}-linux-x86_64.tar.gz
-          asset_name: sas-${{ needs.create-release.outputs.version }}-linux-x86_64.tar.gz
-          asset_content_type: application/gzip
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload v${{ needs.create-release.outputs.version }} \
+            sas-${{ needs.create-release.outputs.version }}-linux-x86_64.tar.gz \
+            --repo ${{ github.repository }} \
+            --clobber
 
   build-windows:
     name: Build Windows
@@ -264,12 +261,11 @@ jobs:
           7z a -tzip "${PACKAGE_NAME}.zip" "$PACKAGE_NAME"
 
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./sas-${{ needs.create-release.outputs.version }}-windows-x86_64.zip
-          asset_name: sas-${{ needs.create-release.outputs.version }}-windows-x86_64.zip
-          asset_content_type: application/zip
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload v${{ needs.create-release.outputs.version }} \
+            sas-${{ needs.create-release.outputs.version }}-windows-x86_64.zip \
+            --repo ${{ github.repository }} \
+            --clobber
 
