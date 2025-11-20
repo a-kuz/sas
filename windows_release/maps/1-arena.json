@@ -1,0 +1,1644 @@
+{
+  "name": "1-arena",
+  "width": 52,
+  "height": 70,
+  "tile_width": 32.0,
+  "tile_height": 16.0,
+  "tile_data": [
+    {
+      "y": 0,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 1,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 2,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 3,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 4,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 5,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 6,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 7,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 8,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 9,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 10,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 11,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 12,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 13,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 14,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 15,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 16,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 17,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 18,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 19,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 20,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 21,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 22,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 23,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 24,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 25,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 26,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 27,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 28,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 29,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 30,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 31,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 32,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 33,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 34,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 35,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 36,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 37,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 20,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 38,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 14,
+          "x_end": 20,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 43,
+          "x_end": 50,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 39,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 43,
+          "x_end": 50,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 40,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 43,
+          "x_end": 50,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 41,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 42,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 43,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 44,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 45,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 46,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 5,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 47,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 7,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 14,
+          "x_end": 17,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 18,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 48,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 4,
+          "x_end": 7,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 49,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 50,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 51,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 52,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 37,
+          "x_end": 39,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 53,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 54,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 55,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 14,
+          "x_end": 18,
+          "solid": true,
+          "texture_id": 0
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 56,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 1,
+          "x_end": 7,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 57,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 1,
+          "x_end": 7,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 58,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 1,
+          "x_end": 3,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 26,
+          "x_end": 30,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 59,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 1,
+          "x_end": 2,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 26,
+          "x_end": 30,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 60,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 1,
+          "x_end": 1,
+          "solid": true,
+          "texture_id": 7
+        },
+        {
+          "x_start": 26,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 61,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 25,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 62,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 24,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 43,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 63,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 23,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 42,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 64,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 22,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 41,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 65,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 21,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 40,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 66,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 20,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 39,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 67,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 19,
+          "x_end": 26,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 38,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 68,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 0,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 18,
+          "x_end": 28,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 29,
+          "x_end": 44,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 51,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    },
+    {
+      "y": 69,
+      "tiles": [
+        {
+          "x_start": 0,
+          "x_end": 14,
+          "solid": true,
+          "texture_id": 9
+        },
+        {
+          "x_start": 15,
+          "x_end": 28,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 29,
+          "x_end": 51,
+          "solid": true,
+          "texture_id": 9
+        }
+      ]
+    }
+  ],
+  "spawn_points": [
+    {
+      "tile_x": 4.940796,
+      "tile_y": 66.53125,
+      "team": 0
+    },
+    {
+      "tile_x": 27.647827,
+      "tile_y": 63.328125,
+      "team": 0
+    }
+  ],
+  "items": [
+    {
+      "tile_x": 45.65747,
+      "tile_y": 67.46753,
+      "item_type": "Railgun"
+    },
+    {
+      "tile_x": 47.484253,
+      "tile_y": 67.42578,
+      "item_type": "Armor100"
+    },
+    {
+      "tile_x": 5.704712,
+      "tile_y": 54.932373,
+      "item_type": "GrenadeLauncher"
+    },
+    {
+      "tile_x": 7.03125,
+      "tile_y": 45.710938,
+      "item_type": "Armor100"
+    },
+    {
+      "tile_x": 10.956421,
+      "tile_y": 35.75,
+      "item_type": "Plasmagun"
+    },
+    {
+      "tile_x": 6.6361084,
+      "tile_y": 35.75,
+      "item_type": "Health100"
+    },
+    {
+      "tile_x": 20.171265,
+      "tile_y": 35.75,
+      "item_type": "Armor50"
+    },
+    {
+      "tile_x": 8.331421,
+      "tile_y": 67.75,
+      "item_type": "Shotgun"
+    },
+    {
+      "tile_x": 11.776733,
+      "tile_y": 67.75,
+      "item_type": "GrenadeLauncher"
+    },
+    {
+      "tile_x": 14.839233,
+      "tile_y": 45.75,
+      "item_type": "GrenadeLauncher"
+    },
+    {
+      "tile_x": 28.18689,
+      "tile_y": 66.75,
+      "item_type": "RocketLauncher"
+    },
+    {
+      "tile_x": 37.51111,
+      "tile_y": 66.75,
+      "item_type": "Health50"
+    },
+    {
+      "tile_x": 17.975952,
+      "tile_y": 45.75,
+      "item_type": "RocketLauncher"
+    }
+  ],
+  "jumppads": [
+    {
+      "tile_x": 43.07556,
+      "tile_y": 61.507812,
+      "width_tiles": 2.0,
+      "force_x": 0.0,
+      "force_y": -10.0
+    },
+    {
+      "tile_x": 37.07666,
+      "tile_y": 51.264893,
+      "width_tiles": 2.0,
+      "force_x": 0.0,
+      "force_y": -10.0
+    },
+    {
+      "tile_x": 1.2871094,
+      "tile_y": 55.073242,
+      "width_tiles": 2.0,
+      "force_x": 0.0,
+      "force_y": -10.0
+    },
+    {
+      "tile_x": 17.589233,
+      "tile_y": 36.375,
+      "width_tiles": 2.0,
+      "force_x": 0.0,
+      "force_y": -5.0
+    }
+  ],
+  "teleporters": [
+    {
+      "tile_x": 48.81482,
+      "tile_y": 64.79907,
+      "width_tiles": 1.5,
+      "height_tiles": 5.0,
+      "dest_tile_x": 4.375366,
+      "dest_tile_y": 54.371338
+    },
+    {
+      "tile_x": 1.0,
+      "tile_y": 64.25,
+      "width_tiles": 1.5,
+      "height_tiles": 4.75,
+      "dest_tile_x": 18.302246,
+      "dest_tile_y": 46.399414
+    }
+  ],
+  "lights": [
+    {
+      "x": 1056.8164,
+      "y": 362.72656,
+      "radius": 1520.0,
+      "r": 255,
+      "g": 230,
+      "b": 200,
+      "intensity": 8.199997,
+      "flicker": false
+    }
+  ]
+}

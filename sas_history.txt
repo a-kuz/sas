@@ -1,0 +1,2 @@
+addbot 
+addbot xaero
