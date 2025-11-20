@@ -56,60 +56,31 @@ if [ ! -f ".installed" ]; then
         else
             curl -L --progress-bar "${pak/@/$i}" > "$TEMP_DIR/pak$i.pk3"
         fi
-        echo "→ Extracting pak$i.pk3..."
-        unzip -q -o "$TEMP_DIR/pak$i.pk3" -d "$Q3_RESOURCES"
-        rm -f "$TEMP_DIR/pak$i.pk3"
-        echo "✓ pak$i.pk3 processed"
     done
 
-    echo "→ Downloading High Resolution Pack..."
+    echo "→ Downloading additional packs..."
     curl -L --progress-bar $hi_res > "$TEMP_DIR/xcsv_hires.zip"
-    unzip -q -o "$TEMP_DIR/xcsv_hires.zip" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/xcsv_hires.zip"
-    echo "✓ High Resolution Pack installed"
-
-    echo "→ Downloading Extra Pack Resolutions..."
+    unzip -q "$TEMP_DIR/xcsv_hires.zip" -d "$TEMP_DIR"
     curl -L --progress-bar $xpr > "$TEMP_DIR/pak9hqq37test20181106.pk3"
-    unzip -q -o "$TEMP_DIR/pak9hqq37test20181106.pk3" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/pak9hqq37test20181106.pk3"
-    echo "✓ Extra Pack Resolutions installed"
-
-    echo "→ Downloading Quake3 Live Soundpack..."
     curl -L --progress-bar $q3_ls > "$TEMP_DIR/quake3-live-soundpack.pk3"
-    unzip -q -o "$TEMP_DIR/quake3-live-soundpack.pk3" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/quake3-live-soundpack.pk3"
-    echo "✓ Quake3 Live Soundpack installed"
-
-    echo "→ Downloading HD Weapons..."
     curl -L --progress-bar $hd_weapons > "$TEMP_DIR/pakxy01Tv5.pk3"
-    unzip -q -o "$TEMP_DIR/pakxy01Tv5.pk3" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/pakxy01Tv5.pk3"
-    echo "✓ HD Weapons installed"
-
-    echo "→ Downloading ZPack Weapons..."
     curl -L --progress-bar $zpack_weapons > "$TEMP_DIR/zpack-weapons.pk3"
-    unzip -q -o "$TEMP_DIR/zpack-weapons.pk3" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/zpack-weapons.pk3"
-    echo "✓ ZPack Weapons installed"
-
-    echo "→ Downloading CPMA Map-Pack..."
     curl -L --progress-bar $mappack > "$TEMP_DIR/cpma-mappack-full.zip"
-    unzip -q -o "$TEMP_DIR/cpma-mappack-full.zip" -d "$Q3_RESOURCES"
-    rm -f "$TEMP_DIR/cpma-mappack-full.zip"
-    echo "✓ CPMA Map-Pack installed"
-
-    echo "→ Downloading CPMA Mod..."
+    unzip -q "$TEMP_DIR/cpma-mappack-full.zip" -d "$TEMP_DIR"
     curl -L --progress-bar $cpma > "$TEMP_DIR/cpma.zip"
-    unzip -q -o "$TEMP_DIR/cpma.zip" -d "$TEMP_DIR/cpma_temp"
+    unzip -q "$TEMP_DIR/cpma.zip" -d "$TEMP_DIR"
     
-    if [ -d "$TEMP_DIR/cpma_temp/cpma" ]; then
-        cp -r "$TEMP_DIR/cpma_temp/cpma/"* "$Q3_RESOURCES/"
-    else
-        cp -r "$TEMP_DIR/cpma_temp/"* "$Q3_RESOURCES/"
+    echo "→ Extracting all pk3 files in alphabetical order..."
+    
+    for pk3 in $(ls "$TEMP_DIR"/*.pk3 2>/dev/null | sort); do
+        echo "  Extracting $(basename "$pk3")..."
+        unzip -q -o "$pk3" -d "$Q3_RESOURCES"
+    done
+    
+    if [ -d "$TEMP_DIR/cpma" ]; then
+        echo "  Merging CPMA files..."
+        cp -r "$TEMP_DIR/cpma/"* "$Q3_RESOURCES/" 2>/dev/null
     fi
-    
-    rm -rf "$TEMP_DIR/cpma.zip" "$TEMP_DIR/cpma_temp"
-    echo "✓ CPMA Mod installed (merged into q3-resources)"
     
     rm -rf "$TEMP_DIR"
     touch ".installed"
