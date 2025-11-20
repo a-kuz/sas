@@ -59,7 +59,7 @@ opt-level = 1
 [package.metadata.ios]
 name = "SAS III"
 bundle_identifier = "com.kuznetsov.sas3"
-version = "0.0.1"
+version = "0.0.3"
 minimum_os_version = "13.0"
 
 [package.metadata.bundle]
