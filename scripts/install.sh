@@ -2,12 +2,11 @@
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-Q3_RESOURCES="$PROJECT_ROOT/q3-resources"
-
 GITHUB_REPO="a-kuz/sas"
 GAME_BINARY="sas"
+
+INSTALL_DIR="$HOME/Library/Application Support/SAS"
+Q3_RESOURCES="$INSTALL_DIR/q3-resources"
 
 
 declare -r pak0="https://github.com/nrempel/q3-server/raw/master/baseq3/pak0.pk3"
@@ -24,14 +23,19 @@ echo "╔═══════════════════════�
 echo "║         SAS (Shoot and Strafe) Installer                  ║"
 echo "╚════════════════════════════════════════════════════════════╝"
 echo ""
+echo "Installation directory: $INSTALL_DIR"
+echo ""
 echo "This installer will:"
 echo "  • Download Quake 3 Arena resources (baseq3)"
 echo "  • Convert textures to PNG format"
 echo "  • Download and build SAS game"
+echo "  • Create app in Applications folder"
 echo "  • Launch the game"
 echo ""
 echo "⚠  Note: You must own a legal copy of Quake 3 Arena."
 echo ""
+
+mkdir -p "$INSTALL_DIR"
 
 if [ ! -d "$Q3_RESOURCES" ]; then
     mkdir -p "$Q3_RESOURCES"
@@ -138,7 +142,7 @@ echo "  Step 2/5: Converting textures to PNG..."
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-cd "$PROJECT_ROOT"
+cd "$INSTALL_DIR"
 
 if command -v sips &> /dev/null || command -v convert &> /dev/null; then
     count=0
@@ -178,7 +182,7 @@ echo ""
 if command -v gh &> /dev/null; then
     echo "→ Fetching latest release from GitHub..."
     
-    cd "$PROJECT_ROOT"
+    cd "$INSTALL_DIR"
     
     LATEST_RELEASE=$(gh release view --repo "$GITHUB_REPO" --json tagName -q .tagName 2>/dev/null || echo "")
     
@@ -230,7 +234,7 @@ echo "  Step 4/5: Building game (if needed)..."
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-cd "$PROJECT_ROOT"
+cd "$INSTALL_DIR"
 
 if [ ! -f "$GAME_BINARY" ] && [ ! -f "target/release/$GAME_BINARY" ]; then
     if [ ! -f "Cargo.toml" ]; then
@@ -252,7 +256,7 @@ if [ ! -f "$GAME_BINARY" ] && [ ! -f "target/release/$GAME_BINARY" ]; then
         cargo build --release
         
         if [ -f "target/release/$GAME_BINARY" ]; then
-            cp "target/release/$GAME_BINARY" "$PROJECT_ROOT/"
+            cp "target/release/$GAME_BINARY" "$INSTALL_DIR/"
             echo "✓ Game built successfully"
         else
             echo "✗ Build failed"
@@ -273,32 +277,71 @@ fi
 
 echo ""
 echo "════════════════════════════════════════════════════════════"
-echo "  Step 5/5: Launching game..."
+echo "  Step 5/6: Creating Application..."
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-cd "$PROJECT_ROOT"
+cd "$INSTALL_DIR"
 
-if [ -f "$GAME_BINARY" ]; then
+if [ -f "sas-source/$GAME_BINARY" ]; then
+    cp "sas-source/$GAME_BINARY" .
     chmod +x "$GAME_BINARY"
-    echo "✓ Starting SAS (Shoot and Strafe)..."
-    echo ""
-    ./"$GAME_BINARY"
-elif [ -f "sas-source/$GAME_BINARY" ]; then
-    cd sas-source
-    chmod +x "$GAME_BINARY"
-    echo "✓ Starting SAS (Shoot and Strafe)..."
-    echo ""
-    ./"$GAME_BINARY"
 elif [ -f "sas-source/target/release/$GAME_BINARY" ]; then
-    cd sas-source
-    chmod +x "target/release/$GAME_BINARY"
-    echo "✓ Starting SAS (Shoot and Strafe)..."
-    echo ""
-    ./target/release/"$GAME_BINARY"
-else
+    cp "sas-source/target/release/$GAME_BINARY" .
+    chmod +x "$GAME_BINARY"
+elif [ ! -f "$GAME_BINARY" ]; then
     echo "✗ Game binary not found"
     exit 1
 fi
+
+APP_DIR="$HOME/Applications/SAS.app"
+mkdir -p "$APP_DIR/Contents/MacOS"
+mkdir -p "$APP_DIR/Contents/Resources"
+
+cat > "$APP_DIR/Contents/MacOS/sas-launcher" << 'EOF'
+#!/bin/bash
+cd "$HOME/Library/Application Support/SAS"
+./sas
+EOF
+
+chmod +x "$APP_DIR/Contents/MacOS/sas-launcher"
+
+cat > "$APP_DIR/Contents/Info.plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleExecutable</key>
+    <string>sas-launcher</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.akuz.sas</string>
+    <key>CFBundleName</key>
+    <string>SAS</string>
+    <key>CFBundleDisplayName</key>
+    <string>SAS III</string>
+    <key>CFBundleVersion</key>
+    <string>0.0.1</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+</dict>
+</plist>
+EOF
+
+echo "✓ Application created: $APP_DIR"
+
+echo ""
+echo "════════════════════════════════════════════════════════════"
+echo "  Step 6/6: Launching game..."
+echo "════════════════════════════════════════════════════════════"
+echo ""
+echo "✓ Installation complete!"
+echo "  • Game installed to: $INSTALL_DIR"
+echo "  • App available in: ~/Applications/SAS.app"
+echo ""
+echo "✓ Starting SAS (Shoot and Strafe)..."
+echo ""
+
+cd "$INSTALL_DIR"
+./"$GAME_BINARY"
 
 
