@@ -15,6 +15,23 @@ struct CGPoint {
     y: f64,
 }
 
+#[cfg(target_os = "macos")]
+pub fn center_mouse_cursor() {
+    unsafe {
+        let screen_w = screen_width() as f64;
+        let screen_h = screen_height() as f64;
+        let center = CGPoint {
+            x: screen_w / 2.0,
+            y: screen_h / 2.0,
+        };
+        CGWarpMouseCursorPosition(center);
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+pub fn center_mouse_cursor() {
+}
+
 #[derive(Clone, Debug)]
 pub struct Input {
     pub move_left: bool,

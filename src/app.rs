@@ -209,13 +209,21 @@ impl App {
                     
                     self.game_loop = Some(game_loop);
                     self.menu_state = None;
-                    mouse_delta_position();
+                    
                     let show_cursor = cvar::get_cvar_bool("m_show_cursor");
                     show_mouse(show_cursor);
                     let grab_mouse = cvar::get_cvar_bool("m_grab");
                     if grab_mouse {
                         set_cursor_grab(true);
                     }
+                    
+                    #[cfg(target_os = "macos")]
+                    {
+                        next_frame().await;
+                        crate::input::center_mouse_cursor();
+                    }
+                    
+                    mouse_delta_position();
                     self.ignore_mouse_delta_for_one_frame = true;
                 } else {
                     menu_state.render();
@@ -223,7 +231,6 @@ impl App {
             } else if let Some(game_loop) = &mut self.game_loop {
                 if !self.console.is_open() {
                     if self.was_console_open {
-                        mouse_delta_position();
                         let show_cursor = cvar::get_cvar_bool("m_show_cursor");
                         show_mouse(show_cursor);
                         #[cfg(not(target_os = "macos"))]
@@ -231,6 +238,9 @@ impl App {
                             let grab_mouse = cvar::get_cvar_bool("m_grab");
                             set_cursor_grab(grab_mouse);
                         }
+                        #[cfg(target_os = "macos")]
+                        crate::input::center_mouse_cursor();
+                        mouse_delta_position();
                         self.ignore_mouse_delta_for_one_frame = true;
                         self.was_console_open = false;
                     }
