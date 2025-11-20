@@ -131,8 +131,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          ARCH=${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64' || 'arm64' }}
           gh release upload v${{ needs.create-release.outputs.version }} \
-            sas-${{ needs.create-release.outputs.version }}-macos-${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64' || 'arm64' }}.tar.gz \
+            "sas-${{ needs.create-release.outputs.version }}-macos-${ARCH}.tar.gz" \
             --repo ${{ github.repository }} \
             --clobber
 
@@ -263,6 +264,7 @@ jobs:
           7z a -tzip "${PACKAGE_NAME}.zip" "$PACKAGE_NAME"
 
       - name: Upload Release Asset
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
