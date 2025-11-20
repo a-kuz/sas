@@ -210,7 +210,7 @@ if command -v gh &> /dev/null; then
             gh release download "$LATEST_RELEASE" --repo "$GITHUB_REPO" --pattern "$ASSET_PATTERN" --clobber 2>/dev/null || true
             
             if ls *tar.gz 1> /dev/null 2>&1; then
-                tar -xzf *.tar.gz 2>/dev/null || tar -xzf *.tar.gz --no-same-owner 2>/dev/null || true
+                tar -xzf *.tar.gz --strip-components=1 2>/dev/null || tar -xzf *.tar.gz --strip-components=1 --no-same-owner 2>/dev/null || true
                 rm -f *.tar.gz
                 if [ -f "$GAME_BINARY" ]; then
                     echo "✓ Game binary downloaded and extracted"
