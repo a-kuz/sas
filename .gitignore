@@ -27,3 +27,5 @@ pro-q3tourney4.bsp
 windows_release
 .cursor
 release_builds/
+release_package
+sas_windows.zip

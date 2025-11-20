@@ -1,9 +1,0 @@
-/Users/alexsandrkuznetsov/ws/sas/target/debug/deps/quad_snd-c9ea3a6098f300bc.d: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/error.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/coreaudio_snd.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/coreaudio/coreaudio.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/mixer.rs
-
-/Users/alexsandrkuznetsov/ws/sas/target/debug/deps/libquad_snd-c9ea3a6098f300bc.rmeta: /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/lib.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/error.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/coreaudio_snd.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/coreaudio/coreaudio.rs /Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/mixer.rs
-
-/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/lib.rs:
-/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/error.rs:
-/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/coreaudio_snd.rs:
-/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/coreaudio/coreaudio.rs:
-/Users/alexsandrkuznetsov/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/quad-snd-0.2.8/src/mixer.rs:
