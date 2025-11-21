@@ -40,7 +40,3 @@ This project provides the code; id Software provided the fun part 25 years ago.
 
 ![Plasma](assets/screenshoots/plasma-light.jpeg)
 *Shiny plasma.*
-
----
-
-*by Aleksandr Kuznetsov & 3d[Power]*

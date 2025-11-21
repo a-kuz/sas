@@ -41,7 +41,3 @@ curl -fsSL https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.bat 
 ![Plasma](assets/screenshoots/plasma-light.jpeg)
 *Плазма светится. Красиво же.*
 
----
-
-*by Aleksandr Kuznetsov & 3d[Power]*
-
