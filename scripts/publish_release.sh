@@ -191,3 +191,5 @@ echo "Users can now install with:"
 echo "  curl -fsSL https://raw.githubusercontent.com/$REPO/main/scripts/install.sh | bash"
 echo ""
 
+
+

@@ -35,17 +35,30 @@ echo ""
 
 echo ""
 echo "════════════════════════════════════════════════════════════"
-echo "  Step 2/4: Committing changes"
+echo "  Step 2/4: Committing and pushing changes"
 echo "════════════════════════════════════════════════════════════"
 echo ""
 
-if [ -n "$NEW_VERSION" ]; then
-    git add Cargo.toml
-    git commit -m "Bump version to $VERSION"
-    echo "✓ Changes committed"
+echo "→ Pulling latest changes..."
+git pull --rebase origin main
+echo "✓ Rebased on origin/main"
+
+git add -A
+
+if git diff --cached --quiet; then
+    echo "✓ No changes to commit"
 else
-    echo "✓ No version changes to commit"
+    if [ -n "$NEW_VERSION" ]; then
+        git commit -m "Bump version to $VERSION"
+    else
+        git commit -m "Release $VERSION"
+    fi
+    echo "✓ Changes committed"
 fi
+
+echo "→ Pushing to origin/main..."
+git push origin main
+echo "✓ Changes pushed to GitHub"
 
 echo ""
 echo "════════════════════════════════════════════════════════════"
@@ -77,4 +90,6 @@ echo "════════════════════════�
 echo ""
 echo "Version $VERSION has been released!"
 echo ""
+
+
 
