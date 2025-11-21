@@ -239,3 +239,5 @@ if exist "%GAME_BINARY%" (
     exit /b 1
 )
 
+
+
