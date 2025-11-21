@@ -131,7 +131,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ARCH=${{ matrix.target == 'x86_64-apple-darwin' && 'x86_64' || 'arm64' }}
+          ARCH=$(echo ${{ matrix.target }} | cut -d'-' -f1)
           gh release upload v${{ needs.create-release.outputs.version }} \
             "sas-${{ needs.create-release.outputs.version }}-macos-${ARCH}.tar.gz" \
             --repo ${{ github.repository }} \
