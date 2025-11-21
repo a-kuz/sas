@@ -51,6 +51,3 @@ curl -fsSL https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.sh |
 ![Plasma](assets/screenshoots/plasma-light.jpeg)
 *Shiny plasma. / Плазма светится.*
 
----
-
-*by Aleksandr Kuznetsov & 3d[Power]*
