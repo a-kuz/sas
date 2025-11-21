@@ -2,14 +2,14 @@ use macroquad::prelude::*;
 use std::sync::OnceLock;
 use std::cell::RefCell;
 
-static MENU_SHADOW_MATERIAL: OnceLock<Material> = OnceLock::new();
+static MENU_FIRE_MATERIAL: OnceLock<Material> = OnceLock::new();
 
 thread_local! {
     static MENU_TEXT_RT: RefCell<Option<RenderTarget>> = RefCell::new(None);
 }
 
 pub fn init_menu_shader() {
-    let _ = MENU_SHADOW_MATERIAL.get_or_init(|| {
+    let _ = MENU_FIRE_MATERIAL.get_or_init(|| {
         let vertex_shader = r#"#version 100
         attribute vec3 position;
         attribute vec2 texcoord;
@@ -29,105 +29,75 @@ pub fn init_menu_shader() {
         
         varying highp vec2 uv;
         
-        uniform sampler2D textTexture;
         uniform vec2 iResolution;
-        uniform vec2 iMouse;
         uniform float iTime;
         
-        const int MAX_SAMPLES = 1;
-        const int MAX_STEPS = 100;
-        const int LIGHT_SIZE = 1;
-        const float LIGHT_ATTENUATION_COEFFICIENT = 0.5;
-        
-        struct Ray {
-            vec2 pos;
-            vec2 dir;
-        };
-        
-        float sampleText(vec2 pos) {
-            vec2 texUV = pos / iResolution;
-            if (texUV.x < 0.0 || texUV.x > 1.0 || texUV.y < 0.0 || texUV.y > 1.0) {
-                return 0.0;
-            }
-            texUV.y = 1.0 - texUV.y;
-            return texture2D(textTexture, texUV).a;
+        // Tanh approximation for GLSL 100
+        vec4 tanh_approx(vec4 x) {
+            vec4 e2x = exp(2.0 * x);
+            return (e2x - 1.0) / (e2x + 1.0);
         }
-        
-        bool raySceneIntersect(in Ray ray, in vec2 stopPos) {
-            vec2 pos = ray.pos;
-            float dist = distance(ray.pos, stopPos);
-            float stepSize = dist / float(MAX_STEPS);
-            
-            for (int stepIndex = 0; stepIndex < MAX_STEPS; stepIndex++) {
-                if (distance(pos, stopPos) < .50) {
-                    return false;
-                }
-                
-                float d = sampleText(pos);
-                if (d > 0.5) {
-                    return true;
-                }
-                
-                pos += ray.dir * stepSize;
-            }
-            
-            return false;
-        }
-        
-        vec3 spectral(float x) {
-            vec3 col = 4.0 * (x - vec3(0.75, 0.5, 0.25));
-            return max(vec3(0.0), vec3(1.0) - col * col);
-        }
-        
+
         void main() {
-            vec2 fragCoord = uv * iResolution;
+            vec2 I = uv * iResolution;
+            vec4 O = vec4(0.0);
             
-            float scene = sampleText(fragCoord);
-            if (scene > 0.5) {
-                gl_FragColor = vec4(vec3(scene), 1.0);
-                return;
-            }
+            // Time for animation
+            float t = iTime / 2.0;
             
-            vec2 lightPos = iMouse;
-            if (length(lightPos) < 1.0) {
-                lightPos = iResolution * 0.5;
-            }
-            
-            float lightRadius = float(LIGHT_SIZE);
-            
-            vec3 lightColour = clamp(spectral(mod(iTime / 10.0, 1.0)) + 0.5, 0.0, 1.0);
-            
-            if (distance(fragCoord, lightPos) < lightRadius) {
-                gl_FragColor = vec4(lightColour, 1.0);
-                return;
-            }
-            
-            vec2 dir = normalize(lightPos - fragCoord);
-            vec2 tangent = vec2(-dir.y, dir.x);
-            
-            vec2 start = lightPos + tangent * lightRadius;
-            vec2 end = lightPos - tangent * lightRadius;
-            
-            int numSamples = MAX_SAMPLES;
-            float intensityStep = 1.0 / float(numSamples + 1);
-            
-            float intensity = 0.1;
-            
-            for (int offset = 0; offset <= MAX_SAMPLES; offset++) {
-                if (offset > numSamples) break;
+            // Raymarch loop iterator
+            float i = 0.0;
+            // Raymarched depth
+            float z = 0.0;
+            // Raymarch step size and "Turbulence" frequency
+            float d = 0.0;
+
+            // Raymarching loop with 50 iterations
+            for (int j = 0; j < 50; j++) {
+                i += 1.0;
                 
-                vec2 target = mix(start, end, float(offset) / float(numSamples));
-                vec2 rayDir = normalize(target - fragCoord);
+                // Add color and glow attenuation
+                O += (sin(z / 3.0 + vec4(7.0, 2.0, 3.0, 0.0)) + 1.1) / d;
                 
-                Ray ray = Ray(fragCoord + rayDir * 2.0, rayDir);
+                // Compute raymarch sample point
+                vec3 p = z * normalize(vec3(I + I, 0.0) - vec3(iResolution, 0.0));
+                // Shift back and animate
+                p.z += 5.0 + cos(t);
+                // Twist and rotate
+                float c = cos(p.y * 0.5 + 0.0); // vec4(0, 33, 11, 0) -> 0 for x
+                float s = sin(p.y * 0.5 + 0.0);
+                mat2 m = mat2(c, -s, s, c);
+                p.xz = m * p.xz;
                 
-                if (!raySceneIntersect(ray, target)) {
-                    float dist = distance(target, fragCoord) - lightRadius;
-                    intensity += intensityStep * exp(-LIGHT_ATTENUATION_COEFFICIENT * dist / 100.0);
+                // Expand upward
+                p /= max(p.y * 0.1 + 1.0, 0.1);
+                
+                // Turbulence loop (increase frequency)
+                d = 2.0;
+                for (int k = 0; k < 5; k++) { // approximate loop
+                    if (d >= 15.0) break;
+                    
+                    // Add a turbulence wave
+                    // p.yzx swizzle
+                    vec3 pyzx = vec3(p.y, p.z, p.x);
+                    p += cos((pyzx - vec3(t / 0.1, t, d)) * d) / d;
+                    
+                    d /= 0.6;
                 }
+                
+                // Sample approximate distance to hollow cone
+                float dist = 0.01 + abs(length(p.xz) + p.y * 0.3 - 0.5) / 7.0;
+                d = dist;
+                z += dist;
+                
+                if (i >= 50.0) break;
             }
             
-            gl_FragColor = vec4(lightColour * clamp(intensity, 0.0, 1.0), 1.0);
+            // Tanh tonemapping
+            O = tanh_approx(O / 1000.0);
+            O.a = 1.0;
+            
+            gl_FragColor = O;
         }"#;
         
         load_material(
@@ -135,73 +105,59 @@ pub fn init_menu_shader() {
             MaterialParams {
                 uniforms: vec![
                     UniformDesc::new("iResolution", UniformType::Float2),
-                    UniformDesc::new("iMouse", UniformType::Float2),
                     UniformDesc::new("iTime", UniformType::Float1),
                 ],
-                textures: vec!["textTexture".to_string()],
                 ..Default::default()
             },
         ).unwrap()
     });
 }
 
-pub fn draw_menu_with_shadows(selected: usize, items: &[&str], time: f32) {
+pub fn draw_menu_background(time: f32) {
     init_menu_shader();
     
     let w = screen_width();
     let h = screen_height();
     
-    let rt = MENU_TEXT_RT.with(|cell| {
-        let mut opt = cell.borrow_mut();
-        if opt.is_none() || opt.as_ref().unwrap().texture.width() != w {
-            *opt = Some(render_target((w) as u32, (h) as u32));
-        }
-        opt.as_ref().unwrap().clone()
-    });
-    
-    set_camera(&Camera2D {
-        render_target: Some(rt.clone()),
-        zoom: vec2(1.0 / w, -1.0 / h),
-        target: vec2(w * 0.5, h * 0.5),
-        ..Default::default()
-    });
-    
-    clear_background(Color::from_rgba(0, 0, 0, 0));
-    
-    crate::render::draw_q3_banner_string("SAS III", w * 0.5 - 100.0, 80.0, 48.0, WHITE);
-   
-    
-    let item_h = 54.0;
-    let item_w = 400.0;
-    let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5;
-    
-    for (i, label) in items.iter().enumerate() {
-        let y = start_y + (i as f32) * (item_h + 12.0);
-        let x = w * 0.5 - item_w * 0.5;
-        let size = if i == selected { 36.0 } else { 30.0 };
-        crate::render::draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, size, WHITE);
-    }
-    
-    set_default_camera();
-    
-    let material = MENU_SHADOW_MATERIAL.get().unwrap();
-    let mouse_pos = mouse_position();
+    let material = MENU_FIRE_MATERIAL.get().unwrap();
     
     material.set_uniform("iResolution", (w, h));
-    material.set_uniform("iMouse", mouse_pos);
     material.set_uniform("iTime", time);
-    material.set_texture("textTexture", rt.texture.clone());
     
     gl_use_material(material);
     draw_rectangle(0.0, 0.0, w, h, WHITE);
     gl_use_default_material();
+}
+
+pub fn draw_menu_items(selected: usize, items: &[&str], logo_texture: Option<&Texture2D>) {
+    let w = screen_width();
+    let h = screen_height();
     
-    set_camera(&Camera2D {
-        render_target: Some(rt.clone()),
-        zoom: vec2(1.0 / w, -1.0 / h),
-        target: vec2(w * 0.5, h * 0.5),
-        ..Default::default()
-    });
+    // Draw Logo
+    if let Some(texture) = logo_texture {
+        let scale = 0.5; // Adjust scale as needed
+        let logo_w = texture.width() * scale;
+        let logo_h = texture.height() * scale;
+        let logo_x = w * 0.5 - logo_w * 0.5;
+        let logo_y = h * 0.1; // Position near top
+        
+        draw_texture_ex(
+            texture,
+            logo_x,
+            logo_y,
+            WHITE,
+            DrawTextureParams {
+                dest_size: Some(vec2(logo_w, logo_h)),
+                ..Default::default()
+            },
+        );
+    } else {
+         crate::render::draw_q3_banner_string("SAS III", w * 0.5 - 100.0, 80.0, 48.0, WHITE);
+    }
+
+    let item_h = 54.0;
+    let item_w = 400.0;
+    let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5 + 100.0; // Push down a bit
     
     for (i, label) in items.iter().enumerate() {
         let y = start_y + (i as f32) * (item_h + 12.0);
@@ -215,19 +171,5 @@ pub fn draw_menu_with_shadows(selected: usize, items: &[&str], time: f32) {
         let size = if i == selected { 36.0 } else { 30.0 };
         crate::render::draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, size, text_color);
     }
-    
-    set_default_camera();
-    
-    draw_texture_ex(
-        &rt.texture,
-        0.0,
-        0.0,
-        WHITE,
-        DrawTextureParams {
-            dest_size: Some(vec2(w, h)),
-            flip_y: true,
-            ..Default::default()
-        },
-    );
 }
 

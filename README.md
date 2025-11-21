@@ -1,3 +1,7 @@
+<small>
+[ru](README_RU.md)
+</small>
+
 # SAS III
 
 
@@ -6,12 +10,11 @@
 
 ## Still Alive Somehow
 
+
 ![SAS III Logo](assets/logo.png)
 
 ![Low Light](assets/screenshoots/low-light.png)
 *Yes, we have dynamic lighting.*
-
-[Русская версия](README_RU.md)
 
 Another arena shooter in Rust. Because the world definitely needed one more.
 Fast, buggy, and purely fueled by nostalgia and caffeine.

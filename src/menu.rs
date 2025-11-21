@@ -13,6 +13,7 @@ pub struct MenuState {
     pub menu_move_sound: Option<Sound>,
     pub menu_select_sound: Option<Sound>,
     pub time: f32,
+    pub logo_texture: Option<Texture2D>,
 }
 
 impl MenuState {
@@ -27,6 +28,7 @@ impl MenuState {
             menu_move_sound: None,
             menu_select_sound: None,
             time: 0.0,
+            logo_texture: None,
         }
     }
 
@@ -41,6 +43,9 @@ impl MenuState {
 
         self.menu_move_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu1.wav").await.ok();
         self.menu_select_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu2.wav").await.ok();
+        
+        // Load logo
+        self.logo_texture = load_texture("assets/logo-alfa.png").await.ok();
     }
 
     pub async fn handle_input(&mut self) -> Option<GameState> {
@@ -173,9 +178,12 @@ impl MenuState {
         let main_menu_items = ["DEATHMATCH", "HOTSEAT", "SETUP", "QUIT"];
         let hover_idx = self.get_hovered_item_index();
 
+        // Draw background for all menus
+        render::menu_shader::draw_menu_background(self.time);
+
         match self.current_menu.as_str() {
             "main" => {
-                render::menu_shader::draw_menu_with_shadows(self.main_menu_selected, &main_menu_items, self.time);
+                render::menu_shader::draw_menu_items(self.main_menu_selected, &main_menu_items, self.logo_texture.as_ref());
             }
             "map_select" => {
                 let map_names: Vec<&str> = self.available_maps.iter().map(|s| s.as_str()).collect();

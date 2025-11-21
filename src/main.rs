@@ -10,7 +10,7 @@ use app::App;
 use macroquad::prelude::*;
 
 fn window_conf() -> Conf {
-    let icon_data = include_bytes!("../assets/logo-alpha.png");
+    let icon_data = include_bytes!("../assets/logo-alfa.png");
     let icon = match image::load_from_memory(icon_data) {
         Ok(img) => {
             let small_img = img.resize_exact(16, 16, image::imageops::FilterType::Lanczos3);
