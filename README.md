@@ -1,57 +1,51 @@
 # SAS III
-## Still Alive Somehow??
+## Still Alive Somehow
 
-![SAS III Logo](assets/logo.png)
+Another arena shooter in Rust. Because the world definitely needed one more.
+Fast, buggy, and purely fueled by nostalgia and caffeine.
 
-Да, это еще один arena shooter. Нет, я не знаю зачем. Да, он написан на Rust. Нет, это не сделало его быстрее.
-
-### Что это?
-
-Quake 3-inspired шутер, который пережил уже три итерации и до сих пор не понимает, зачем он существует. Есть боты, есть физика гибов, есть рельсотрон. Чего еще нужно для счастья в 2025?
-
-### Скриншоты
-
-![Gibs Physics](assets/screenshoots/gibs-physics.jpeg)
-*Физика гибов работает. Это главное.*
-
-![Rail Gun](assets/screenshoots/rail.jpeg)
-*Рельса есть. Значит, это настоящий арена шутер.*
-
-![Plasma](assets/screenshoots/plasma-light.jpeg)
-*Плазма светится. Красиво же.*
-
-### Запуск
+### How to Install
+I spent more time on this installation script than on the physics engine. It's beautiful. It works on everything (macOS, Linux, Windows):
 
 ```bash
-cargo run --release
+curl -fsSL https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.sh | bash
 ```
 
-Или используй один из 47 билд-скриптов в корне проекта. Они все работают. Наверное.
-
-### Фичи
-
-- ✅ Боты с навигационными графами
-- ✅ Сетевая игра (работает в 30% случаев)
-- ✅ Карты в JSON (потому что XML это прошлый век)
-- ✅ Dedicated server (для тех, кто хочет страдать в одиночку)
-- ✅ WASM билд (запускается в браузере, тормозит везде)
-- ✅ iOS поддержка (зачем? не спрашивай)
-- ✅ Map editor (потому что блокнот это слишком мейнстрим)
-
-### Системные требования
-
-- Rust (последний, какой найдешь)
-- Терпение
-- Ностальгия по 1999-му году
-- Готовность к тому, что ничего не работает с первого раза
-
-### Лицензия
-
-Делай что хочешь, я не твоя мама.
+### Disclaimer
+**You need a legal copy of Quake 3 Arena** to play.
+This project provides the code; id Software provided the fun part 25 years ago.
 
 ---
 
-*v0.62.0 - версия, в которой мы наконец-то исправили тот баг... или нет*
+## Всё ещё жив (каким-то чудом)
 
-**by Aleksandr Kuznetsov & 3d[Power]**
+Ещё один арена-шутер на Rust. Потому что миру определённо был нужен ещё один.
+Быстро, с багами, работает на чистой ностальгии и кофеине.
 
+### Как установить
+Я потратил на этот скрипт установки больше времени, чем на физический движок. Он прекрасен. Работает везде (macOS, Linux, Windows):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.sh | bash
+```
+
+### Важно
+**Вам нужна лицензионная копия Quake 3 Arena** для игры.
+Здесь только код; веселую часть id Software сделали 25 лет назад.
+
+---
+
+### Screenshots / Скриншоты
+
+![Gibs Physics](assets/screenshoots/gibs-physics.jpeg)
+*Gibs physics. It just works. / Физика гибов работает.*
+
+![Rail Gun](assets/screenshoots/rail.jpeg)
+*Railgun present. / Рельса на месте.*
+
+![Plasma](assets/screenshoots/plasma-light.jpeg)
+*Shiny plasma. / Плазма светится.*
+
+---
+
+*by Aleksandr Kuznetsov & 3d[Power]*
