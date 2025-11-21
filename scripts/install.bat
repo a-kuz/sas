@@ -69,7 +69,7 @@ for /l %%i in (1,1,8) do (
     )
 )
 
-if not exist "xcsv_hires.pk3" (
+if not exist "xcsv_bq3hi-res.pk3" (
     echo Downloading High Resolution Pack...
     curl -L --progress-bar "%hi_res%" -o xcsv_hires.zip
     tar -xf xcsv_hires.zip
@@ -136,6 +136,21 @@ if not exist "cpma" (
 ) else (
     echo [OK] CPMA Mod already exists
 )
+
+echo.
+echo ================================================================
+echo   Extracting all pk3 files...
+echo ================================================================
+echo.
+
+cd /d "%Q3_RESOURCES%\baseq3"
+
+for %%f in (*.pk3) do (
+    echo Extracting %%f...
+    tar -xf "%%f" -C "%Q3_RESOURCES%"
+)
+
+echo [OK] All pk3 files extracted
 
 echo.
 echo ================================================================
