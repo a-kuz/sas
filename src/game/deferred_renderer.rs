@@ -205,7 +205,7 @@ impl DeferredRenderer {
         set_default_camera();
     }
     
-    pub fn apply_lighting(&mut self, map: &Map, static_lights: &[LightSource], all_lights: &[LightSource], linear_lights: &[super::map::LinearLight], camera_x: f32, camera_y: f32, ambient: f32, disable_shadows: bool, disable_dynamic_lights: bool, cartoon_shader: bool) {
+    pub fn apply_lighting(&mut self, map: &Map, static_lights: &[LightSource], all_lights: &[LightSource], linear_lights: &[super::map::LinearLight], camera_x: f32, camera_y: f32, zoom: f32, ambient: f32, disable_shadows: bool, disable_dynamic_lights: bool, cartoon_shader: bool) {
         let scene_texture = match &self.scene_target {
             Some(target) => target.texture.clone(),
             None => {
@@ -248,11 +248,11 @@ impl DeferredRenderer {
             profile_scope!("lighting_cull_lights");
             let mut lights = Vec::with_capacity(8);
             for light in &dynamic_lights {
-                let dx = light.x - (camera_x + screen_w * 0.5);
-                let dy = light.y - (camera_y + screen_h * 0.5);
+                let dx = light.x - (camera_x + (screen_w / zoom) * 0.5);
+                let dy = light.y - (camera_y + (screen_h / zoom) * 0.5);
                 let dist = (dx * dx + dy * dy).sqrt();
                 
-                if dist < light.radius + screen_w.max(screen_h) {
+                if dist < light.radius + (screen_w.max(screen_h) / zoom) {
                     lights.push(light.clone());
                     if lights.len() >= 8 {
                         break;
@@ -299,7 +299,7 @@ impl DeferredRenderer {
                 self.static_uniforms_set = true;
             }
             
-            material.set_uniform("screenToWorld", [screen_w, screen_h]);
+            material.set_uniform("screenToWorld", [screen_w / zoom, screen_h / zoom]);
             material.set_uniform("cameraPos", [camera_x, camera_y]);
             material.set_uniform("time", get_time() as f32);
             
@@ -363,7 +363,7 @@ impl DeferredRenderer {
     }
 
     #[cfg(target_arch = "wasm32")]
-    fn apply_wasm_overlay_lighting(&mut self, map: &Map, all_lights: &[LightSource], linear_lights: &[super::map::LinearLight], camera_x: f32, camera_y: f32, _ambient: f32) {
+    fn apply_wasm_overlay_lighting(&mut self, map: &Map, all_lights: &[LightSource], linear_lights: &[super::map::LinearLight], camera_x: f32, camera_y: f32, zoom: f32, _ambient: f32) {
         let screen_w = screen_width();
         let screen_h = screen_height();
         let map_w = self.map_width as f32 * 32.0;
@@ -382,10 +382,10 @@ impl DeferredRenderer {
         
         let active_lights: Vec<LightSource> = dynamic_lights.iter()
             .filter(|light| {
-                let dx = light.x - (camera_x + screen_w * 0.5);
-                let dy = light.y - (camera_y + screen_h * 0.5);
+                let dx = light.x - (camera_x + (screen_w / zoom) * 0.5);
+                let dy = light.y - (camera_y + (screen_h / zoom) * 0.5);
                 let dist = (dx * dx + dy * dy).sqrt();
-                dist < light.radius + screen_w.max(screen_h)
+                dist < light.radius + (screen_w.max(screen_h) / zoom)
             })
             .take(8)
             .cloned()
@@ -408,7 +408,7 @@ impl DeferredRenderer {
         material.set_texture("lightData", self.dynamic_light_texture.as_ref().unwrap().clone());
         material.set_texture("linearLightData", self.linear_light_texture.as_ref().unwrap().clone());
         material.set_texture("obstacleTex", obstacle_tex.clone());
-        material.set_uniform("screenToWorld", [screen_w, screen_h]);
+        material.set_uniform("screenToWorld", [screen_w / zoom, screen_h / zoom]);
         material.set_uniform("screenSize", [screen_w, screen_h]);
         material.set_uniform("cameraPos", [camera_x, camera_y]);
         material.set_uniform("mapSize", [map_w, map_h]);
@@ -428,9 +428,11 @@ impl DeferredRenderer {
         let mut max_y = 0.0f32;
 
         for l in &active_lights {
-            let r = l.radius;
-            let sx = (l.x - camera_x).clamp(0.0, screen_w);
-            let sy = (l.y - camera_y).clamp(0.0, screen_h);
+            let r = l.radius * zoom;
+            let sx = (l.x - camera_x) * zoom;
+            let sy = (l.y - camera_y) * zoom;
+            let sx = sx.clamp(0.0, screen_w);
+            let sy = sy.clamp(0.0, screen_h);
             let lx = (sx - r).max(0.0);
             let ly = (sy - r).max(0.0);
             let hx = (sx + r).min(screen_w);
@@ -442,11 +444,11 @@ impl DeferredRenderer {
         }
 
         for bl in linear_lights.iter().take(4) {
-            let sx0 = (bl.start_x - camera_x).clamp(0.0, screen_w);
-            let sy0 = (bl.start_y - camera_y).clamp(0.0, screen_h);
-            let sx1 = (bl.end_x - camera_x).clamp(0.0, screen_w);
-            let sy1 = (bl.end_y - camera_y).clamp(0.0, screen_h);
-            let pad = bl.width;
+            let sx0 = ((bl.start_x - camera_x) * zoom).clamp(0.0, screen_w);
+            let sy0 = ((bl.start_y - camera_y) * zoom).clamp(0.0, screen_h);
+            let sx1 = ((bl.end_x - camera_x) * zoom).clamp(0.0, screen_w);
+            let sy1 = ((bl.end_y - camera_y) * zoom).clamp(0.0, screen_h);
+            let pad = bl.width * zoom;
             let lx = sx0.min(sx1) - pad;
             let ly = sy0.min(sy1) - pad;
             let hx = sx0.max(sx1) + pad;

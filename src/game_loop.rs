@@ -27,6 +27,7 @@ pub struct GameLoop {
     pub fps_display_samples: Vec<f64>,
 }
 
+
 impl GameLoop {
     pub async fn new(
         game_state: GameState,

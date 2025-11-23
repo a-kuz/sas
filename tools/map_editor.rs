@@ -47,6 +47,15 @@ mod icons;
 #[path = "map_editor/tools.rs"]
 mod tools;
 
+#[path = "map_editor/input.rs"]
+mod input;
+
+#[path = "map_editor/help.rs"]
+mod help;
+
+#[path = "map_editor/ui.rs"]
+mod ui;
+
 #[path = "map_editor/state.rs"]
 pub mod state;
 

@@ -30,6 +30,7 @@ pub struct EditorState {
     map: map::Map,
     camera_x: f32,
     camera_y: f32,
+    zoom: f32,
     current_tool: EditorTool,
     current_texture: u16,
     current_item_type: ItemPlaceType,
@@ -71,6 +72,8 @@ pub struct EditorState {
     show_nav_edges: bool,
     show_texture_picker: bool,
     show_bg_texture_picker: bool,
+    input_handler: super::input::InputHandler,
+    help_panel: super::help::HelpPanel,
 }
 
 impl EditorState {
@@ -118,6 +121,7 @@ impl EditorState {
             map,
             camera_x: 0.0,
             camera_y: 0.0,
+            zoom: 1.0,
             current_tool: EditorTool::Draw,
             current_texture: 1,
             current_item_type: ItemPlaceType::RocketLauncher,
@@ -166,6 +170,8 @@ impl EditorState {
             show_nav_edges: true,
             show_texture_picker: false,
             show_bg_texture_picker: false,
+            input_handler: super::input::InputHandler::new(),
+            help_panel: super::help::HelpPanel::new(),
         }
     }
     
@@ -702,21 +708,34 @@ impl EditorState {
             }
         }
         
+        let context = super::input::get_current_context(self.current_tool, &self.selected_object);
+        
+        self.input_handler.handle_texture_scale(&mut self.texture_scale, context);
+        self.input_handler.handle_background_controls(&mut self.current_bg_alpha, &mut self.current_bg_scale, context);
+        
         if is_key_pressed(KeyCode::LeftBracket) {
-            if is_shift && self.current_tool == EditorTool::Draw {
-                self.texture_scale = (self.texture_scale - 0.1).max(0.1);
-                println!("Texture scale: {:.2}x", self.texture_scale);
-            } else if self.current_tool == EditorTool::Background {
-                self.current_bg_alpha = (self.current_bg_alpha - 0.1).max(0.0);
+            if let Some(SelectedObject::Light(idx)) = &self.selected_object {
+                if *idx < self.map.lights.len() {
+                    self.map.lights[*idx].radius = (self.map.lights[*idx].radius - 20.0).max(50.0);
+                    self.mark_lightmap_dirty();
+                }
+            } else if let Some(SelectedObject::JumpPad(idx)) = &self.selected_object {
+                if *idx < self.map.jumppads.len() {
+                    self.map.jumppads[*idx].force_x -= 0.2;
+                }
             }
         }
         
         if is_key_pressed(KeyCode::RightBracket) {
-            if is_shift && self.current_tool == EditorTool::Draw {
-                self.texture_scale = (self.texture_scale + 0.1).min(10.0);
-                println!("Texture scale: {:.2}x", self.texture_scale);
-            } else if self.current_tool == EditorTool::Background {
-                self.current_bg_alpha = (self.current_bg_alpha + 0.1).min(1.0);
+            if let Some(SelectedObject::Light(idx)) = &self.selected_object {
+                if *idx < self.map.lights.len() {
+                    self.map.lights[*idx].radius = (self.map.lights[*idx].radius + 20.0).min(2000.0);
+                    self.mark_lightmap_dirty();
+                }
+            } else if let Some(SelectedObject::JumpPad(idx)) = &self.selected_object {
+                if *idx < self.map.jumppads.len() {
+                    self.map.jumppads[*idx].force_x += 0.2;
+                }
             }
         }
         
@@ -728,8 +747,8 @@ impl EditorState {
                     self.current_texture = (self.current_texture + 1) % self.wall_textures.len() as u16;
                 }
             } else if self.current_tool == EditorTool::Light {
-                let world_x_t = mouse_position().0 + self.camera_x;
-                let world_y_t = mouse_position().1 + self.camera_y;
+                let world_x_t = (mouse_position().0 / self.zoom) + self.camera_x;
+                let world_y_t = (mouse_position().1 / self.zoom) + self.camera_y;
                 let mut changed = false;
                 for light in &mut self.map.lights {
                     let dx = light.x - world_x_t;
@@ -817,25 +836,16 @@ impl EditorState {
                 self.current_tool = EditorTool::Draw;
             }
         }
+
+        self.input_handler.handle_zoom(&mut self.zoom);
         
         let (mouse_x, mouse_y) = mouse_position();
-        let world_x_temp = mouse_x + self.camera_x;
-        let world_y_temp = mouse_y + self.camera_y;
+        let world_x_temp = (mouse_x / self.zoom) + self.camera_x;
+        let world_y_temp = (mouse_y / self.zoom) + self.camera_y;
         
-        let scroll = mouse_wheel().1;
-        if scroll != 0.0 && self.current_tool == EditorTool::Light {
-                let mut changed = false;
-                for light in &mut self.map.lights {
-                    let dx = light.x - world_x_temp;
-                    let dy = light.y - world_y_temp;
-                    if dx * dx + dy * dy < 400.0 {
-                        light.radius = (light.radius + scroll * 20.0).max(50.0).min(2000.0);
-                        changed = true;
-                    }
-                }
-                if changed {
-                    self.mark_lightmap_dirty();
-                }
+        let context = super::input::get_current_context(self.current_tool, &self.selected_object);
+        if self.input_handler.handle_light_radius_scroll(&mut self.map.lights, world_x_temp, world_y_temp, context) {
+            self.mark_lightmap_dirty();
         }
         
         let is_cmd = is_key_down(KeyCode::LeftSuper) || is_key_down(KeyCode::RightSuper);
@@ -1061,8 +1071,8 @@ impl EditorState {
     }
     
     fn handle_mouse_input(&mut self) {
-        let world_x = mouse_position().0 + self.camera_x;
-        let world_y = mouse_position().1 + self.camera_y;
+        let world_x = (mouse_position().0 / self.zoom) + self.camera_x;
+        let world_y = (mouse_position().1 / self.zoom) + self.camera_y;
         let tile_x = (world_x / TILE_WIDTH) as i32;
         let tile_y = (world_y / TILE_HEIGHT) as i32;
         
@@ -1322,11 +1332,11 @@ impl EditorState {
         renderer.begin_scene();
         
         if let Some(bg_tex) = &self.background_texture {
-            let bg_scale = 2.0;
+            let bg_scale = 2.0 * self.zoom;
             let bg_w = bg_tex.width() * bg_scale;
             let bg_h = bg_tex.height() * bg_scale;
-            let start_bg_x = ((self.camera_x / bg_w).floor() * bg_w) - self.camera_x;
-            let start_bg_y = ((self.camera_y / bg_h).floor() * bg_h) - self.camera_y;
+            let start_bg_x = ((self.camera_x * self.zoom / bg_w).floor() * bg_w) - self.camera_x * self.zoom;
+            let start_bg_y = ((self.camera_y * self.zoom / bg_h).floor() * bg_h) - self.camera_y * self.zoom;
             
             let tiles_x = ((screen_width() / bg_w).ceil() as i32) + 2;
             let tiles_y = ((screen_height() / bg_h).ceil() as i32) + 2;
@@ -1360,8 +1370,8 @@ impl EditorState {
                 };
                 
                 let tex = &bg_tex.frames[frame_idx];
-                let screen_x = bg_elem.x - self.camera_x;
-                let screen_y = bg_elem.y - self.camera_y;
+                let screen_x = (bg_elem.x - self.camera_x) * self.zoom;
+                let screen_y = (bg_elem.y - self.camera_y) * self.zoom;
                 
                 let alpha = (bg_elem.alpha * 255.0) as u8;
                 let color = Color::from_rgba(255, 255, 255, alpha);
@@ -1375,7 +1385,7 @@ impl EditorState {
                         screen_y,
                         color,
                         DrawTextureParams {
-                            dest_size: Some(vec2(bg_elem.width, bg_elem.height)),
+                            dest_size: Some(vec2(bg_elem.width * self.zoom, bg_elem.height * self.zoom)),
                             ..Default::default()
                         },
                     );
@@ -1388,7 +1398,7 @@ impl EditorState {
                         screen_y,
                         color,
                         DrawTextureParams {
-                            dest_size: Some(vec2(bg_elem.width, bg_elem.height)),
+                            dest_size: Some(vec2(bg_elem.width * self.zoom, bg_elem.height * self.zoom)),
                             ..Default::default()
                         },
                     );
@@ -1397,9 +1407,9 @@ impl EditorState {
         }
         
         let start_x = ((self.camera_x / TILE_WIDTH).floor() as i32).max(0);
-        let end_x = (((self.camera_x + screen_width()) / TILE_WIDTH).ceil() as i32).min(self.map.width as i32);
+        let end_x = (((self.camera_x + screen_width() / self.zoom) / TILE_WIDTH).ceil() as i32).min(self.map.width as i32);
         let start_y = ((self.camera_y / TILE_HEIGHT).floor() as i32).max(0);
-        let end_y = (((self.camera_y + screen_height()) / TILE_HEIGHT).ceil() as i32).min(self.map.height as i32);
+        let end_y = (((self.camera_y + screen_height() / self.zoom) / TILE_HEIGHT).ceil() as i32).min(self.map.height as i32);
         
         let mut visited = vec![vec![false; self.map.height]; self.map.width];
         
@@ -1440,10 +1450,10 @@ impl EditorState {
                         }
                     }
                     
-                    let screen_x = (x as f32 * TILE_WIDTH) - self.camera_x;
-                    let screen_y = (y as f32 * TILE_HEIGHT) - self.camera_y;
-                    let block_pixel_w = block_width as f32 * TILE_WIDTH;
-                    let block_pixel_h = block_height as f32 * TILE_HEIGHT;
+                    let screen_x = ((x as f32 * TILE_WIDTH) - self.camera_x) * self.zoom;
+                    let screen_y = ((y as f32 * TILE_HEIGHT) - self.camera_y) * self.zoom;
+                    let block_pixel_w = block_width as f32 * TILE_WIDTH * self.zoom;
+                    let block_pixel_h = block_height as f32 * TILE_HEIGHT * self.zoom;
                     
                     let world_x = x as f32 * TILE_WIDTH + self.texture_offset_x;
                     let world_y = y as f32 * TILE_HEIGHT + self.texture_offset_y;
@@ -1464,8 +1474,8 @@ impl EditorState {
                         let base_tex_w = texture.width();
                         let base_tex_h = texture.height();
                         
-                        let scaled_tex_w = base_tex_w * self.texture_scale;
-                        let scaled_tex_h = base_tex_h * self.texture_scale;
+                        let scaled_tex_w = base_tex_w * self.texture_scale * self.zoom;
+                        let scaled_tex_h = base_tex_h * self.texture_scale * self.zoom;
                         
                         let start_offset_x = world_x % scaled_tex_w;
                         let start_offset_y = world_y % scaled_tex_h;
@@ -1478,8 +1488,8 @@ impl EditorState {
                                 let tile_x_world = world_x + tx as f32 * scaled_tex_w - start_offset_x;
                                 let tile_y_world = world_y + ty as f32 * scaled_tex_h - start_offset_y;
                                 
-                                let tile_x_screen = tile_x_world - self.camera_x;
-                                let tile_y_screen = tile_y_world - self.camera_y;
+                                let tile_x_screen = (tile_x_world - self.camera_x) * self.zoom;
+                                let tile_y_screen = (tile_y_world - self.camera_y) * self.zoom;
                                 
                                 let clip_left = (screen_x - tile_x_screen).max(0.0);
                                 let clip_top = (screen_y - tile_y_screen).max(0.0);
@@ -1530,16 +1540,16 @@ impl EditorState {
                 }
                 
                 if self.show_grid {
-                    let screen_x = (x as f32 * TILE_WIDTH) - self.camera_x;
-                    let screen_y = (y as f32 * TILE_HEIGHT) - self.camera_y;
-                    draw_rectangle_lines(screen_x, screen_y, TILE_WIDTH, TILE_HEIGHT, 1.0, Color::from_rgba(50, 50, 60, 60));
+                    let screen_x = ((x as f32 * TILE_WIDTH) - self.camera_x) * self.zoom;
+                    let screen_y = ((y as f32 * TILE_HEIGHT) - self.camera_y) * self.zoom;
+                    draw_rectangle_lines(screen_x, screen_y, TILE_WIDTH * self.zoom, TILE_HEIGHT * self.zoom, 1.0, Color::from_rgba(50, 50, 60, 60));
                 }
             }
         }
         
         for (idx, sp) in self.map.spawn_points.iter().enumerate() {
-            let screen_x = sp.x - self.camera_x;
-            let screen_y = sp.y - self.camera_y;
+            let screen_x = (sp.x - self.camera_x) * self.zoom;
+            let screen_y = (sp.y - self.camera_y) * self.zoom;
             let is_selected = matches!(&self.selected_object, Some(SelectedObject::SpawnPoint(i)) if *i == idx);
             
             if is_selected {
@@ -1551,8 +1561,8 @@ impl EditorState {
         }
         
         for (idx, item) in self.map.items.iter().enumerate() {
-            let screen_x = item.x - self.camera_x;
-            let screen_y = item.y - self.camera_y;
+            let screen_x = (item.x - self.camera_x) * self.zoom;
+            let screen_y = (item.y - self.camera_y) * self.zoom;
             let is_selected = matches!(&self.selected_object, Some(SelectedObject::Item(i)) if *i == idx);
             
             if is_selected {
@@ -1584,19 +1594,19 @@ impl EditorState {
         }
         
         for (idx, jp) in self.map.jumppads.iter().enumerate() {
-            let screen_x = jp.x - self.camera_x;
-            let screen_y = jp.y - self.camera_y;
+            let screen_x = (jp.x - self.camera_x) * self.zoom;
+            let screen_y = (jp.y - self.camera_y) * self.zoom;
             let is_selected = matches!(&self.selected_object, Some(SelectedObject::JumpPad(i)) if *i == idx);
             
             if is_selected {
                 draw_rectangle(screen_x - 2.0, screen_y - 2.0, jp.width + 4.0, 20.0, Color::from_rgba(255, 255, 0, 200));
             }
-            draw_rectangle(screen_x, screen_y, jp.width, 16.0, Color::from_rgba(255, 180, 60, 200));
+            draw_rectangle(screen_x, screen_y, jp.width * self.zoom, 16.0 * self.zoom, Color::from_rgba(255, 180, 60, 200));
         }
         
         for (idx, tp) in self.map.teleporters.iter().enumerate() {
-            let screen_x = tp.x - self.camera_x;
-            let screen_y = tp.y - self.camera_y;
+            let screen_x = (tp.x - self.camera_x) * self.zoom;
+            let screen_y = (tp.y - self.camera_y) * self.zoom;
             let is_selected_teleporter = self.selected_teleporter_index == Some(idx);
             let is_selected_object = matches!(&self.selected_object, Some(SelectedObject::Teleporter(i)) if *i == idx);
             
@@ -1606,7 +1616,7 @@ impl EditorState {
                 Color::from_rgba(60, 120, 180, 150)
             };
             
-            draw_rectangle(screen_x, screen_y, tp.width, tp.height, teleporter_color);
+            draw_rectangle(screen_x, screen_y, tp.width * self.zoom, tp.height * self.zoom, teleporter_color);
             
             if is_selected_teleporter {
                 draw_rectangle_lines(screen_x - 2.0, screen_y - 2.0, tp.width + 4.0, tp.height + 4.0, 3.0, Color::from_rgba(255, 255, 100, 255));
@@ -1614,8 +1624,8 @@ impl EditorState {
                 draw_rectangle_lines(screen_x - 2.0, screen_y - 2.0, tp.width + 4.0, tp.height + 4.0, 3.0, Color::from_rgba(255, 255, 0, 255));
             }
             
-            let dest_screen_x = tp.dest_x - self.camera_x;
-            let dest_screen_y = tp.dest_y - self.camera_y;
+            let dest_screen_x = (tp.dest_x - self.camera_x) * self.zoom;
+            let dest_screen_y = (tp.dest_y - self.camera_y) * self.zoom;
             
             let line_color = if is_selected_teleporter || is_selected_object {
                 Color::from_rgba(255, 255, 100, 255)
@@ -1623,7 +1633,7 @@ impl EditorState {
                 Color::from_rgba(0, 255, 255, 200)
             };
             
-            draw_line(screen_x + tp.width / 2.0, screen_y + tp.height / 2.0, dest_screen_x, dest_screen_y, if is_selected_teleporter || is_selected_object { 3.0 } else { 2.0 }, line_color);
+            draw_line(screen_x + tp.width * self.zoom / 2.0, screen_y + tp.height * self.zoom / 2.0, dest_screen_x, dest_screen_y, if is_selected_teleporter || is_selected_object { 3.0 } else { 2.0 }, line_color);
             
             draw_circle(dest_screen_x, dest_screen_y, 6.0, line_color);
             draw_circle(dest_screen_x, dest_screen_y, 3.0, Color::from_rgba(255, 255, 255, 200));
@@ -1632,7 +1642,7 @@ impl EditorState {
         renderer.end_scene();
         
         let empty_linear_lights = Vec::new();
-        renderer.apply_lighting(&self.map, &self.map.lights, &self.map.lights, &empty_linear_lights, self.camera_x, self.camera_y, self.ambient_light, false, false, false);
+        renderer.apply_lighting(&self.map, &self.map.lights, &self.map.lights, &empty_linear_lights, self.camera_x, self.camera_y, self.zoom, self.ambient_light, false, false, false);
         
         if self.show_nav_graph {
             if let Some(ref graph) = self.nav_graph {
@@ -1645,8 +1655,8 @@ impl EditorState {
         let world_y_vis = mouse_y_vis + self.camera_y;
         
         for (idx, light) in self.map.lights.iter().enumerate() {
-            let screen_x = light.x - self.camera_x;
-            let screen_y = light.y - self.camera_y;
+            let screen_x = (light.x - self.camera_x) * self.zoom;
+            let screen_y = (light.y - self.camera_y) * self.zoom;
             let is_selected = matches!(&self.selected_object, Some(SelectedObject::Light(i)) if *i == idx);
             
             if is_selected {
@@ -1684,8 +1694,8 @@ impl EditorState {
                             let y = tile_y - half_size + by;
                             
                             if x >= 0 && x < self.map.width as i32 && y >= 0 && y < self.map.height as i32 {
-                                let sx = (x as f32 * TILE_WIDTH) - self.camera_x;
-                                let sy = (y as f32 * TILE_HEIGHT) - self.camera_y;
+                                let sx = ((x as f32 * TILE_WIDTH) - self.camera_x) * self.zoom;
+                                let sy = ((y as f32 * TILE_HEIGHT) - self.camera_y) * self.zoom;
                                 
                                 let color = if self.current_tool == EditorTool::Draw {
                                     Color::from_rgba(255, 255, 255, 100)
@@ -1693,26 +1703,26 @@ impl EditorState {
                                     Color::from_rgba(255, 0, 0, 100)
                                 };
                                 
-                                draw_rectangle(sx, sy, TILE_WIDTH, TILE_HEIGHT, color);
+                                draw_rectangle(sx, sy, TILE_WIDTH * self.zoom, TILE_HEIGHT * self.zoom, color);
                             }
                         }
                     }
                     
                     if let Some((start_x, start_y)) = self.line_draw_start {
-                        let start_sx = (start_x as f32 * TILE_WIDTH + TILE_WIDTH / 2.0) - self.camera_x;
-                        let start_sy = (start_y as f32 * TILE_HEIGHT + TILE_HEIGHT / 2.0) - self.camera_y;
-                        let end_sx = (tile_x as f32 * TILE_WIDTH + TILE_WIDTH / 2.0) - self.camera_x;
-                        let end_sy = (tile_y as f32 * TILE_HEIGHT + TILE_HEIGHT / 2.0) - self.camera_y;
+                        let start_sx = ((start_x as f32 * TILE_WIDTH + TILE_WIDTH / 2.0) - self.camera_x) * self.zoom;
+                        let start_sy = ((start_y as f32 * TILE_HEIGHT + TILE_HEIGHT / 2.0) - self.camera_y) * self.zoom;
+                        let end_sx = ((tile_x as f32 * TILE_WIDTH + TILE_WIDTH / 2.0) - self.camera_x) * self.zoom;
+                        let end_sy = ((tile_y as f32 * TILE_HEIGHT + TILE_HEIGHT / 2.0) - self.camera_y) * self.zoom;
                         
                         draw_line(start_sx, start_sy, end_sx, end_sy, 3.0, Color::from_rgba(255, 255, 0, 200));
                         draw_circle(start_sx, start_sy, 5.0, Color::from_rgba(255, 255, 0, 255));
                     }
                 }
                 EditorTool::Background => {
-                    let cursor_size = 64.0 * self.current_bg_scale;
+                    let cursor_size = 64.0 * self.current_bg_scale * self.zoom;
                     let (cursor_x, cursor_y) = if self.bg_snap_to_grid {
-                        let grid_x = ((world_x / 32.0).round() * 32.0) - self.camera_x;
-                        let grid_y = ((world_y / 32.0).round() * 32.0) - self.camera_y;
+                        let grid_x = (((world_x / 32.0).round() * 32.0) - self.camera_x) * self.zoom;
+                        let grid_y = (((world_y / 32.0).round() * 32.0) - self.camera_y) * self.zoom;
                         (grid_x, grid_y)
                     } else {
                         (mouse_x, mouse_y)
@@ -2321,10 +2331,7 @@ impl EditorState {
             },
         };
         
-        draw_text(&format!("Map: {} | Tool: {} | Grid: {} | Ambient: {:.2} | Help: H | Props: {} | Ctrl+T: Textures", 
-            self.map_name, tool_name, if self.show_grid { "ON" } else { "OFF" }, self.ambient_light,
-            if self.show_properties { "ON" } else { "OFF" }), 
-            10.0, 22.0, 20.0, WHITE);
+        super::ui::render_compact_status_bar(&self.map_name, &tool_name, self.show_grid, self.zoom);
         
         self.render_properties_panel();
         
@@ -2341,76 +2348,13 @@ impl EditorState {
         }
         
         if self.show_help {
-            let help_width = 700.0;
-            let help_height = 700.0;
-            let help_x = screen_width() / 2.0 - help_width / 2.0;
-            let help_y = screen_height() / 2.0 - help_height / 2.0;
-            draw_rectangle(help_x, help_y, help_width, help_height, Color::from_rgba(0, 0, 0, 240));
-            draw_rectangle_lines(help_x, help_y, help_width, help_height, 2.0, WHITE);
-            
-            let mut y = help_y + 30.0;
-            draw_text("MAP EDITOR HELP", help_x + 180.0, y, 24.0, YELLOW);
-            y += 40.0;
-            
-            let help_text = [
-                "0-8: Switch tools (8=Background)",
-                "WASD: Move camera",
-                "G: Toggle grid",
-                "P: Toggle properties panel",
-                "H/F1: Toggle help",
-                "Del/Backspace: Delete selected",
-                "ESC: Reset tool to Draw",
-                "Ctrl+S: Save map",
-                "",
-                "Draw/Erase Tools (1/2):",
-                "Q: Change brush size (1x1 -> 2x2 -> 4x4)",
-                "Hold Shift + Drag: Draw straight line",
-                "Hold LMB: Paint with brush",
-                "T: Next texture (Draw mode)",
-                "Shift+]: Increase scale (+0.1x)",
-                "Shift+[: Decrease scale (-0.1x)",
-                "Ctrl+T: Open texture picker",
-                "X: Toggle shader on/off",
-                "Ctrl+X: Open shader picker",
-                "Cmd+Arrows: Move texture offset (1px)",
-                "Cmd+Shift+Arrows: Fine offset (0.1px)",
-                "Cmd+0: Reset offset to (0,0)",
-                "Scale range: 0.1x - 10x",
-                "",
-                "Background Tool (8):",
-                "Hold LMB: Draw background (like tiles)",
-                "B: Next background texture",
-                "Ctrl+B: Open background texture picker",
-                "A: Toggle additive blend mode",
-                "V: Toggle snap to grid",
-                "[/]: Change alpha (transparency)",
-                "+/-: Change scale",
-                "",
-                "Item Tool (4):",
-                "I: Change item type",
-                "",
-                "Navigation Graph:",
-                "N: Toggle nav graph visualization",
-                "E: Toggle edges (when nav visible)",
-                "Ctrl+N: Generate nav graph",
-                "Shift+S: Save nav graph",
-                "Ctrl+L: Load nav graph",
-                "",
-                "Object Movement (when selected):",
-                "Arrows: Move object (4px step)",
-                "Shift+Arrows: Resize (Teleporter)",
-                "R: Set teleporter destination (then click)",
-                "",
-                "Object Properties:",
-                "+/-: Intensity (Light) / Force Y (Jump) / Scale (BG)",
-                "[/]: Radius (Light) / Force X (Jump) / Alpha (BG)",
-                "F: Toggle flicker (Light)",
-            ];
-            
-            for line in &help_text {
-                draw_text(line, help_x + 20.0, y, 18.0, WHITE);
-                y += 20.0;
-            }
+            self.help_panel.render(
+                self.current_tool,
+                &self.selected_object,
+                &self.map_name,
+                self.zoom,
+                self.ambient_light,
+            );
         }
     }
 }
