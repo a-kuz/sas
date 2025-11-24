@@ -121,6 +121,7 @@ pub struct GameState {
     pub game_results: award::GameResults,
     pub net_hud: NetHud,
     pub next_projectile_id: u32,
+    pub shadow_target: Option<RenderTarget>,
 }
 
 impl GameState {
@@ -719,6 +720,7 @@ impl GameState {
             game_results: award::GameResults::new(),
             net_hud: NetHud::new(),
             next_projectile_id: 0,
+            shadow_target: None,
         }
     }
 
@@ -787,6 +789,7 @@ impl GameState {
             game_results: award::GameResults::new(),
             net_hud: NetHud::new(),
             next_projectile_id: 0,
+            shadow_target: None,
         }
     }
 
@@ -1802,6 +1805,11 @@ impl GameState {
                         
                         player.vel_x += dir_x * knockback_scale;
                         player.vel_y += dir_y * knockback_scale;
+
+                        // 20% chance to flip if knocked up significantly
+                        if player.vel_y < -4.0 && crate::compat_rand::gen_range_f32(0.0, 1.0) < 0.2 {
+                            player.somersault_time = 1.0;
+                        }
                     }
 
                     if !self.is_multiplayer {
@@ -2101,99 +2109,158 @@ impl GameState {
             let screen_h = screen_height();
             let shadow_margin = 100.0;
 
-            for player in &mut self.players {
-                if player.gibbed {
-                    continue;
-                }
+            // Initialize or resize shadow target
+            let target_w = screen_w as u32;
+            let target_h = screen_h as u32;
+            
+            let needs_resize = if let Some(target) = &self.shadow_target {
+                target.texture.width() != screen_w || target.texture.height() != screen_h
+            } else {
+                true
+            };
 
-                if self.disable_shadows {
-                    continue;
-                }
+            if needs_resize {
+                let target = render_target(target_w, target_h);
+                target.texture.set_filter(FilterMode::Linear);
+                self.shadow_target = Some(target);
+            }
 
-                let screen_x = player.x - camera_x;
-                let screen_y = player.y - camera_y;
+            if let Some(target) = &self.shadow_target {
+                // Render shadows to target
+                let mut camera = Camera2D {
+                    render_target: Some(target.clone()),
+                    zoom: vec2(2.0 / screen_w, 2.0 / screen_h),
+                    target: vec2(screen_w / 2.0, screen_h / 2.0),
+                    offset: vec2(0.0, 0.0),
+                    ..Default::default()
+                };
+                
+                // Flip Y for render target
+                camera.zoom.y = -camera.zoom.y;
+                
+                set_camera(&camera);
+                clear_background(Color::new(0.0, 0.0, 0.0, 0.0));
 
-                if screen_x < -shadow_margin
-                    || screen_x > screen_w + shadow_margin
-                    || screen_y < -shadow_margin
-                    || screen_y > screen_h + shadow_margin
-                {
-                    continue;
-                }
-                if let Some(model) = self.model_cache.get_or_load(&player.model) {
-                    let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
-                    let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
-                    let mut rel_angle = player.angle - base_dir;
-                    while rel_angle > std::f32::consts::PI {
-                        rel_angle -= 2.0 * std::f32::consts::PI;
-                    }
-                    while rel_angle < -std::f32::consts::PI {
-                        rel_angle += 2.0 * std::f32::consts::PI;
-                    }
-                    let in_air = player.was_in_air;
-                    let model_yaw_offset = if in_air {
-                        (player.vel_x / self::constants::MAX_SPEED_AIR).clamp(-1.0, 1.0) * 0.8
-                    } else {
-                        0.0
-                    };
+                for player in &mut self.players {
+                    if player.gibbed { continue; }
+                    if self.disable_shadows { continue; }
 
-                    let sway = if !in_air && player.vel_x.abs() > 0.5 {
-                        (self.time as f32 * 12.0).sin() * 0.06
-                    } else {
-                        0.0
-                    };
+                    let screen_x = player.x - camera_x;
+                    let screen_y = player.y - camera_y;
 
-                    let mut pitch = rel_angle + sway;
-
-                    if !in_air && player.vel_x.abs() <= 0.1 {
-                        pitch += player.idle_yaw;
+                    if screen_x < -shadow_margin || screen_x > screen_w + shadow_margin ||
+                       screen_y < -shadow_margin || screen_y > screen_h + shadow_margin {
+                        continue;
                     }
 
-                    let aim_angle = player.angle;
-                    let weapon_model = self.weapon_model_cache.get(player.weapon);
-                    let mut acc_x = 0.0;
-                    let mut acc_y = 0.0;
-                    let mut acc_w = 0.0;
-                    let mut acc_r = 0.0;
-                    for lp in &self.lights {
-                        let sx = lp.x - camera_x;
-                        let sy = lp.y - camera_y;
-                        let dx = screen_x - sx;
-                        let dy = screen_y - sy;
-                        let d = (dx * dx + dy * dy).sqrt();
-                        let w = (1.0 - (d / (lp.radius + 1.0))).clamp(0.0, 1.0);
-                        if w > 0.0 {
-                            acc_x += sx * w;
-                            acc_y += sy * w;
-                            acc_r += lp.radius * w;
-                            acc_w += w;
+                    if let Some(model) = self.model_cache.get_or_load(&player.model) {
+                        let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
+                        let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                        let mut rel_angle = player.angle - base_dir;
+                        while rel_angle > std::f32::consts::PI { rel_angle -= 2.0 * std::f32::consts::PI; }
+                        while rel_angle < -std::f32::consts::PI { rel_angle += 2.0 * std::f32::consts::PI; }
+                        
+                        let in_air = player.was_in_air;
+                        let model_yaw_offset = if in_air {
+                            (player.vel_x / self::constants::MAX_SPEED_AIR).clamp(-1.0, 1.0) * 0.8
+                        } else {
+                            0.0
+                        };
+
+                        let sway = if !in_air && player.vel_x.abs() > 0.5 {
+                            (self.time as f32 * 12.0).sin() * 0.06
+                        } else {
+                            0.0
+                        };
+
+                        let mut pitch = rel_angle + sway;
+                        if !in_air && player.vel_x.abs() <= 0.1 {
+                            pitch += player.idle_yaw;
+                        }
+
+                        let aim_angle = player.angle;
+                        let weapon_model = self.weapon_model_cache.get(player.weapon);
+                        
+                        let mut acc_x = 0.0;
+                        let mut acc_y = 0.0;
+                        let mut acc_w = 0.0;
+                        let mut acc_r = 0.0;
+                        
+                        for lp in &self.lights {
+                            let sx = lp.x - camera_x;
+                            let sy = lp.y - camera_y;
+                            let dx = screen_x - sx;
+                            let dy = screen_y - sy;
+                            let d = (dx * dx + dy * dy).sqrt();
+                            let w = (1.0 - (d / (lp.radius + 1.0))).clamp(0.0, 1.0);
+                            if w > 0.0 {
+                                acc_x += sx * w;
+                                acc_y += sy * w;
+                                acc_r += lp.radius * w;
+                                acc_w += w;
+                            }
+                        }
+
+                        if acc_w > 0.0 {
+                            let target_sx = acc_x / acc_w;
+                            let target_sy = acc_y / acc_w;
+                            let target_sr = acc_r / acc_w;
+                            let lerp = 0.18;
+                            
+                            player.shadow_lx = player.shadow_lx + (target_sx - player.shadow_lx) * lerp;
+                            player.shadow_ly = player.shadow_ly + (target_sy - player.shadow_ly) * lerp;
+                            player.shadow_lr = player.shadow_lr + (target_sr - player.shadow_lr) * lerp;
+                            
+                            // Render solid black shadow
+                            model.render_shadow_with_light(
+                                screen_x,
+                                screen_y,
+                                player.shadow_lx,
+                                player.shadow_ly,
+                                player.shadow_lr.max(1.0),
+                                1.5,
+                                flip,
+                                pitch,
+                                aim_angle,
+                                player.lower_frame,
+                                player.upper_frame,
+                                weapon_model,
+                                model_yaw_offset,
+                                BLACK, // Solid black
+                            );
                         }
                     }
-                    if acc_w > 0.0 {
-                        let target_sx = acc_x / acc_w;
-                        let target_sy = acc_y / acc_w;
-                        let target_sr = acc_r / acc_w;
-                        let lerp = 0.18;
-                        player.shadow_lx = player.shadow_lx + (target_sx - player.shadow_lx) * lerp;
-                        player.shadow_ly = player.shadow_ly + (target_sy - player.shadow_ly) * lerp;
-                        player.shadow_lr = player.shadow_lr + (target_sr - player.shadow_lr) * lerp;
-                        model.render_shadow_with_light(
-                            screen_x,
-                            screen_y,
-                            player.shadow_lx,
-                            player.shadow_ly,
-                            player.shadow_lr.max(1.0),
-                            1.5,
-                            flip,
-                            pitch,
-                            aim_angle,
-                            player.lower_frame,
-                            player.upper_frame,
-                            weapon_model,
-                            model_yaw_offset,
-                        );
-                    }
                 }
+
+                // Restore previous camera
+                if !self.disable_deferred {
+                    if let Some(target) = &renderer.scene_target {
+                        let camera = Camera2D {
+                            render_target: Some(target.clone()),
+                            zoom: vec2(2.0 / screen_w, 2.0 / screen_h),
+                            target: vec2(screen_w / 2.0, screen_h / 2.0),
+                            offset: vec2(0.0, 0.0),
+                            ..Default::default()
+                        };
+                        set_camera(&camera);
+                    }
+                } else {
+                    set_default_camera();
+                }
+                
+                // Draw the shadow target to screen with transparency
+                // If deferred rendering is enabled, this draws to the scene_target
+                draw_texture_ex(
+                    &target.texture,
+                    0.0,
+                    0.0,
+                    Color::from_rgba(0, 0, 0, 80), // Shadow opacity
+                    DrawTextureParams {
+                        dest_size: Some(vec2(screen_w, screen_h)),
+                        flip_y: true, // Texture coordinates are flipped
+                        ..Default::default()
+                    },
+                );
             }
         }
 
@@ -2469,6 +2536,7 @@ impl GameState {
                         None,
                         0.0,
                         0.0,
+                        0.0, // Added missing somersault_angle argument
                         false,
                     );
                 }
@@ -2544,15 +2612,15 @@ impl GameState {
                         0.0
                     };
 
+                    let mut somersault_angle = 0.0;
                     if player.somersault_time > 0.0 {
-                        let t = 1.0 - player.somersault_time;
-                        let eased = if t < 0.5 {
-                            2.0 * t * t
-                        } else {
-                            1.0 - (-2.0 * t + 2.0).powi(2) / 2.0
-                        };
-                        model_roll += eased * std::f32::consts::PI * 2.0;
+                        let t = player.somersault_time;
+                        // Cubic easing for sharper, earlier rotation
+                        let eased = t * t * t;
+                        somersault_angle = eased * std::f32::consts::PI * 2.0;
                     }
+                    
+                    model_roll += somersault_angle;
 
                     let aim_angle = player.angle;
                     let weapon_model = self.weapon_model_cache.get(player.weapon);
@@ -2574,6 +2642,7 @@ impl GameState {
                         Some(&lighting_ctx),
                         model_yaw_offset,
                         model_roll,
+                        somersault_angle,
                         has_quad_damage,
                     );
 

@@ -279,7 +279,7 @@ impl PlayerModel {
             .to_string()
     }
     
-    pub fn render_simple(&self, screen_x: f32, screen_y: f32, color: Color, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, _debug_md3: bool, lighting_context: Option<&super::md3_render::LightingContext>, model_yaw_offset: f32, model_roll: f32, has_quad_damage: bool) {
+    pub fn render_simple(&self, screen_x: f32, screen_y: f32, color: Color, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, _debug_md3: bool, lighting_context: Option<&super::md3_render::LightingContext>, model_yaw_offset: f32, model_roll: f32, somersault_angle: f32, has_quad_damage: bool) {
         let draw_gun = crate::cvar::get_cvar_integer("cg_drawGun");
         let weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
         let base_y = screen_y - 10.0;
@@ -298,22 +298,29 @@ impl PlayerModel {
         let mut torso_tag_x = 0.0;
         let mut torso_tag_z = 0.0;
         
+        // Invert roll angles if flipped to maintain correct rotation direction
+        // Legs use Standard rotation (X, Z), Torso uses Pivot rotation (X, -Z).
+        // To match directions: Right (!flip) uses +roll, Left (flip) uses -roll.
+        let effective_model_roll = if flip_x { -model_roll } else { model_roll };
+        let effective_legs_roll = if flip_x { somersault_angle } else { -somersault_angle };
+
         if let Some(ref lower) = self.lower {
             let safe_frame = lower_frame.min(lower.tags.len().saturating_sub(1));
             if let Some(tags_for_frame) = lower.tags.get(safe_frame) {
-                if let Some(torso_tag) = tags_for_frame.iter().find(|t| Self::get_tag_name(t) == "tag_torso") {
-                    torso_tag_x = torso_tag.position[0] * scale;
-                    torso_tag_z = torso_tag.position[2] * scale;
-                    
-                    if model_roll.abs() > 1.0 {
-                        let cos_r = (-model_roll).cos();
-                        let sin_r = (-model_roll).sin();
-                        let rotated_x = torso_tag_x * cos_r - torso_tag_z * sin_r;
-                        let rotated_z = torso_tag_x * sin_r + torso_tag_z * cos_r;
-                        torso_tag_x = rotated_x;
-                        torso_tag_z = rotated_z;
-                    }
-                }
+        if let Some(torso_tag) = tags_for_frame.iter().find(|t| Self::get_tag_name(t) == "tag_torso") {
+            // Legs -> Torso (Standard Rotation)
+            torso_tag_x = torso_tag.position[0] * scale * x_mult; // Flip first
+            torso_tag_z = torso_tag.position[2] * scale;
+            
+            if effective_legs_roll.abs() > 0.01 {
+                let cos_r = effective_legs_roll.cos();
+                let sin_r = effective_legs_roll.sin();
+                let rotated_x = torso_tag_x * cos_r - torso_tag_z * sin_r;
+                let rotated_z = torso_tag_x * sin_r + torso_tag_z * cos_r;
+                torso_tag_x = rotated_x;
+                torso_tag_z = rotated_z;
+            }
+        }
             }
             
             for (_mesh_idx, mesh) in lower.meshes.iter().enumerate() {
@@ -322,8 +329,6 @@ impl PlayerModel {
                 let texture_path = self.texture_paths.get(&mesh_name);
                 let shader_textures = self.shader_textures.get(&mesh_name);
                 let safe_frame = lower_frame.min(mesh.vertices.len().saturating_sub(1));
-                
-                let legs_roll = if model_roll.abs() > 1.0 { -model_roll } else { 0.0 };
                 
                 super::md3_render::render_md3_mesh_with_yaw_and_roll_shader(
                     mesh,
@@ -338,7 +343,7 @@ impl PlayerModel {
                     flip_x,
                     0.0,
                     legs_total_yaw,
-                    legs_roll,
+                    effective_legs_roll,
                     lighting_context,
                 );
             }
@@ -350,7 +355,9 @@ impl PlayerModel {
         let mut weapon_tag_z = 0.0;
         
         if let Some(ref upper) = self.upper {
-            let torso_origin_x = screen_x + torso_tag_x * x_mult;
+            // Torso origin (Standard: y = base - z)
+            // Note: torso_tag_x is already flipped and rotated, so just add it.
+            let torso_origin_x = screen_x + torso_tag_x; 
             let torso_origin_y = (base_y - torso_offset_y) - torso_tag_z;
             
             let safe_frame = upper_frame.min(upper.tags.len().saturating_sub(1));
@@ -387,13 +394,13 @@ impl PlayerModel {
                     model_yaw_offset,
                     0.0,
                     0.0,
-                    model_roll,
+                    effective_model_roll,
                 );
             }
         }
         
-                if let Some(weapon) = weapon_to_render {
-            let torso_origin_x = screen_x + torso_tag_x * x_mult;
+        if let Some(weapon) = weapon_model {
+            let torso_origin_x = screen_x + torso_tag_x;
             let torso_origin_y = (base_y - torso_offset_y) - torso_tag_z;
             
             #[cfg(target_arch = "wasm32")]
@@ -403,18 +410,26 @@ impl PlayerModel {
             let sin_p = pitch.sin();
             let cos_y = model_yaw_offset.cos();
             let sin_y = model_yaw_offset.sin();
+            let cos_r = effective_model_roll.cos();
+            let sin_r = effective_model_roll.sin();
             
             let weapon_x = weapon_tag_x * x_mult;
             let weapon_z = -weapon_tag_z;
             
+            // Pitch
             let rotated_weapon_x = weapon_x * cos_p - weapon_z * sin_p;
             let rotated_weapon_y = weapon_x * sin_p + weapon_z * cos_p;
             
+            // Yaw
             let yaw_rotated_weapon_x = rotated_weapon_x * cos_y - rotated_weapon_y * sin_y;
             let yaw_rotated_weapon_y = rotated_weapon_x * sin_y + rotated_weapon_y * cos_y;
             
-            let origin_x = torso_origin_x + yaw_rotated_weapon_x;
-            let origin_y = torso_origin_y + yaw_rotated_weapon_y;
+            // Roll (Pivot Logic)
+            let roll_rotated_x = yaw_rotated_weapon_x * cos_r - yaw_rotated_weapon_y * sin_r;
+            let roll_rotated_y = yaw_rotated_weapon_x * sin_r + yaw_rotated_weapon_y * cos_r;
+            
+            let origin_x = torso_origin_x + roll_rotated_x;
+            let origin_y = torso_origin_y + roll_rotated_y;
             
             let weapon_color = WHITE;
 
@@ -477,7 +492,7 @@ impl PlayerModel {
         }
         
         if let Some(ref head) = self.head {
-            let torso_origin_x = screen_x + torso_tag_x * x_mult;
+            let torso_origin_x = screen_x + torso_tag_x;
             let torso_origin_y = (base_y - torso_offset_y) - torso_tag_z;
 
             let cos_p = pitch.cos();
@@ -494,8 +509,10 @@ impl PlayerModel {
             let yaw_rotated_x = rotated_head_x * cos_y - rotated_head_y * sin_y;
             let yaw_rotated_y = rotated_head_x * sin_y + rotated_head_y * cos_y;
             
-            let cos_r = model_roll.cos();
-            let sin_r = model_roll.sin();
+            let cos_r = effective_model_roll.cos();
+            let sin_r = effective_model_roll.sin();
+
+            // Roll (Pivot Logic: X, -Z -> X, Y)
             let roll_rotated_x = yaw_rotated_x * cos_r - yaw_rotated_y * sin_r;
             let roll_rotated_y = yaw_rotated_x * sin_r + yaw_rotated_y * cos_r;
             
@@ -531,7 +548,7 @@ impl PlayerModel {
                     model_yaw_offset,
                     0.0,
                     0.0,
-                    -model_roll,
+                    -effective_model_roll,
                 );
             }
         }
@@ -652,13 +669,13 @@ impl PlayerModel {
         }
     }
 
-    pub fn render_shadow_with_light(&self, screen_x: f32, screen_y: f32, light_sx: f32, light_sy: f32, light_radius: f32, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, model_yaw_offset: f32) {
+    pub fn render_shadow_with_light(&self, screen_x: f32, screen_y: f32, light_sx: f32, light_sy: f32, light_radius: f32, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, model_yaw_offset: f32, color: Color) {
         let draw_gun = crate::cvar::get_cvar_integer("cg_drawGun");
         let weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
         let base_y = screen_y - 10.0;
         let torso_offset_y = 0.0;
         let x_mult = if flip_x { -1.0 } else { 1.0 };
-        let shadow_color = Color::from_rgba(0, 0, 0, 80);
+        let shadow_color = color;
         let dir_x = screen_x - light_sx;
         let dir_y = screen_y - light_sy;
         let dist = (dir_x * dir_x + dir_y * dir_y).sqrt().max(1.0);

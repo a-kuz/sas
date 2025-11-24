@@ -34,6 +34,8 @@ pub struct PmoveResult {
 }
 
 pub fn pmove(state: &PmoveState, cmd: &PmoveCmd, dt: f32, map: &Map) -> PmoveResult {
+    const MAX_DT: f32 = 0.05;
+    
     let x = state.x;
     let y = state.y;
     let mut vel_x = state.vel_x;
@@ -42,7 +44,8 @@ pub fn pmove(state: &PmoveState, cmd: &PmoveCmd, dt: f32, map: &Map) -> PmoveRes
 
     let on_ground = collision::check_on_ground(x, y, map);
 
-    let dt_norm = dt * 60.0;
+    let dt_clamped = dt.min(MAX_DT);
+    let dt_norm = dt_clamped * 60.0;
 
     let base_max_speed = if cmd.crouch {
         MAX_SPEED_GROUND * CROUCH_SPEED_MULT

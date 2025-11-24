@@ -29,7 +29,7 @@ fn get_overlay_lighting_material() -> &'static Material {
 }
 
 pub struct DeferredRenderer {
-    scene_target: Option<RenderTarget>,
+    pub scene_target: Option<RenderTarget>,
     map_width: usize,
     map_height: usize,
     last_screen_w: u32,

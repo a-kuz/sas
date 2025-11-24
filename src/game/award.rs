@@ -311,6 +311,7 @@ impl GameResults {
                         None,
                         0.0,
                         0.0,
+                        0.0,
                         Some(*id) == self.winner_id,
                     );
                 }

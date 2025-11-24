@@ -40,11 +40,15 @@ impl Cvar {
     }
 
     pub fn get_integer(&self) -> i32 {
-        self.value.parse::<i32>().unwrap_or(0)
+        self.value.parse::<i32>().unwrap_or_else(|_| {
+            self.default_value.parse::<i32>().unwrap_or(0)
+        })
     }
 
     pub fn get_float(&self) -> f32 {
-        self.value.parse::<f32>().unwrap_or(0.0)
+        self.value.parse::<f32>().unwrap_or_else(|_| {
+            self.default_value.parse::<f32>().unwrap_or(0.0)
+        })
     }
 
     pub fn get_bool(&self) -> bool {
