@@ -1,5 +1,6 @@
 pub mod animation;
 pub mod award;
+pub mod batched_effects;
 pub mod bg_pmove;
 pub mod bg_combat;
 pub mod bot_ai;
@@ -118,6 +119,7 @@ pub struct GameState {
     pub award_trackers: std::collections::HashMap<u16, award::AwardTracker>,
     pub award_icon_cache: award::AwardIconCache,
     pub time_announcements: award::TimeAnnouncement,
+    pub lead_announcements: award::LeadAnnouncement,
     pub game_results: award::GameResults,
     pub net_hud: NetHud,
     pub next_projectile_id: u32,
@@ -168,10 +170,10 @@ impl GameState {
             .push(damage_number::DamageNumber::new(player_id, target_id, x, y, damage, target_health, target_armor));
     }
 
-    fn check_and_award(&mut self, killer_id: u16, _victim_id: u16, was_airborne: bool) {
+    fn check_and_award(&mut self, killer_id: u16, _victim_id: u16, was_airborne: bool, weapon: weapon::Weapon) {
         let tracker = self.award_trackers.entry(killer_id).or_insert_with(award::AwardTracker::new);
         
-        let award_type = if was_airborne {
+        let award_type = if matches!(weapon, weapon::Weapon::Railgun) {
             Some(award::AwardType::Impressive)
         } else if tracker.check_excellent(self.match_time) {
             Some(award::AwardType::Excellent)
@@ -717,6 +719,7 @@ impl GameState {
             award_trackers: std::collections::HashMap::new(),
             award_icon_cache: award::AwardIconCache::new(),
             time_announcements: award::TimeAnnouncement::new(),
+            lead_announcements: award::LeadAnnouncement::new(),
             game_results: award::GameResults::new(),
             net_hud: NetHud::new(),
             next_projectile_id: 0,
@@ -786,6 +789,7 @@ impl GameState {
             award_trackers: std::collections::HashMap::new(),
             award_icon_cache,
             time_announcements: award::TimeAnnouncement::new(),
+            lead_announcements: award::LeadAnnouncement::new(),
             game_results: award::GameResults::new(),
             net_hud: NetHud::new(),
             next_projectile_id: 0,
@@ -1287,7 +1291,7 @@ impl GameState {
             }
         }
 
-        let mut exploded_projectiles = Vec::new();
+        let mut exploded_projectiles: Vec<(f32, f32, weapon::Weapon, u16, i32, f32, Option<u16>)> = Vec::new();
         let mut kills = Vec::new();
         let mut pending_damage_numbers: Vec<(u32, u16, f32, f32, i32, i32, i32)> = Vec::new();
         
@@ -1335,6 +1339,7 @@ impl GameState {
                         proj.owner_id,
                         proj.damage,
                         proj.explosion_radius(),
+                        None,
                     ));
                 }
             }
@@ -1373,8 +1378,64 @@ impl GameState {
                                 if let Some(p) = self.projectiles.iter_mut().find(|p| {
                                     p.x == proj.x && p.y == proj.y && p.owner_id == proj.owner_id
                                 }) {
-                                    println!("[{:.3}] [COLLISION] Explosive projectile [{}] hit player {}, deactivating (will explode via normal logic)", 
-                                        macroquad::prelude::get_time(), p.id, player.id);
+                                    println!("[{:.3}] [DIRECT HIT] Explosive projectile [{}] {:?} hit player {} for {} damage", 
+                                        macroquad::prelude::get_time(), p.id, p.weapon_type, player.id, proj.damage);
+                                    
+                                    let was_alive = !player.dead;
+                                    let (died, gibbed) = player.take_damage(proj.damage);
+                                    
+                                    self.weapon_hit_effects.push(
+                                        weapon_hit_effect::WeaponHitEffect::new_blood(proj.x, proj.y),
+                                    );
+                                    
+                                    if was_alive {
+                                        for _ in 0..3 {
+                                            let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
+                                                0 => gib::GibType::Meat1,
+                                                1 => gib::GibType::Meat2,
+                                                _ => gib::GibType::Meat3,
+                                            };
+                                            self.gibs.push(gib::Gib::new(
+                                                player.x,
+                                                player.y,
+                                                crate::compat_rand::gen_range_f32(-3.0, 3.0),
+                                                crate::compat_rand::gen_range_f32(-5.0, -2.0),
+                                                gib_type,
+                                            ));
+                                        }
+                                    }
+                                    
+                                    if proj.owner_id == 1 && was_alive {
+                                        self.audio_events.push(
+                                            crate::audio::events::AudioEvent::PlayerHit {
+                                                damage: proj.damage,
+                                            },
+                                        );
+                                        pending_damage_numbers.push((
+                                            proj.owner_id as u32,
+                                            player.id,
+                                            player.x,
+                                            player.y,
+                                            proj.damage,
+                                            player.health,
+                                            player.armor,
+                                        ));
+                                    }
+                                    
+                                    if died {
+                                        kills.push((proj.owner_id, player.id, player.was_in_air, proj.weapon_type));
+                                    }
+                                    
+                                    exploded_projectiles.push((
+                                        proj.x,
+                                        proj.y,
+                                        proj.weapon_type,
+                                        proj.owner_id,
+                                        proj.damage,
+                                        proj.explosion_radius(),
+                                        Some(player.id),
+                                    ));
+                                    
                                     p.active = false;
                                 }
                                 break;
@@ -1474,7 +1535,7 @@ impl GameState {
                                             );
                                         }
                                         println!("[PROJECTILE KILL] owner={} victim={} weapon={:?}", proj.owner_id, player.id, proj.weapon_type);
-                                        kills.push((proj.owner_id, player.id, false));
+                                        kills.push((proj.owner_id, player.id, false, proj.weapon_type));
                                     }
                                 }
                                 break;
@@ -1600,6 +1661,7 @@ impl GameState {
                                     owner_id,
                                     damage,
                                     explosion_radius,
+                                    None,
                                 ));
                             }
                             
@@ -1755,7 +1817,7 @@ impl GameState {
             ));
         }
 
-        for (x, y, weapon, owner_id, damage, radius) in exploded_projectiles {
+        for (x, y, weapon, owner_id, damage, radius, direct_hit_player_id) in exploded_projectiles {
             self.audio_events
                 .push(crate::audio::events::AudioEvent::Explosion { x });
 
@@ -1783,6 +1845,10 @@ impl GameState {
             let mut new_corpses = Vec::new();
             
             for player in &mut self.players {
+                if Some(player.id) == direct_hit_player_id {
+                    continue;
+                }
+                
                 let dx = player.x - x;
                 let dy = player.y - y;
                 let dist = (dx * dx + dy * dy).sqrt();
@@ -1861,7 +1927,7 @@ impl GameState {
                                         .push(crate::audio::events::AudioEvent::PlayerGib { x: player.x });
                                 }
                                 println!("[EXPLOSION KILL] owner={} victim={} weapon={:?}", owner_id, player.id, weapon);
-                                kills.push((owner_id, player.id, false));
+                                kills.push((owner_id, player.id, false, weapon));
                             }
                         } else if owner_id as u16 == player.id {
                             let self_damage = (damage_points * 0.5) as i32;
@@ -1907,7 +1973,7 @@ impl GameState {
                                         .push(crate::audio::events::AudioEvent::PlayerGib { x: player.x });
                                 }
                                 println!("[EXPLOSION SUICIDE] owner={} weapon={:?}", owner_id, weapon);
-                                kills.push((owner_id, player.id, false));
+                                kills.push((owner_id, player.id, false, weapon));
                             }
                         }
                     }
@@ -1977,7 +2043,7 @@ impl GameState {
             println!("[KILLS] Processing {} kills", kills.len());
         }
 
-        for &(killer_id, victim_id, was_airborne) in &kills {
+        for &(killer_id, victim_id, was_airborne, weapon) in &kills {
             println!("[FRAG] killer_id={} victim_id={} suicide={}", killer_id, victim_id, killer_id == victim_id);
             if killer_id == victim_id {
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == killer_id) {
@@ -1990,7 +2056,7 @@ impl GameState {
                     println!("[FRAG] Kill: player {} frags now {}", killer_id, killer.frags);
                 }
             }
-            self.check_and_award(killer_id, victim_id, was_airborne);
+            self.check_and_award(killer_id, victim_id, was_airborne, weapon);
         }
 
         if let Some(ref mut story) = self.story_mode {
@@ -2052,6 +2118,12 @@ impl GameState {
 
         if let Some(announcement) = self.time_announcements.update(self.match_time, self.time_limit) {
             self.audio_events.push(crate::audio::events::AudioEvent::TimeAnnouncement {
+                announcement: announcement.to_string(),
+            });
+        }
+
+        if let Some(announcement) = self.lead_announcements.update(&self.players) {
+            self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
                 announcement: announcement.to_string(),
             });
         }
@@ -2254,7 +2326,7 @@ impl GameState {
                     &target.texture,
                     0.0,
                     0.0,
-                    Color::from_rgba(0, 0, 0, 80), // Shadow opacity
+                    Color::from_rgba(0, 0, 0, 166), // Shadow opacity
                     DrawTextureParams {
                         dest_size: Some(vec2(screen_w, screen_h)),
                         flip_y: true, // Texture coordinates are flipped
@@ -2347,8 +2419,19 @@ impl GameState {
             let screen_h = screen_height();
             let proj_margin = 100.0;
 
+            let mut batch = batched_effects::BatchedEffectsRenderer::new();
+
             for trail in &self.trails {
-                trail.render(camera_x, camera_y);
+                let screen_x = trail.x - camera_x;
+                let screen_y = trail.y - camera_y;
+                
+                let alpha = (1.0 - (trail.life as f32 / trail.max_life as f32)) * 0.8;
+                let size = trail.size * (1.0 - (trail.life as f32 / trail.max_life as f32) * 0.5);
+                
+                let mut color = trail.color;
+                color.a = alpha;
+                
+                batch.add_trail(screen_x, screen_y, size, color);
             }
 
             for smoke in &self.smokes {
@@ -2371,9 +2454,17 @@ impl GameState {
                     && sy > -proj_margin
                     && sy < screen_h + proj_margin
                 {
-                    projectile.render(camera_x, camera_y, &mut self.projectile_model_cache);
+                    if matches!(projectile.weapon_type, weapon::Weapon::Plasmagun) {
+                        batch.add_plasma(sx, sy, 6.0, Color::from_rgba(50, 150, 255, 120));
+                        batch.add_plasma(sx, sy, 5.0, Color::from_rgba(80, 180, 255, 200));
+                        batch.add_plasma(sx, sy, 3.5, Color::from_rgba(150, 220, 255, 255));
+                    } else {
+                        projectile.render(camera_x, camera_y, &mut self.projectile_model_cache);
+                    }
                 }
             }
+
+            batch.render();
         }
 
         let lighting_ctx = {

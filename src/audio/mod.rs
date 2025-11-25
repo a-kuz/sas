@@ -195,6 +195,9 @@ impl AudioSystem {
             AudioEvent::TimeAnnouncement { announcement } => {
                 self.play(announcement, 0.8);
             }
+            AudioEvent::LeadChange { announcement } => {
+                self.play(announcement, 0.8);
+            }
             AudioEvent::MatchStart => {
                 self.play("fight", 0.8);
             }
@@ -263,6 +266,9 @@ pub async fn init_audio() -> AudioSystem {
     audio.load_sound("5_minute", "q3-resources/sound/feedback/5_minute.wav").await;
     audio.load_sound("1_minute", "q3-resources/sound/feedback/1_minute.wav").await;
     audio.load_sound("prepare", "q3-resources/sound/feedback/prepare.wav").await;
+    
+    audio.load_sound("taken_the_lead", "q3-resources/sound/feedback/taken_lead.wav").await;
+    audio.load_sound("tied_for_the_lead", "q3-resources/sound/feedback/tied_lead.wav").await;
 
     audio
 }

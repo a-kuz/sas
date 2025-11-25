@@ -24,6 +24,7 @@ pub enum AudioEvent {
     GrenadeBounce { x: f32 },
     Award { award_type: AwardType },
     TimeAnnouncement { announcement: String },
+    LeadChange { announcement: String },
     MatchStart,
     MatchEnd,
 }
