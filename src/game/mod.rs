@@ -1741,7 +1741,7 @@ impl GameState {
                     }
 
                     let victim_was_airborne = self.players[idx].was_in_air;
-                    self.check_and_award(owner_id, self.players[idx].id, victim_was_airborne);
+                    self.check_and_award(owner_id, self.players[idx].id, victim_was_airborne, weapon::Weapon::MachineGun);
 
                     let killer_name = self
                         .players
@@ -1768,7 +1768,7 @@ impl GameState {
                 }
 
                 let victim_was_airborne = self.players[idx].was_in_air;
-                self.check_and_award(owner_id, self.players[idx].id, victim_was_airborne);
+                self.check_and_award(owner_id, self.players[idx].id, victim_was_airborne, weapon::Weapon::MachineGun);
 
                 let killer_name = self
                     .players
