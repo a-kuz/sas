@@ -1538,7 +1538,9 @@ impl GameState {
                                         kills.push((proj.owner_id, player.id, false, proj.weapon_type));
                                     }
                                 }
-                                break;
+                                if !matches!(proj.weapon_type, weapon::Weapon::Railgun) {
+                                    break;
+                                }
                             }
                         }
                     }
