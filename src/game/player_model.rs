@@ -17,6 +17,21 @@ pub struct PlayerModel {
 
 impl PlayerModel {
     
+    fn should_skip_quad_for_texture(texture_path: Option<&str>) -> bool {
+        if let Some(path) = texture_path {
+            let path_lower = path.to_lowercase();
+            path_lower.contains("_h.") || path_lower.contains("_h/") ||
+            path_lower.contains("_a.") || path_lower.contains("_a/") ||
+            path_lower.contains("_q.") || path_lower.contains("_q/") ||
+            path_lower.contains("skate") || 
+            path_lower.contains("null") ||
+            path_lower.contains("_f.") ||
+            path_lower.contains("/f_")
+        } else {
+            false
+        }
+    }
+    
     pub fn load(model_name: &str) -> Result<Self, String> {
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -281,7 +296,7 @@ impl PlayerModel {
     
     pub fn render_simple(&self, screen_x: f32, screen_y: f32, color: Color, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, _debug_md3: bool, lighting_context: Option<&super::md3_render::LightingContext>, model_yaw_offset: f32, model_roll: f32, somersault_angle: f32, has_quad_damage: bool) {
         let draw_gun = crate::cvar::get_cvar_integer("cg_drawGun");
-        let weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
+        let _weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
         let base_y = screen_y - 10.0;
         let torso_offset_y = 0.0;
         let x_mult = if flip_x { -1.0 } else { 1.0 };
@@ -346,6 +361,24 @@ impl PlayerModel {
                     effective_legs_roll,
                     lighting_context,
                 );
+
+                if has_quad_damage && !Self::should_skip_quad_for_texture(texture_path.map(|s| s.as_str())) {
+                    super::md3_render::render_md3_mesh_with_yaw_and_roll_quad(
+                        mesh,
+                        safe_frame,
+                        screen_x,
+                        base_y - torso_offset_y,
+                        scale,
+                        color,
+                        texture,
+                        texture_path.map(|s| s.as_str()),
+                        flip_x,
+                        0.0,
+                        legs_total_yaw,
+                        effective_legs_roll,
+                        lighting_context,
+                    );
+                }
             }
         }
         
@@ -396,6 +429,25 @@ impl PlayerModel {
                     0.0,
                     effective_model_roll,
                 );
+
+                if has_quad_damage && !Self::should_skip_quad_for_texture(texture_path.map(|s| s.as_str())) {
+                    super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                        mesh,
+                        safe_frame,
+                        torso_origin_x,
+                        torso_origin_y,
+                        scale,
+                        color,
+                        texture,
+                        texture_path.map(|s| s.as_str()),
+                        flip_x,
+                        pitch,
+                        model_yaw_offset,
+                        0.0,
+                        0.0,
+                        effective_model_roll,
+                    );
+                }
             }
         }
         
@@ -454,6 +506,25 @@ impl PlayerModel {
                         0.0,
                         0.0,
                     );
+
+                    if has_quad_damage {
+                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                            mesh,
+                            safe_frame,
+                            origin_x,
+                            origin_y,
+                            scale * 0.8,
+                            weapon_color,
+                            texture,
+                            None,
+                            flip_x,
+                            weapon_angle,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                        );
+                    }
                 }
 
                 let mut barrel_dx = 0.0f32;
@@ -486,6 +557,25 @@ impl PlayerModel {
                             0.0,
                             0.0,
                         );
+
+                        if has_quad_damage {
+                            super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                                mesh,
+                                safe_frame,
+                                origin_x + barrel_dx,
+                                origin_y + barrel_dy,
+                                scale * 0.8,
+                                weapon_color,
+                                texture,
+                                None,
+                                flip_x,
+                                weapon_angle,
+                                0.0,
+                                0.0,
+                                0.0,
+                                0.0,
+                            );
+                        }
                     }
                 }
             }
@@ -550,104 +640,8 @@ impl PlayerModel {
                     0.0,
                     -effective_model_roll,
                 );
-            }
-        }
 
-        if has_quad_damage {
-            if let Some(ref lower) = self.lower {
-                for mesh in lower.meshes.iter() {
-                    let mesh_name = Self::get_mesh_name(&mesh.header);
-                    let texture = self.textures.get(&mesh_name);
-                    let texture_path = self.texture_paths.get(&mesh_name);
-                    let safe_frame = lower_frame.min(mesh.vertices.len().saturating_sub(1));
-                    
-                    let legs_roll = if model_roll.abs() > 1.0 { -model_roll } else { 0.0 };
-                    
-                    super::md3_render::render_md3_mesh_with_yaw_and_roll_quad(
-                        mesh,
-                        safe_frame,
-                        screen_x,
-                        base_y - torso_offset_y,
-                        scale,
-                        color,
-                        texture,
-                        texture_path.map(|s| s.as_str()),
-                        flip_x,
-                        0.0,
-                        legs_total_yaw,
-                        legs_roll,
-                        lighting_context,
-                    );
-                }
-            }
-            
-            if let Some(ref upper) = self.upper {
-                let torso_origin_x = screen_x + torso_tag_x * x_mult;
-                let torso_origin_y = (base_y - torso_offset_y) - torso_tag_z;
-                
-                for mesh in upper.meshes.iter() {
-                    let mesh_name = Self::get_mesh_name(&mesh.header);
-                    let texture = self.textures.get(&mesh_name);
-                    let texture_path = self.texture_paths.get(&mesh_name);
-                    let safe_frame = upper_frame.min(mesh.vertices.len().saturating_sub(1));
-                    
-                    super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
-                        mesh,
-                        safe_frame,
-                        torso_origin_x,
-                        torso_origin_y,
-                        scale,
-                        color,
-                        texture,
-                        texture_path.map(|s| s.as_str()),
-                        flip_x,
-                        pitch,
-                        model_yaw_offset,
-                        torso_tag_x * x_mult,
-                        -torso_tag_z,
-                        -model_roll,
-                    );
-                }
-            }
-            
-            if let Some(ref head) = self.head {
-                let torso_origin_x = screen_x + torso_tag_x * x_mult;
-                let torso_origin_y = (base_y - torso_offset_y) - torso_tag_z;
-                
-                let head_x = head_tag_x;
-                let head_z = head_tag_z;
-                let cos_p = pitch.cos();
-                let sin_p = pitch.sin();
-                let cos_y = model_yaw_offset.cos();
-                let sin_y = model_yaw_offset.sin();
-                
-                let rotated_head_x = head_x * cos_p - head_z * sin_p;
-                let rotated_head_y = head_x * sin_p + head_z * cos_p;
-                
-                let yaw_rotated_x = rotated_head_x * cos_y - rotated_head_y * sin_y;
-                let yaw_rotated_y = rotated_head_x * sin_y + rotated_head_y * cos_y;
-                
-                let cos_r = model_roll.cos();
-                let sin_r = model_roll.sin();
-                let roll_rotated_x = yaw_rotated_x * cos_r - yaw_rotated_y * sin_r;
-                let roll_rotated_y = yaw_rotated_x * sin_r + yaw_rotated_y * cos_r;
-                
-                let head_origin_x = torso_origin_x + roll_rotated_x;
-                let head_origin_y = torso_origin_y + roll_rotated_y;
-
-                let base_dir = if flip_x { std::f32::consts::PI } else { 0.0 };
-                let mut rel = aim_angle - base_dir;
-                while rel > std::f32::consts::PI { rel -= 2.0 * std::f32::consts::PI; }
-                while rel < -std::f32::consts::PI { rel += 2.0 * std::f32::consts::PI; }
-                let max_turn = 0.7_f32;
-                rel = rel.clamp(-max_turn, max_turn);
-                let head_angle = rel * 0.75;
-
-                for mesh in head.meshes.iter() {
-                    let mesh_name = Self::get_mesh_name(&mesh.header);
-                    let texture = self.textures.get(&mesh_name);
-                    let safe_frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                    
+                if has_quad_damage && !Self::should_skip_quad_for_texture(texture_path.map(|s| s.as_str())) {
                     super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
                         mesh,
                         safe_frame,
@@ -662,7 +656,7 @@ impl PlayerModel {
                         model_yaw_offset,
                         0.0,
                         0.0,
-                        -model_roll,
+                        -effective_model_roll,
                     );
                 }
             }

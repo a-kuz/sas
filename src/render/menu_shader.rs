@@ -31,6 +31,7 @@ pub fn init_menu_shader() {
         
         uniform vec2 iResolution;
         uniform float iTime;
+        uniform vec2 iMouse;
         
         // Tanh approximation for GLSL 100
         vec4 tanh_approx(vec4 x) {
@@ -95,6 +96,14 @@ pub fn init_menu_shader() {
             
             // Tanh tonemapping
             O = tanh_approx(O / 1000.0);
+            
+            // Mouse shadow effect
+            vec2 mousePos = iMouse;
+            float distToMouse = length(I - mousePos);
+            float shadowRadius = 150.0;
+            float shadowStrength = smoothstep(shadowRadius, 0.0, distToMouse);
+            O.rgb *= (1.0 - shadowStrength * 0.7);
+            
             O.a = 1.0;
             
             gl_FragColor = O;
@@ -106,6 +115,7 @@ pub fn init_menu_shader() {
                 uniforms: vec![
                     UniformDesc::new("iResolution", UniformType::Float2),
                     UniformDesc::new("iTime", UniformType::Float1),
+                    UniformDesc::new("iMouse", UniformType::Float2),
                 ],
                 ..Default::default()
             },
@@ -118,11 +128,13 @@ pub fn draw_menu_background(time: f32) {
     
     let w = screen_width();
     let h = screen_height();
+    let mouse_pos = mouse_position();
     
     let material = MENU_FIRE_MATERIAL.get().unwrap();
     
     material.set_uniform("iResolution", (w, h));
     material.set_uniform("iTime", time);
+    material.set_uniform("iMouse", (mouse_pos.0, mouse_pos.1));
     
     gl_use_material(material);
     draw_rectangle(0.0, 0.0, w, h, WHITE);
@@ -156,12 +168,11 @@ pub fn draw_menu_items(selected: usize, items: &[&str], logo_texture: Option<&Te
     }
 
     let item_h = 54.0;
-    let item_w = 400.0;
-    let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5 + 100.0; // Push down a bit
+    let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5;
+    let right_margin = 100.0;
     
     for (i, label) in items.iter().enumerate() {
         let y = start_y + (i as f32) * (item_h + 12.0);
-        let x = w * 0.5 - item_w * 0.5;
         
         let text_color = if i == selected { 
             Color::from_rgba(255, 64, 64, 255) 
@@ -169,7 +180,11 @@ pub fn draw_menu_items(selected: usize, items: &[&str], logo_texture: Option<&Te
             Color::from_rgba(210, 220, 230, 255) 
         };
         let size = if i == selected { 36.0 } else { 30.0 };
-        crate::render::draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, size, text_color);
+        
+        let text_width = crate::render::measure_q3_banner_string(&label.to_uppercase(), size);
+        let x = w - text_width - right_margin;
+        
+        crate::render::draw_q3_banner_string(&label.to_uppercase(), x, y + 10.0, size, text_color);
     }
 }
 

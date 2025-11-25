@@ -170,7 +170,7 @@ impl GameState {
             .push(damage_number::DamageNumber::new(player_id, target_id, x, y, damage, target_health, target_armor));
     }
 
-    fn check_and_award(&mut self, killer_id: u16, _victim_id: u16, was_airborne: bool, weapon: weapon::Weapon) {
+    fn check_and_award(&mut self, killer_id: u16, _victim_id: u16, _was_airborne: bool, weapon: weapon::Weapon) {
         let tracker = self.award_trackers.entry(killer_id).or_insert_with(award::AwardTracker::new);
         
         let award_type = if matches!(weapon, weapon::Weapon::Railgun) {

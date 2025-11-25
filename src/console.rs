@@ -28,6 +28,7 @@ pub struct Console {
     shader_renderer: Option<TileShaderRenderer>,
     pub bot_add_request: Option<String>,
     pub bot_remove_request: bool,
+    pub bot_afk_request: bool,
     pub connect_request: Option<(String, String)>,
     pub disconnect_request: bool,
     pub net_stats_toggle: bool,
@@ -64,6 +65,7 @@ impl Console {
             shader_renderer: None,
             bot_add_request: None,
             bot_remove_request: false,
+            bot_afk_request: false,
             connect_request: None,
             disconnect_request: false,
             net_stats_toggle: false,
@@ -331,7 +333,7 @@ impl Console {
         let commands = vec![
             "clear", "cls", "cvarlist", "toggle", "echo", "reset", 
             "writeconfig", "bot_add", "addbot", "bot_remove", "removebot",
-            "help", "set", "endmatch"
+            "bot_afk", "help", "set", "endmatch"
         ];
         
         let mut all_matches = Vec::new();
@@ -438,6 +440,9 @@ impl Console {
         } else if cmd == "bot_remove" || cmd == "removebot" {
             self.bot_remove_request = true;
             self.print("Removing bot\n");
+        } else if cmd == "bot_afk" {
+            self.bot_afk_request = true;
+            self.print("Toggling bot AFK mode\n");
         } else if cmd == "connect" {
             if parts.len() >= 2 {
                 let server = parts[1].to_string();
@@ -476,6 +481,7 @@ impl Console {
             self.print("  writeconfig - Save config\n");
             self.print("  bot_add [model] - Add bot\n");
             self.print("  bot_remove - Remove bot\n");
+            self.print("  bot_afk - Toggle bot AFK mode\n");
             self.print("  connect <server:port> [name] - Connect to server\n");
             self.print("  disconnect - Disconnect from server\n");
             self.print("  endmatch - End current match\n");

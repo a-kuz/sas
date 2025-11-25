@@ -1,4 +1,3 @@
-use super::PACKET_BACKUP;
 
 pub const CMD_BACKUP: usize = 64;
 

@@ -23,6 +23,7 @@ pub struct BotAI {
     pub current_path: Vec<usize>,
     pub path_target: Option<(f32, f32)>,
     pub path_update_timer: u32,
+    pub afk: bool,
 }
 
 impl BotAI {
@@ -45,10 +46,18 @@ impl BotAI {
             current_path: Vec::new(),
             path_target: None,
             path_update_timer: 0,
+            afk: false,
         }
     }
 
     pub fn think(&mut self, bot: &Player, players: &[Player], map: &Map, projectiles: &[super::projectile::Projectile], nav_graph: Option<&NavGraph>) {
+        if self.afk {
+            self.move_direction = 0.0;
+            self.want_jump = false;
+            self.want_shoot = false;
+            return;
+        }
+        
         self.think_time += 1;
         
         if self.evade_timer > 0 {
@@ -185,13 +194,6 @@ impl BotAI {
 
         if let Some((enemy, dist)) = closest_enemy {
             let has_los = map.has_line_of_sight(bot.x, bot.y - 24.0, enemy.x, enemy.y - 24.0);
-            
-            if self.think_time % 60 == 0 {
-                let dx = enemy.x - bot.x;
-                let dy = enemy.y - bot.y;
-                // println!("[Bot {}] -> Enemy {} dist={:.0} dx={:.0} dy={:.0} has_los={}", 
-                    // bot.id, enemy.id, dist, dx, dy, has_los);
-            }
             
             if !has_los {
                 self.want_shoot = false;
@@ -498,7 +500,7 @@ impl BotAI {
         }
     }
     
-    fn find_reachable_node(x: f32, y: f32, nav_graph: &NavGraph, map: &Map) -> Option<usize> {
+    fn find_reachable_node(x: f32, y: f32, nav_graph: &NavGraph, _map: &Map) -> Option<usize> {
         let feet_y = y + 24.0;
         
         let mut best = None;
@@ -559,7 +561,7 @@ impl BotAI {
                 for (goal, _dist) in candidates.iter().take(10) {
                     if let Some(path) = nav_graph.find_path(start, *goal) {
                         self.current_path = path;
-                        let goal_node = &nav_graph.nodes[*goal];
+                        let _goal_node = &nav_graph.nodes[*goal];
                         // println!("[Bot {}] Found path: {} waypoints from node {} ({:.0},{:.0}) to node {} ({:.0},{:.0}), target=({:.0},{:.0})", 
                         //     bot.id, self.current_path.len(), 
                         //     start, nav_graph.nodes[start].x, nav_graph.nodes[start].y,
@@ -605,7 +607,7 @@ impl BotAI {
             let dist = (dx * dx + dy * dy).sqrt();
             
             if self.think_time % 120 == 0 {
-                let edge_type = edge_to_next.map(|e| format!("{:?}", e.edge_type)).unwrap_or("Unknown".to_string());
+                let _edge_type = edge_to_next.map(|e| format!("{:?}", e.edge_type)).unwrap_or("Unknown".to_string());
                 // println!("[Bot {}] Path: {}/{} waypoints, next at ({:.0},{:.0}), type={}, dist={:.0}, bot at ({:.0},{:.0})", 
                 //     bot.id, self.current_path.len() - 1, self.current_path.len(), 
                 //     next_node.x, next_node.y, edge_type, dist, bot.x, bot.y);

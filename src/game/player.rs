@@ -353,7 +353,7 @@ impl Player {
     }
 
     pub fn _update(&mut self, dt: f32, map: &Map) -> (Option<bool>, Vec<AudioEvent>) {
-        let mut events = Vec::new();
+        let events = Vec::new();
 
         if self.dead {
             return (None, events);

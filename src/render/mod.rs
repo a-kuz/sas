@@ -415,6 +415,34 @@ pub fn draw_q3_banner_string(text: &str, x: f32, y: f32, size: f32, color: Color
     }
 }
 
+pub fn measure_q3_banner_string(text: &str, size: f32) -> f32 {
+    if Q3_FONT2_PROP.get().is_none() {
+        return text.len() as f32 * size;
+    }
+    
+    let mut width = 0.0;
+    let size_scale = size / PROPB_HEIGHT;
+    
+    for ch in text.chars() {
+        let upper = ch.to_ascii_uppercase();
+        if upper == ' ' {
+            width += (PROPB_SPACE_WIDTH + PROPB_GAP_WIDTH) * size_scale;
+            continue;
+        }
+        if ('A'..='Z').contains(&upper) {
+            let idx = (upper as u8 - b'A') as usize;
+            let (_sx, _sy, w) = PROPB_MAP[idx];
+            let aw = (w as f32) * size_scale;
+            width += (aw + PROPB_GAP_WIDTH * size_scale).round();
+        } else {
+            width += size.round();
+        }
+    }
+    
+    width
+}
+
+
 pub struct Camera {
     pub x: f32,
     pub y: f32,

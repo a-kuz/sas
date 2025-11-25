@@ -344,6 +344,11 @@ impl GameLoop {
             self.decrease_bot_count();
         }
         
+        if console.bot_afk_request {
+            console.bot_afk_request = false;
+            self.toggle_bot_afk();
+        }
+        
         if console.server_bot_add_request {
             console.server_bot_add_request = false;
             if let Err(e) = self.game_state.send_chat("addbot".to_string()) {
@@ -896,6 +901,28 @@ impl GameLoop {
             }
         } else {
             println!("[GameLoop] No bots to remove (F4)");
+        }
+    }
+
+    fn toggle_bot_afk(&mut self) {
+        if self.game_state.is_local_multiplayer {
+            return;
+        }
+
+        let mut toggled_count = 0;
+        for player in &mut self.game_state.players {
+            if player.is_bot {
+                if let Some(ref mut ai) = player.bot_ai {
+                    ai.afk = !ai.afk;
+                    let status = if ai.afk { "AFK" } else { "Active" };
+                    println!("[GameLoop] Bot {} is now {}", player.name, status);
+                    toggled_count += 1;
+                }
+            }
+        }
+
+        if toggled_count == 0 {
+            println!("[GameLoop] No bots to toggle AFK");
         }
     }
 

@@ -49,7 +49,7 @@ impl MenuState {
     }
 
     pub async fn handle_input(&mut self) -> Option<GameState> {
-        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "SETUP", "QUIT"];
+        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
 
         match self.current_menu.as_str() {
             "main" => {
@@ -72,8 +72,7 @@ impl MenuState {
                     match self.main_menu_selected {
                         0 => self.current_menu = "map_select".to_string(),
                         1 => self.current_menu = "1v1_map_select".to_string(),
-                        2 => self.current_menu = "settings".to_string(),
-                        3 => std::process::exit(0),
+                        2 => std::process::exit(0),
                         _ => {}
                     }
                 } else if is_key_pressed(KeyCode::Enter) {
@@ -81,8 +80,7 @@ impl MenuState {
                     match self.main_menu_selected {
                         0 => self.current_menu = "map_select".to_string(),
                         1 => self.current_menu = "1v1_map_select".to_string(),
-                        2 => self.current_menu = "settings".to_string(),
-                        3 => std::process::exit(0),
+                        2 => std::process::exit(0),
                         _ => {}
                     }
                 }
@@ -175,7 +173,7 @@ impl MenuState {
     }
 
     pub fn render(&self) {
-        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "SETUP", "QUIT"];
+        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
         let hover_idx = self.get_hovered_item_index();
 
         // Draw background for all menus
@@ -211,15 +209,18 @@ impl MenuState {
         
         match self.current_menu.as_str() {
             "main" => {
-                let num_items = 4;
+                let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
                 let item_h = 54.0;
-                let item_w = 400.0;
-                let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5;
+                let start_y = h * 0.5 - (main_menu_items.len() as f32 * (item_h + 12.0)) * 0.5;
+                let right_margin = 100.0;
                 
-                for i in 0..num_items {
+                for i in 0..main_menu_items.len() {
                     let y = start_y + (i as f32) * (item_h + 12.0);
-                    let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
+                    let size = if i == self.main_menu_selected { 36.0 } else { 30.0 };
+                    let text_width = crate::render::measure_q3_banner_string(&main_menu_items[i].to_uppercase(), size);
+                    let x = w - text_width - right_margin;
+                    
+                    if mouse_pos.0 >= x && mouse_pos.0 <= w - right_margin
                         && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
                     {
                         return Some(i);
@@ -314,15 +315,18 @@ impl MenuState {
         let w = screen_width();
         let h = screen_height();
         
+        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
         let item_h = 54.0;
-        let item_w = 400.0;
         let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5;
+        let right_margin = 100.0;
 
         for i in 0..num_items {
             let y = start_y + (i as f32) * (item_h + 12.0);
-            let x = w * 0.5 - item_w * 0.5;
+            let size = if i == self.main_menu_selected { 36.0 } else { 30.0 };
+            let text_width = crate::render::measure_q3_banner_string(&main_menu_items[i].to_uppercase(), size);
+            let x = w - text_width - right_margin;
 
-            if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
+            if mouse_pos.0 >= x && mouse_pos.0 <= w - right_margin
                 && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
             {
                 return Some(i);

@@ -20,7 +20,7 @@ impl UserCmd {
         }
     }
     
-    pub fn from_input(input: &crate::input::Input, screen_width: f32, screen_height: f32) -> Self {
+    pub fn from_input(input: &crate::input::Input, _screen_width: f32, _screen_height: f32) -> Self {
         let mut cmd = Self::new();
         
         if input.move_left {

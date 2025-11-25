@@ -1,5 +1,4 @@
 use macroquad::prelude::*;
-use macroquad::miniquad;
 use std::sync::OnceLock;
 
 static RGB_SHIFT_MATERIAL: OnceLock<Material> = OnceLock::new();
