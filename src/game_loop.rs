@@ -750,6 +750,7 @@ impl GameLoop {
 
     fn handle_camera(&mut self, dt: f32) {
         if self.game_state.is_local_multiplayer && self.game_state.players.len() >= 2 {
+            self.camera.tracking_projectile_id = None;
             self.camera.follow_two_players(
                 self.game_state.players[0].x,
                 self.game_state.players[0].y,
@@ -757,7 +758,33 @@ impl GameLoop {
                 self.game_state.players[1].y,
             );
         } else if let Some(player) = self.game_state.players.get(0) {
-            self.camera.follow(player.x, player.y);
+            if player.dead {
+                if let Some(tracking_id) = self.camera.tracking_projectile_id {
+                    if let Some(projectile) = self.game_state.projectiles.iter().find(|p| p.id == tracking_id && p.active) {
+                        self.camera.follow_projectile(projectile.x, projectile.y);
+                    } else {
+                        self.camera.tracking_projectile_id = None;
+                    }
+                } else {
+                    let player_projectile = self.game_state.projectiles.iter()
+                        .find(|p| p.owner_id == player.id 
+                            && p.active 
+                            && matches!(p.weapon_type, crate::game::weapon::Weapon::RocketLauncher | crate::game::weapon::Weapon::GrenadeLauncher));
+                    
+                    if let Some(projectile) = player_projectile {
+                        self.camera.tracking_projectile_id = Some(projectile.id);
+                        self.camera.follow_projectile(projectile.x, projectile.y);
+                    } else {
+                        self.camera.follow(player.x, player.y);
+                    }
+                }
+            } else {
+                if self.camera.tracking_projectile_id.is_some() {
+                    // Player alive, clear tracking
+                }
+                self.camera.tracking_projectile_id = None;
+                self.camera.follow(player.x, player.y);
+            }
         }
 
         self.camera.update(
@@ -806,7 +833,7 @@ impl GameLoop {
             }
         }
         
-        self.game_state.render(self.camera.x, self.camera.y);
+        self.game_state.render(self.camera.x, self.camera.y, self.camera.zoom);
         self.game_state.render_messages();
         
         {

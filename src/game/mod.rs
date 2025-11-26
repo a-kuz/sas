@@ -2135,7 +2135,7 @@ impl GameState {
         }
     }
 
-    pub fn render(&mut self, camera_x: f32, camera_y: f32) {
+    pub fn render(&mut self, camera_x: f32, camera_y: f32, zoom: f32) {
         let _t_total_start = get_time();
         let _render_total = crate::profiler::scope("render_total");
 
@@ -2152,7 +2152,7 @@ impl GameState {
         let renderer = self.deferred_renderer.as_mut().unwrap();
 
         if !self.disable_deferred {
-            renderer.begin_scene_with_scale(self.render_scale);
+            renderer.begin_scene_with_scale(self.render_scale, zoom);
         }
 
         #[cfg(target_arch = "wasm32")]
@@ -2164,7 +2164,7 @@ impl GameState {
                 &self.linear_lights,
                 camera_x,
                 camera_y,
-                1.0,
+                zoom,
                 self.ambient_light,
                 self.disable_shadows,
                 self.disable_dynamic_lights,
@@ -2311,7 +2311,7 @@ impl GameState {
                     if let Some(target) = &renderer.scene_target {
                         let camera = Camera2D {
                             render_target: Some(target.clone()),
-                            zoom: vec2(2.0 / screen_w, 2.0 / screen_h),
+                            zoom: vec2((2.0 * zoom) / screen_w, (2.0 * zoom) / screen_h),
                             target: vec2(screen_w / 2.0, screen_h / 2.0),
                             offset: vec2(0.0, 0.0),
                             ..Default::default()

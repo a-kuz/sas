@@ -165,10 +165,10 @@ impl DeferredRenderer {
     }
     
     pub fn begin_scene(&mut self) {
-        self.begin_scene_with_scale(self.last_render_scale);
+        self.begin_scene_with_scale(self.last_render_scale, 1.0);
     }
     
-    pub fn begin_scene_with_scale(&mut self, render_scale: f32) {
+    pub fn begin_scene_with_scale(&mut self, render_scale: f32, zoom: f32) {
         let current_w = screen_width() as u32;
         let current_h = screen_height() as u32;
         
@@ -191,7 +191,7 @@ impl DeferredRenderer {
         if let Some(ref target) = self.scene_target {
             set_camera(&Camera2D {
                 render_target: Some(target.clone()),
-                zoom: vec2(2.0 / screen_width(), 2.0 / screen_height()),
+                zoom: vec2((2.0 * zoom) / screen_width(), (2.0 * zoom) / screen_height()),
                 target: vec2(screen_width() / 2.0, screen_height() / 2.0),
                 offset: vec2(0.0, 0.0),
                 ..Default::default()

@@ -448,11 +448,14 @@ pub struct Camera {
     pub y: f32,
     pub target_x: f32,
     pub target_y: f32,
+    pub zoom: f32,
+    pub target_zoom: f32,
     pub dead_zone_w: f32,
     pub dead_zone_h: f32,
     pub shake_x: f32,
     pub shake_y: f32,
     pub shake_intensity: f32,
+    pub tracking_projectile_id: Option<u32>,
 }
 
 impl Camera {
@@ -462,11 +465,14 @@ impl Camera {
             y: 0.0,
             target_x: 0.0,
             target_y: 0.0,
+            zoom: 1.0,
+            target_zoom: 1.0,
             dead_zone_w: 160.0,
             dead_zone_h: 120.0,
             shake_x: 0.0,
             shake_y: 0.0,
             shake_intensity: 0.0,
+            tracking_projectile_id: None,
         }
     }
 
@@ -493,6 +499,7 @@ impl Camera {
 
         self.target_x = desired_x;
         self.target_y = desired_y;
+        self.target_zoom = 1.0;
     }
     
     pub fn follow_two_players(&mut self, p1_x: f32, p1_y: f32, p2_x: f32, p2_y: f32) {
@@ -520,6 +527,19 @@ impl Camera {
         
         self.target_x = center_x - view_w * 0.5;
         self.target_y = center_y - effective_view_h * 0.5;
+        self.target_zoom = 1.0;
+    }
+
+    pub fn follow_projectile(&mut self, projectile_x: f32, projectile_y: f32) {
+        const HUD_HEIGHT: f32 = 80.0;
+        
+        let view_w = screen_width();
+        let view_h = screen_height();
+        let effective_view_h = view_h - HUD_HEIGHT;
+        // Center the projectile in the viewport
+        self.target_x = projectile_x - view_w * 0.5;
+        self.target_y = projectile_y - effective_view_h * 0.5;
+        self.target_zoom = 1.5;
     }
 
     pub fn update(&mut self, dt: f32, map_width: f32, map_height: f32) {
@@ -528,6 +548,7 @@ impl Camera {
         
         self.x += (self.target_x - self.x) * SMOOTHNESS * dt;
         self.y += (self.target_y - self.y) * SMOOTHNESS * dt;
+        self.zoom += (self.target_zoom - self.zoom) * SMOOTHNESS * dt;
 
         let screen_w = screen_width();
         let screen_h = screen_height();
