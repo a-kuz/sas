@@ -761,7 +761,7 @@ impl GameLoop {
             if player.dead {
                 if let Some(tracking_id) = self.camera.tracking_projectile_id {
                     if let Some(projectile) = self.game_state.projectiles.iter().find(|p| p.id == tracking_id && p.active) {
-                        self.camera.follow_projectile(projectile.x, projectile.y);
+                        self.camera.follow_projectile_with_zoom(projectile.x, projectile.y);
                     } else {
                         self.camera.tracking_projectile_id = None;
                     }
@@ -773,7 +773,7 @@ impl GameLoop {
                     
                     if let Some(projectile) = player_projectile {
                         self.camera.tracking_projectile_id = Some(projectile.id);
-                        self.camera.follow_projectile(projectile.x, projectile.y);
+                        self.camera.follow_projectile_with_zoom(projectile.x, projectile.y);
                     } else {
                         self.camera.follow(player.x, player.y);
                     }

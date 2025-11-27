@@ -3,8 +3,21 @@ setlocal enabledelayedexpansion
 
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_ROOT=%SCRIPT_DIR%.."
-set "Q3_RESOURCES=%PROJECT_ROOT%\q3-resources"
+set "Q3_RESOURCES=q3-resources"
 set "GAME_BINARY=sas.exe"
+
+echo Checking for ImageMagick...
+where magick >nul 2>nul
+if %errorlevel% neq 0 (
+    echo ImageMagick not found. Installing via winget...
+    winget install --id ImageMagick.ImageMagick -e --silent
+    if %errorlevel% neq 0 (
+        echo [WARNING] Failed to install ImageMagick automatically
+        echo           You can install it manually from: https://imagemagick.org/
+    ) else (
+        echo [OK] ImageMagick installed successfully
+    )
+)
 
 set "pak0=https://github.com/nrempel/q3-server/raw/master/baseq3/pak0.pk3"
 set "hi_res=https://files.ioquake3.org/xcsv_hires.zip"

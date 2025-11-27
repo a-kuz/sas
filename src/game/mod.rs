@@ -2203,7 +2203,7 @@ impl GameState {
                 // Render shadows to target
                 let mut camera = Camera2D {
                     render_target: Some(target.clone()),
-                    zoom: vec2(2.0 / screen_w, 2.0 / screen_h),
+                    zoom: vec2((2.0 * zoom) / screen_w, (2.0 * zoom) / screen_h),
                     target: vec2(screen_w / 2.0, screen_h / 2.0),
                     offset: vec2(0.0, 0.0),
                     ..Default::default()
@@ -2991,7 +2991,7 @@ impl GameState {
                         &self.linear_lights,
                         camera_x,
                         camera_y,
-                        1.0,
+                        zoom,
                         self.ambient_light,
                         self.disable_shadows,
                         self.disable_dynamic_lights,
@@ -3047,8 +3047,8 @@ impl GameState {
                         continue;
                     }
                     
-                    let screen_x = player.x - camera_x;
-                    let screen_y = player.y - camera_y - 90.0;
+                    let world_x = player.x;
+                    let world_y = player.y - 90.0;
                     
                     if let Some(texture) = self.award_icon_cache.get(&award.award_type) {
                         let size = 48.0 * award.scale;
@@ -3056,8 +3056,8 @@ impl GameState {
                         
                         draw_texture_ex(
                             texture,
-                            screen_x - size / 2.0,
-                            screen_y - bounce,
+                            world_x - size / 2.0,
+                            world_y - bounce,
                             Color::new(1.0, 1.0, 1.0, award.scale),
                             DrawTextureParams {
                                 dest_size: Some(Vec2::new(size, size)),

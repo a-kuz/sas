@@ -299,8 +299,13 @@ impl DeferredRenderer {
                 self.static_uniforms_set = true;
             }
             
+            let center_x = camera_x + screen_w * 0.5;
+            let center_y = camera_y + screen_h * 0.5;
+            let adjusted_x = center_x - (screen_w / zoom) * 0.5;
+            let adjusted_y = center_y - (screen_h / zoom) * 0.5;
+            
             material.set_uniform("screenToWorld", [screen_w / zoom, screen_h / zoom]);
-            material.set_uniform("cameraPos", [camera_x, camera_y]);
+            material.set_uniform("cameraPos", [adjusted_x, adjusted_y]);
             material.set_uniform("time", get_time() as f32);
             
             if disable_dynamic_lights {

@@ -536,19 +536,30 @@ impl Camera {
         let view_w = screen_width();
         let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
-        // Center the projectile in the viewport
+        
         self.target_x = projectile_x - view_w * 0.5;
         self.target_y = projectile_y - effective_view_h * 0.5;
-        self.target_zoom = 1.5;
+    }
+    
+    pub fn follow_projectile_with_zoom(&mut self, projectile_x: f32, projectile_y: f32) {
+        const HUD_HEIGHT: f32 = 80.0;
+        
+        let view_w = screen_width();
+        let view_h = screen_height();
+        let effective_view_h = view_h - HUD_HEIGHT;
+        
+        self.target_x = projectile_x - view_w * 0.5;
+        self.target_y = projectile_y - effective_view_h * 0.5;
+        self.target_zoom = 1.2;
     }
 
     pub fn update(&mut self, dt: f32, map_width: f32, map_height: f32) {
-        const SMOOTHNESS: f32 = 5.0;
+        const SMOOTHNESS: f32 = 3.0;
         const HUD_HEIGHT: f32 = 80.0;
         
         self.x += (self.target_x - self.x) * SMOOTHNESS * dt;
         self.y += (self.target_y - self.y) * SMOOTHNESS * dt;
-        self.zoom += (self.target_zoom - self.zoom) * SMOOTHNESS * dt;
+        self.zoom += (self.target_zoom - self.zoom) * 2.0 * dt;
 
         let screen_w = screen_width();
         let screen_h = screen_height();

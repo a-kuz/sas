@@ -27,9 +27,14 @@ I spent more time on these installation scripts than on the physics engine. They
 curl -fsSL https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.sh | bash
 ```
 
-**Windows:**
+**Windows (cmd):**
 ```cmd
-curl -fsSL https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.bat -o install.bat && install.bat
+curl -L https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.bat -o install.bat & install.bat
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.ps1 | iex
 ```
 
 ### Disclaimer
