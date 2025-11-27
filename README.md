@@ -5,16 +5,13 @@
 # SAS III
 
 
-<video src="https://github.com/user-attachments/assets/175cd912-7038-4be9-88ce-be2e0602e987" controls="controls" style="max-width: 730px;">
+<video src="https://github.com/user-attachments/assets/d45c265c-64d8-438b-8cdf-2b6f72c436da" controls="controls" style="max-width: 730px;">
 </video>
 
 ## Still Alive Somehow
 
 
 ![SAS III Logo](assets/sub-3.gif)
-
-![Low Light](assets/screenshoots/low-light.png)
-*Yes, we have dynamic lighting.*
 
 Another arena shooter in Rust. Because the world definitely needed one more.
 Fast, buggy, and purely fueled by nostalgia and caffeine.
@@ -40,16 +37,3 @@ irm https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.ps1 | iex
 ### Disclaimer
 **You need a legal copy of Quake 3 Arena** to play.
 This project provides the code; id Software provided the fun part 25 years ago.
-
----
-
-### Screenshots
-
-![Gibs Physics](assets/screenshoots/gibs-physics.jpeg)
-*Gibs physics. It just works.*
-
-![Rail Gun](assets/screenshoots/rail.jpeg)
-*Railgun present.*
-
-![Plasma](assets/screenshoots/plasma-light.jpeg)
-*Shiny plasma.*

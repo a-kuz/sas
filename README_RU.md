@@ -1,10 +1,17 @@
+<small>
+[en](README.md)
+</small>
+
 # SAS III
+
+
+<video src="https://github.com/user-attachments/assets/d45c265c-64d8-438b-8cdf-2b6f72c436da" controls="controls" style="max-width: 730px;">
+</video>
+
 ## Still Alive Somehow
 
-![SAS III Logo](assets/sub-3.gif)
 
-![Low Light](assets/screenshoots/low-light.png)
-*Да, у нас есть динамическое освещение.*
+![SAS III Logo](assets/sub-3.gif)
 
 [English Version](README.md)
 
@@ -32,19 +39,6 @@ irm https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.ps1 | iex
 ### Важно
 **Вам нужна лицензионная копия Quake 3 Arena** для игры.
 Здесь только код; веселую часть id Software сделали 25 лет назад.
-
----
-
-### Скриншоты
-
-![Gibs Physics](assets/screenshoots/gibs-physics.jpeg)
-*Физика гибов работает. Это главное.*
-
-![Rail Gun](assets/screenshoots/rail.jpeg)
-*Рельса на месте. Значит, это настоящий арена шутер.*
-
-![Plasma](assets/screenshoots/plasma-light.jpeg)
-*Плазма светится. Красиво же.*
 
 
 
