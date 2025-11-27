@@ -82,47 +82,6 @@ for /l %%i in (1,1,8) do (
     )
 )
 
-if not exist "xcsv_bq3hi-res.pk3" (
-    echo Downloading High Resolution Pack...
-    curl -L --progress-bar "%hi_res%" -o xcsv_hires.zip
-    tar -xf xcsv_hires.zip
-    del xcsv_hires.zip
-    echo [OK] High Resolution Pack installed
-) else (
-    echo [OK] High Resolution Pack already exists
-)
-
-if not exist "pak9hqq37test20181106.pk3" (
-    echo Downloading Extra Pack Resolutions...
-    curl -L --progress-bar "%xpr%" -o pak9hqq37test20181106.pk3
-    echo [OK] Extra Pack Resolutions installed
-) else (
-    echo [OK] Extra Pack Resolutions already exists
-)
-
-if not exist "quake3-live-soundpack.pk3" (
-    echo Downloading Quake3 Live Soundpack...
-    curl -L --progress-bar "%q3_ls%" -o quake3-live-soundpack.pk3
-    echo [OK] Quake3 Live Soundpack installed
-) else (
-    echo [OK] Quake3 Live Soundpack already exists
-)
-
-if not exist "pakxy01Tv5.pk3" (
-    echo Downloading HD Weapons...
-    curl -L --progress-bar "%hd_weapons%" -o pakxy01Tv5.pk3
-    echo [OK] HD Weapons installed
-) else (
-    echo [OK] HD Weapons already exists
-)
-
-if not exist "zpack-weapons.pk3" (
-    echo Downloading ZPack Weapons...
-    curl -L --progress-bar "%zpack_weapons%" -o zpack-weapons.pk3
-    echo [OK] ZPack Weapons installed
-) else (
-    echo [OK] ZPack Weapons already exists
-)
 
 if not exist "cpma-mappack-full.pk3" (
     if not exist "maps" (

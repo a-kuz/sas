@@ -85,47 +85,6 @@ for ($i = 1; $i -le 8; $i++) {
     }
 }
 
-if (-not (Test-Path "xcsv_bq3hi-res.pk3")) {
-    Write-Host "Downloading High Resolution Pack..."
-    curl -L --progress-bar $hi_res -o xcsv_hires.zip
-    Expand-Archive -Path xcsv_hires.zip -DestinationPath . -Force
-    Remove-Item xcsv_hires.zip
-    Write-Host "[OK] High Resolution Pack installed" -ForegroundColor Green
-} else {
-    Write-Host "[OK] High Resolution Pack already exists" -ForegroundColor Green
-}
-
-if (-not (Test-Path "pak9hqq37test20181106.pk3")) {
-    Write-Host "Downloading Extra Pack Resolutions..."
-    curl -L --progress-bar $xpr -o pak9hqq37test20181106.pk3
-    Write-Host "[OK] Extra Pack Resolutions installed" -ForegroundColor Green
-} else {
-    Write-Host "[OK] Extra Pack Resolutions already exists" -ForegroundColor Green
-}
-
-if (-not (Test-Path "quake3-live-soundpack.pk3")) {
-    Write-Host "Downloading Quake3 Live Soundpack..."
-    curl -L --progress-bar $q3_ls -o quake3-live-soundpack.pk3
-    Write-Host "[OK] Quake3 Live Soundpack installed" -ForegroundColor Green
-} else {
-    Write-Host "[OK] Quake3 Live Soundpack already exists" -ForegroundColor Green
-}
-
-if (-not (Test-Path "pakxy01Tv5.pk3")) {
-    Write-Host "Downloading HD Weapons..."
-    curl -L --progress-bar $hd_weapons -o pakxy01Tv5.pk3
-    Write-Host "[OK] HD Weapons installed" -ForegroundColor Green
-} else {
-    Write-Host "[OK] HD Weapons already exists" -ForegroundColor Green
-}
-
-if (-not (Test-Path "zpack-weapons.pk3")) {
-    Write-Host "Downloading ZPack Weapons..."
-    curl -L --progress-bar $zpack_weapons -o zpack-weapons.pk3
-    Write-Host "[OK] ZPack Weapons installed" -ForegroundColor Green
-} else {
-    Write-Host "[OK] ZPack Weapons already exists" -ForegroundColor Green
-}
 
 if (-not (Test-Path "cpma-mappack-full.pk3")) {
     if (-not (Test-Path "maps")) {
