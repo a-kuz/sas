@@ -10,9 +10,6 @@
 
 ## Still Alive Somehow
 
-
-![SAS III Logo](assets/sub-3.gif)
-
 Another arena shooter in Rust. Because the world definitely needed one more.
 Fast, buggy, and purely fueled by nostalgia and caffeine.
 
@@ -37,3 +34,7 @@ irm https://raw.githubusercontent.com/a-kuz/sas/main/scripts/install.ps1 | iex
 ### Disclaimer
 **You need a legal copy of Quake 3 Arena** to play.
 This project provides the code; id Software provided the fun part 25 years ago.
+
+---
+
+[📸 Gallery](GALLERY.md)
