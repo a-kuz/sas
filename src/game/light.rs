@@ -45,22 +45,6 @@ impl ExplosionFlash {
            screen_y < -100.0 || screen_y > screen_height() + 100.0 {
             return;
         }
-
-        let life_ratio = self.life as f32 / self.max_life as f32;
-        let current_radius = self.radius * (0.5 + life_ratio * 0.5);
-        
-        if life_ratio < 0.3 {
-            let white_alpha = (self.flash_intensity * 255.0) as u8;
-            draw_circle(screen_x, screen_y, current_radius * 1.5, Color::from_rgba(255, 255, 255, white_alpha));
-            draw_circle(screen_x, screen_y, current_radius, Color::from_rgba(255, 255, 255, 255));
-        } else if life_ratio < 0.6 {
-            let yellow_alpha = (self.flash_intensity * 220.0) as u8;
-            draw_circle(screen_x, screen_y, current_radius * 1.2, Color::from_rgba(255, 255, 100, yellow_alpha));
-            draw_circle(screen_x, screen_y, current_radius * 0.8, Color::from_rgba(255, 200, 0, 255));
-        } else {
-            let orange_alpha = (self.flash_intensity * 180.0) as u8;
-            draw_circle(screen_x, screen_y, current_radius, Color::from_rgba(255, 150, 50, orange_alpha));
-        }
     }
 }
 

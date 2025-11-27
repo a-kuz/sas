@@ -68,6 +68,7 @@ pub struct GameState {
     pub particles: Vec<particle::Particle>,
     pub projectiles: Vec<projectile::Projectile>,
     pub gibs: Vec<gib::Gib>,
+    pub gib_model_cache: gib::GibModelCache,
     pub liquid_blood: liquid_blood::LiquidBloodManager,
     pub smokes: Vec<smoke::Smoke>,
     pub trails: Vec<trail::Trail>,
@@ -668,6 +669,7 @@ impl GameState {
             particles: Vec::new(),
             projectiles: Vec::new(),
             gibs: Vec::new(),
+            gib_model_cache: gib::GibModelCache::new(),
             liquid_blood: liquid_blood::LiquidBloodManager::new(),
             smokes: Vec::new(),
             trails: Vec::new(),
@@ -738,6 +740,11 @@ impl GameState {
             particles: Vec::new(),
             projectiles: Vec::new(),
             gibs: Vec::new(),
+            gib_model_cache: {
+                let mut cache = gib::GibModelCache::new();
+                cache.load().await;
+                cache
+            },
             liquid_blood: liquid_blood::LiquidBloodManager::new(),
             smokes: Vec::new(),
             trails: Vec::new(),
@@ -1391,9 +1398,9 @@ impl GameState {
                                     if was_alive {
                                         for _ in 0..3 {
                                             let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                                0 => gib::GibType::Meat1,
-                                                1 => gib::GibType::Meat2,
-                                                _ => gib::GibType::Meat3,
+                                                0 => gib::GibType::Intestine,
+                                                1 => gib::GibType::Brain,
+                                                _ => gib::GibType::Fist,
                                             };
                                             self.gibs.push(gib::Gib::new(
                                                 player.x,
@@ -1495,9 +1502,9 @@ impl GameState {
                                     if was_alive {
                                         for _ in 0..3 {
                                             let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                                0 => gib::GibType::Meat1,
-                                                1 => gib::GibType::Meat2,
-                                                _ => gib::GibType::Meat3,
+                                                0 => gib::GibType::Intestine,
+                                                1 => gib::GibType::Brain,
+                                                _ => gib::GibType::Fist,
                                             };
                                             self.gibs.push(gib::Gib::new(
                                                 player.x,
@@ -1684,9 +1691,9 @@ impl GameState {
             if was_alive {
                 for _ in 0..3 {
                     let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                        0 => gib::GibType::Meat1,
-                        1 => gib::GibType::Meat2,
-                        _ => gib::GibType::Meat3,
+                        0 => gib::GibType::Intestine,
+                        1 => gib::GibType::Brain,
+                        _ => gib::GibType::Fist,
                     };
                     self.gibs.push(gib::Gib::new(
                         player_x,
@@ -1890,9 +1897,9 @@ impl GameState {
                                 let gib_count = (actual_damage / 10).min(5);
                                 for _ in 0..gib_count {
                                     let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                        0 => gib::GibType::Meat1,
-                                        1 => gib::GibType::Meat2,
-                                        _ => gib::GibType::Meat3,
+                                        0 => gib::GibType::Intestine,
+                                        1 => gib::GibType::Brain,
+                                        _ => gib::GibType::Fist,
                                     };
                                     self.gibs.push(gib::Gib::new(
                                         player.x,
@@ -1940,9 +1947,9 @@ impl GameState {
                                 let gib_count = (self_damage / 10).min(5);
                                 for _ in 0..gib_count {
                                     let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                        0 => gib::GibType::Meat1,
-                                        1 => gib::GibType::Meat2,
-                                        _ => gib::GibType::Meat3,
+                                        0 => gib::GibType::Intestine,
+                                        1 => gib::GibType::Brain,
+                                        _ => gib::GibType::Fist,
                                     };
                                     self.gibs.push(gib::Gib::new(
                                         player.x,
@@ -2859,7 +2866,7 @@ impl GameState {
                         && sy > -effect_margin
                         && sy < screen_h + effect_margin
                     {
-                        gib.render(camera_x, camera_y);
+                        gib.render(camera_x, camera_y, &self.gib_model_cache);
                     }
                 }
 

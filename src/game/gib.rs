@@ -1,14 +1,75 @@
 use macroquad::prelude::*;
 use crate::game::map::Map;
+use crate::game::md3::MD3Model;
+use std::collections::HashMap;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum GibType {
-    Skull,
+    Abdomen,
+    Arm,
     Brain,
-    Meat1,
-    Meat2,
-    Meat3,
-    Bone,
+    Chest,
+    Fist,
+    Foot,
+    Forearm,
+    Intestine,
+    Leg,
+    Skull,
+}
+
+pub struct GibModelCache {
+    pub models: HashMap<GibType, MD3Model>,
+    pub texture: Option<Texture2D>,
+}
+
+impl GibModelCache {
+    pub fn new() -> Self {
+        Self {
+            models: HashMap::new(),
+            texture: None,
+        }
+    }
+
+    pub async fn load(&mut self) {
+        let base_path = "q3-resources/models/gibs";
+        
+        // Load texture
+        if let Some(tex) = crate::game::skin_loader::load_texture_file(&format!("{}/gibs.png", base_path)).await {
+            self.texture = Some(tex);
+        } else if let Some(tex) = crate::game::skin_loader::load_texture_file(&format!("{}/gibs.jpg", base_path)).await {
+            self.texture = Some(tex);
+        }
+
+        // Load models
+        let types = [
+            (GibType::Abdomen, "abdomen.md3"),
+            (GibType::Arm, "arm.md3"),
+            (GibType::Brain, "brain.md3"),
+            (GibType::Chest, "chest.md3"),
+            (GibType::Fist, "fist.md3"),
+            (GibType::Foot, "foot.md3"),
+            (GibType::Forearm, "forearm.md3"),
+            (GibType::Intestine, "intestine.md3"),
+            (GibType::Leg, "leg.md3"),
+            (GibType::Skull, "skull.md3"),
+        ];
+
+        for (gib_type, filename) in types.iter() {
+            let path = format!("{}/{}", base_path, filename);
+            #[cfg(target_arch = "wasm32")]
+            {
+                if let Ok(model) = MD3Model::load_async(&path).await {
+                    self.models.insert(*gib_type, model);
+                }
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                if let Ok(model) = MD3Model::load(path) {
+                    self.models.insert(*gib_type, model);
+                }
+            }
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -18,7 +79,12 @@ pub struct Gib {
     pub vel_x: f32,
     pub vel_y: f32,
     pub angle: f32,
-    pub spin: f32,
+    pub pitch: f32,
+    pub yaw: f32,
+    pub roll: f32,
+    pub spin_pitch: f32,
+    pub spin_yaw: f32,
+    pub spin_roll: f32,
     pub life: u32,
     pub gib_type: GibType,
     pub size: f32,
@@ -26,7 +92,6 @@ pub struct Gib {
 
 impl Gib {
     pub fn new(x: f32, y: f32, vel_x: f32, vel_y: f32, gib_type: GibType) -> Self {
-        
         use crate::compat_rand::*;
         
         Self {
@@ -35,16 +100,20 @@ impl Gib {
             vel_x,
             vel_y,
             angle: gen_f32() * std::f32::consts::PI * 2.0,
-            spin: (gen_f32() - 0.5) * 0.3,
+            pitch: gen_f32() * std::f32::consts::PI * 2.0,
+            yaw: gen_f32() * std::f32::consts::PI * 2.0,
+            roll: gen_f32() * std::f32::consts::PI * 2.0,
+            spin_pitch: (gen_f32() - 0.5) * 0.5,
+            spin_yaw: (gen_f32() - 0.5) * 0.5,
+            spin_roll: (gen_f32() - 0.5) * 0.5,
             life: 0,
             gib_type,
             size: match gib_type {
                 GibType::Skull => 8.0,
                 GibType::Brain => 6.0,
-                GibType::Bone => 5.0,
-                GibType::Meat1 => 5.0,
-                GibType::Meat2 => 4.5,
-                GibType::Meat3 => 4.0,
+                GibType::Abdomen => 8.0,
+                GibType::Chest => 10.0,
+                _ => 5.0,
             },
         }
     }
@@ -64,7 +133,9 @@ impl Gib {
             self.vel_y = 15.0;
         }
         
-        self.angle += self.spin * dt_norm;
+        self.pitch += self.spin_pitch * dt_norm;
+        self.yaw += self.spin_yaw * dt_norm;
+        self.roll += self.spin_roll * dt_norm;
         
         self.x += self.vel_x * dt_norm;
         self.y += self.vel_y * dt_norm;
@@ -75,7 +146,9 @@ impl Gib {
         if map.is_solid(tile_x, tile_y) {
             self.vel_y = -self.vel_y * 0.4;
             self.vel_x *= 0.7;
-            self.spin *= 0.8;
+            self.spin_pitch *= 0.8;
+            self.spin_yaw *= 0.8;
+            self.spin_roll *= 0.8;
             
             let max_corrections = 16;
             let mut correction_count = 0;
@@ -101,7 +174,7 @@ impl Gib {
         true
     }
 
-    pub fn render(&self, camera_x: f32, camera_y: f32) {
+    pub fn render(&self, camera_x: f32, camera_y: f32, cache: &GibModelCache) {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
         
@@ -120,49 +193,31 @@ impl Gib {
             1.0
         };
 
-        match self.gib_type {
-            GibType::Skull => {
-                draw_circle(screen_x, screen_y, self.size, Color::from_rgba(220, 210, 200, (255.0 * alpha) as u8));
-                draw_circle(screen_x - 2.0, screen_y - 1.0, 2.0, Color::from_rgba(50, 50, 50, (200.0 * alpha) as u8));
-                draw_circle(screen_x + 2.0, screen_y - 1.0, 2.0, Color::from_rgba(50, 50, 50, (200.0 * alpha) as u8));
-                draw_circle(screen_x, screen_y + 2.0, 1.5, Color::from_rgba(50, 50, 50, (200.0 * alpha) as u8));
+        if let Some(model) = cache.models.get(&self.gib_type) {
+            let color = Color::from_rgba(255, 255, 255, (255.0 * alpha) as u8);
+            
+            // Render MD3 model
+            for mesh in &model.meshes {
+                let safe_frame = 0; // Gibs usually have 1 frame or we just use the first
+                crate::game::md3_render::render_md3_mesh_with_yaw_and_roll(
+                    mesh,
+                    safe_frame,
+                    screen_x,
+                    screen_y,
+                    1.0, // Scale
+                    color,
+                    cache.texture.as_ref(),
+                    None,
+                    false, // flip_x
+                    self.pitch,
+                    self.yaw,
+                    self.roll,
+                    None, // lighting context (optional, could add if needed)
+                );
             }
-            GibType::Brain => {
-                draw_circle(screen_x, screen_y, self.size, Color::from_rgba(220, 100, 120, (255.0 * alpha) as u8));
-                draw_circle(screen_x - 2.0, screen_y, 3.0, Color::from_rgba(200, 80, 100, (220.0 * alpha) as u8));
-                draw_circle(screen_x + 2.0, screen_y, 3.0, Color::from_rgba(200, 80, 100, (220.0 * alpha) as u8));
-                draw_circle(screen_x, screen_y + 1.5, 2.0, Color::from_rgba(180, 50, 70, (200.0 * alpha) as u8));
-                draw_circle(screen_x - 1.0, screen_y - 1.0, 1.5, Color::from_rgba(160, 30, 50, (180.0 * alpha) as u8));
-            }
-            GibType::Bone => {
-                let cos_a = self.angle.cos();
-                let sin_a = self.angle.sin();
-                let len = self.size;
-                
-                let x1 = screen_x + cos_a * len;
-                let y1 = screen_y + sin_a * len;
-                let x2 = screen_x - cos_a * len;
-                let y2 = screen_y - sin_a * len;
-                
-                draw_line(x1, y1, x2, y2, 3.0, Color::from_rgba(220, 210, 200, (255.0 * alpha) as u8));
-                draw_circle(x1, y1, 2.0, Color::from_rgba(240, 230, 220, (255.0 * alpha) as u8));
-                draw_circle(x2, y2, 2.0, Color::from_rgba(240, 230, 220, (255.0 * alpha) as u8));
-            }
-            GibType::Meat1 => {
-                draw_circle(screen_x, screen_y, self.size, Color::from_rgba(200, 20, 20, (255.0 * alpha) as u8));
-                draw_circle(screen_x - 1.0, screen_y - 1.0, 2.5, Color::from_rgba(255, 40, 40, (220.0 * alpha) as u8));
-                draw_circle(screen_x + 0.5, screen_y + 0.5, 1.5, Color::from_rgba(140, 10, 10, (200.0 * alpha) as u8));
-            }
-            GibType::Meat2 => {
-                draw_circle(screen_x, screen_y, self.size, Color::from_rgba(180, 15, 15, (255.0 * alpha) as u8));
-                draw_circle(screen_x + 1.0, screen_y, 2.5, Color::from_rgba(220, 30, 30, (220.0 * alpha) as u8));
-                draw_circle(screen_x - 0.5, screen_y - 0.5, 1.8, Color::from_rgba(120, 10, 10, (200.0 * alpha) as u8));
-            }
-            GibType::Meat3 => {
-                draw_circle(screen_x, screen_y, self.size, Color::from_rgba(160, 10, 10, (255.0 * alpha) as u8));
-                draw_circle(screen_x, screen_y + 1.0, 3.0, Color::from_rgba(200, 25, 25, (220.0 * alpha) as u8));
-                draw_circle(screen_x + 1.0, screen_y - 1.0, 1.5, Color::from_rgba(100, 5, 5, (200.0 * alpha) as u8));
-            }
+        } else {
+            // Fallback rendering if model not found
+            draw_circle(screen_x, screen_y, self.size, Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8));
         }
         
         if self.life < 40 {
@@ -197,76 +252,33 @@ pub fn spawn_gibs(x: f32, y: f32) -> Vec<Gib> {
     
     let mega_explosion = gen_bool(0.1);
     
-    let skull_count = if mega_explosion {
-        gen_range_usize(20, 80)
-    } else {
-        if gen_bool(0.5) { 1 } else { 0 }
-    };
+    // Always spawn essential parts
+    gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Skull));
+    gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Chest));
+    gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Abdomen));
     
-    let brain_count = if mega_explosion {
-        gen_range_usize(15, 60)
-    } else {
-        if skull_count == 0 { 1 } else { 0 }
-    };
-    
-    let meat_count = if mega_explosion {
-        gen_range_usize(100, 500)
-    } else {
-        gen_range_usize(5, 12)
-    };
-    
-    let bone_count = if mega_explosion {
-        gen_range_usize(50, 200)
-    } else {
-        gen_range_usize(2, 6)
-    };
-    
-    for _ in 0..skull_count {
-        gibs.push(Gib::new(
-            x,
-            y,
-            (gen_f32() - 0.5) * gib_velocity,
-            gib_jump + (gen_f32() - 0.5) * gib_velocity,
-            GibType::Skull,
-        ));
-    }
-    
-    for _ in 0..brain_count {
-        gibs.push(Gib::new(
-            x,
-            y,
-            (gen_f32() - 0.5) * gib_velocity,
-            gib_jump + (gen_f32() - 0.5) * gib_velocity,
-            GibType::Brain,
-        ));
-    }
-    
-    for _ in 0..meat_count {
-        let gib_type = match gen_range_usize(0, 3) {
-            0 => GibType::Meat1,
-            1 => GibType::Meat2,
-            _ => GibType::Meat3,
+    // Random limbs
+    let limb_count = if mega_explosion { gen_range_usize(150, 500) } else { gen_range_usize(3, 6) };
+    for _ in 0..limb_count {
+        let limb_type = match gen_range_usize(0, 4) {
+            0 => GibType::Arm,
+            1 => GibType::Leg,
+            2 => GibType::Forearm,
+            _ => GibType::Foot,
         };
-        
-        gibs.push(Gib::new(
-            x,
-            y,
-            (gen_f32() - 0.5) * gib_velocity * 1.2,
-            gib_jump + (gen_f32() - 0.5) * gib_velocity,
-            gib_type,
-        ));
+        gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, limb_type));
     }
     
-    for _ in 0..bone_count {
-        gibs.push(Gib::new(
-            x,
-            y,
-            (gen_f32() - 0.5) * gib_velocity,
-            gib_jump + (gen_f32() - 0.5) * gib_velocity,
-            GibType::Bone,
-        ));
+    // Organs
+    let organ_count = if mega_explosion { gen_range_usize(100, 750) } else { gen_range_usize(2, 5) };
+    for _ in 0..organ_count {
+        let organ_type = match gen_range_usize(0, 3) {
+            0 => GibType::Brain,
+            1 => GibType::Intestine,
+            _ => GibType::Fist, // Why fist? Quake 3 has fist gibs.
+        };
+        gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, organ_type));
     }
     
     gibs
 }
-

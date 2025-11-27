@@ -156,71 +156,10 @@ impl Particle {
 
         match self.particle_type {
             ParticleType::Blood => {
-                let size = 3.0 + (self._visual as f32 * 1.5);
-                
-                let base_red = 200 + (self._visual * 13);
-                let base_green = (self._visual * 20).min(100);
-                let base_blue = 0;
-                
-                let color = Color::from_rgba(
-                    base_red,
-                    base_green,
-                    base_blue,
-                    (self.alpha * 255.0) as u8,
-                );
-
-                draw_circle(screen_x, screen_y, size, color);
-                
-                if self.alpha > 0.5 {
-                    let inner_color = Color::from_rgba(
-                        255,
-                        (base_green + 50).min(150),
-                        0,
-                        (self.alpha * 200.0) as u8,
-                    );
-                    draw_circle(screen_x, screen_y, size * 0.5, inner_color);
-                }
             }
             ParticleType::Smoke => {
-                let gray_value = 180 + (self._visual * 15);
-                let color = Color::from_rgba(
-                    gray_value,
-                    gray_value,
-                    gray_value,
-                    (self.alpha * 255.0) as u8,
-                );
-
-                draw_circle(screen_x, screen_y, self.radius, color);
-                
-                if self.alpha > 0.15 {
-                    let inner_color = Color::from_rgba(
-                        255,
-                        255,
-                        255,
-                        (self.alpha * 128.0) as u8,
-                    );
-                    draw_circle(screen_x, screen_y, self.radius * 0.6, inner_color);
-                }
             }
             ParticleType::Explosion => {
-                let life_ratio = self.life / self.max_life;
-                
-                if life_ratio < 0.2 {
-                    let white_color = Color::from_rgba(255, 255, 255, (self.alpha * 255.0) as u8);
-                    draw_circle(screen_x, screen_y, self.radius, white_color);
-                } else if life_ratio < 0.5 {
-                    let yellow_color = Color::from_rgba(255, 255, 100, (self.alpha * 255.0) as u8);
-                    draw_circle(screen_x, screen_y, self.radius, yellow_color);
-                    
-                    let orange_color = Color::from_rgba(255, 150, 0, (self.alpha * 200.0) as u8);
-                    draw_circle(screen_x, screen_y, self.radius * 0.7, orange_color);
-                } else {
-                    let red_color = Color::from_rgba(255, 80, 0, (self.alpha * 255.0) as u8);
-                    draw_circle(screen_x, screen_y, self.radius, red_color);
-                    
-                    let dark_red_color = Color::from_rgba(180, 40, 0, (self.alpha * 180.0) as u8);
-                    draw_circle(screen_x, screen_y, self.radius * 0.6, dark_red_color);
-                }
             }
         }
     }
