@@ -2,7 +2,11 @@
 
 ## Logo
 
-![SAS III Logo](assets/sub-3.gif)
+![SAS III Logo](assets/logo.png)
+
+## Gameplay
+
+![Gameplay](assets/sub-3.gif)
 
 ## Screenshots
 
@@ -17,3 +21,4 @@
 
 ![Plasma](assets/screenshoots/plasma-light.jpeg)
 *Shiny plasma.*
+
