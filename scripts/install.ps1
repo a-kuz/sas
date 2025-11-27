@@ -267,3 +267,4 @@ if (Test-Path $GAME_BINARY) {
     Write-Host "[ERROR] Game binary not found" -ForegroundColor Red
     exit 1
 }
+

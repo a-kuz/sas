@@ -11,7 +11,7 @@
 ## Still Alive Somehow
 
 
-![SAS III Logo](assets/logo.png)
+![SAS III Logo](assets/sub-3.gif)
 
 ![Low Light](assets/screenshoots/low-light.png)
 *Yes, we have dynamic lighting.*
