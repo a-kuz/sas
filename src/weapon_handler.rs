@@ -354,6 +354,8 @@ impl WeaponHandler {
                 player.weapon = new_weapon;
                 player.weapon_switch_time = player.weapon.switch_time_seconds();
                 player.refire = player.weapon_switch_time;
+                player.barrel_spin_speed = 0.0;
+                player.barrel_spin_angle = 0.0;
             }
         }
     }
@@ -412,9 +414,6 @@ impl WeaponHandler {
                     projectile.damage *= 3;
                 }
                 projectile = game_state.create_projectile_with_id(projectile);
-                println!("[{:.3}] [WEAPON] Created projectile [{}]: weapon={:?} owner_id={} damage={} has_quad={} pos=({:.1}, {:.1})", 
-                    macroquad::prelude::get_time(),
-                    projectile.id, weapon, player_id, projectile.damage, has_quad, shoot_x, shoot_y);
                 game_state.projectiles.push(projectile);
             }
             Weapon::Railgun => {
@@ -685,6 +684,13 @@ impl WeaponHandler {
         angle: f32,
         player_id: u16,
     ) {
+        if let Some(idx) = game_state.players.iter().position(|p| p.id == player_id) {
+            let p = &mut game_state.players[idx];
+            p.barrel_spin_speed += crate::game::constants::BARREL_SPIN_ACCEL_IMPULSE;
+            if p.barrel_spin_speed > crate::game::constants::BARREL_SPIN_MAX_SPEED {
+                p.barrel_spin_speed = crate::game::constants::BARREL_SPIN_MAX_SPEED;
+            }
+        }
         let rays = crate::game::hitscan::fire_hitscan(
             shoot_x, shoot_y, angle, 1000.0, 0.05, 1, player_id, 7,
         );

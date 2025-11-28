@@ -9,7 +9,7 @@ mod app;
 use app::App;
 use macroquad::prelude::*;
 
-fn window_conf() -> Conf {
+fn window_conf() -> macroquad::conf::Conf {
     let icon_data = include_bytes!("../assets/logo-alfa.png");
     let icon = match image::load_from_memory(icon_data) {
         Ok(img) => {
@@ -38,12 +38,17 @@ fn window_conf() -> Conf {
         Err(_) => None,
     };
     
-    Conf {
-        window_title: "SAS III - Still Alive Somehow??".to_string(),
-        window_resizable: true,
-        fullscreen: true,
-        high_dpi: true,
-        icon,
+    macroquad::conf::Conf {
+        miniquad_conf: miniquad::conf::Conf {
+            window_title: "SAS III - Still Alive Somehow??".to_string(),
+            window_resizable: true,
+            fullscreen: true,
+            high_dpi: true,
+            icon,
+            ..Default::default()
+        },
+        draw_call_vertex_capacity: 30000,
+        draw_call_index_capacity: 15000,
         ..Default::default()
     }
 }

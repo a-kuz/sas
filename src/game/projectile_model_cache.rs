@@ -3,6 +3,7 @@ use crate::game::md3::MD3Model;
 
 pub enum ProjectileModelType {
     Rocket,
+    Grenade,
 }
 
 pub struct ProjectileModelCache {
@@ -21,6 +22,7 @@ impl ProjectileModelCache {
     pub fn get_or_load_model(&mut self, model_type: ProjectileModelType) -> Option<&MD3Model> {
         let model_path = match model_type {
             ProjectileModelType::Rocket => "q3-resources/models/ammo/rocket/rocket.md3",
+            ProjectileModelType::Grenade => "q3-resources/models/ammo/grenade1.md3",
         };
 
         if !self.models.contains_key(model_path) {
@@ -37,6 +39,7 @@ impl ProjectileModelCache {
     pub fn get_model(&self, model_type: ProjectileModelType) -> Option<&MD3Model> {
         let model_path = match model_type {
             ProjectileModelType::Rocket => "q3-resources/models/ammo/rocket/rocket.md3",
+            ProjectileModelType::Grenade => "q3-resources/models/ammo/grenade1.md3",
         };
         self.models.get(model_path)
     }

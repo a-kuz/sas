@@ -6,6 +6,7 @@ use std::collections::HashMap;
 pub struct MuzzleFlashCache {
     models: HashMap<Weapon, Option<MD3Model>>,
     textures: HashMap<Weapon, Option<Texture2D>>,
+    texture_paths: HashMap<Weapon, String>,
 }
 
 impl MuzzleFlashCache {
@@ -13,22 +14,43 @@ impl MuzzleFlashCache {
         Self {
             models: HashMap::new(),
             textures: HashMap::new(),
+            texture_paths: HashMap::new(),
         }
     }
 
     pub async fn load_all(&mut self) {
         self.load_flash_model(Weapon::MachineGun, "q3-resources/models/weapons2/machinegun/machinegun_flash.md3").await;
-        self.load_flash_model(Weapon::Shotgun, "q3-resources/models/weapons2/shotgun/shotgun_flash.md3").await;
-        self.load_flash_model(Weapon::GrenadeLauncher, "q3-resources/models/weapons2/grenadel/grenadel_flash.md3").await;
-        self.load_flash_model(Weapon::RocketLauncher, "q3-resources/models/weapons2/rocketl/rocketl_flash.md3").await;
-        self.load_flash_model(Weapon::Lightning, "q3-resources/models/weapons2/lightning/lightning_flash.md3").await;
-        self.load_flash_model(Weapon::Railgun, "q3-resources/models/weapons2/railgun/railgun_flash.md3").await;
-        self.load_flash_model(Weapon::Plasmagun, "q3-resources/models/weapons2/plasma/plasma_flash.md3").await;
-        self.load_flash_model(Weapon::BFG, "q3-resources/models/weapons2/bfg/bfg_flash.md3").await;
+        self.load_flash_texture(Weapon::MachineGun, "q3-resources/models/weapons2/machinegun/f_machinegun.png").await;
         
-        if let Ok(tex) = load_texture("q3-resources/gfx/misc/flare.png").await {
+        self.load_flash_model(Weapon::Shotgun, "q3-resources/models/weapons2/shotgun/shotgun_flash.md3").await;
+        self.load_flash_texture(Weapon::Shotgun, "q3-resources/models/weapons2/shotgun/f_shotgun.png").await;
+        
+        self.load_flash_model(Weapon::GrenadeLauncher, "q3-resources/models/weapons2/grenadel/grenadel_flash.md3").await;
+        self.load_flash_texture(Weapon::GrenadeLauncher, "q3-resources/models/weapons2/grenadel/f_grenadel.png").await;
+        
+        self.load_flash_model(Weapon::RocketLauncher, "q3-resources/models/weapons2/rocketl/rocketl_flash.md3").await;
+        self.load_flash_texture(Weapon::RocketLauncher, "q3-resources/models/weapons2/rocketl/f_rocketl.png").await;
+        
+        self.load_flash_model(Weapon::Lightning, "q3-resources/models/weapons2/lightning/lightning_flash.md3").await;
+        self.load_flash_texture(Weapon::Lightning, "q3-resources/models/weapons2/lightning/f_lightning.png").await;
+        
+        self.load_flash_model(Weapon::Railgun, "q3-resources/models/weapons2/railgun/railgun_flash.md3").await;
+        self.load_flash_texture(Weapon::Railgun, "q3-resources/models/weapons2/railgun/f_railgun.png").await;
+        
+        self.load_flash_model(Weapon::Plasmagun, "q3-resources/models/weapons2/plasma/plasma_flash.md3").await;
+        self.load_flash_texture(Weapon::Plasmagun, "q3-resources/models/weapons2/plasma/f_plasma.png").await;
+        
+        self.load_flash_model(Weapon::BFG, "q3-resources/models/weapons2/bfg/bfg_flash.md3").await;
+        self.load_flash_texture(Weapon::BFG, "q3-resources/models/weapons2/bfg/f_bfg.png").await;
+    }
+    
+    async fn load_flash_texture(&mut self, weapon: Weapon, path: &str) {
+        self.texture_paths.insert(weapon, path.to_string());
+        if let Ok(tex) = load_texture(path).await {
             tex.set_filter(FilterMode::Linear);
-            self.textures.insert(Weapon::MachineGun, Some(tex.clone()));
+            self.textures.insert(weapon, Some(tex));
+        } else {
+            self.textures.insert(weapon, None);
         }
     }
 
@@ -43,6 +65,14 @@ impl MuzzleFlashCache {
     pub fn get_model(&self, weapon: Weapon) -> Option<&MD3Model> {
         self.models.get(&weapon).and_then(|opt| opt.as_ref())
     }
+    
+    pub fn get_texture(&self, weapon: Weapon) -> Option<&Texture2D> {
+        self.textures.get(&weapon).and_then(|opt| opt.as_ref())
+    }
+    
+    pub fn get_texture_path(&self, weapon: Weapon) -> Option<&str> {
+        self.texture_paths.get(&weapon).map(|s| s.as_str())
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -50,6 +80,7 @@ pub struct MuzzleFlash {
     pub x: f32,
     pub y: f32,
     pub angle: f32,
+    pub roll: f32,
     pub life: u8,
     pub weapon: Weapon,
     pub birth_time: f64,
@@ -57,10 +88,12 @@ pub struct MuzzleFlash {
 
 impl MuzzleFlash {
     pub fn new(x: f32, y: f32, angle: f32, weapon: Weapon) -> Self {
+        let roll = crate::compat_rand::gen_range_f32(-10.0, 10.0);
         Self {
             x,
             y,
             angle,
+            roll,
             life: 0,
             weapon,
             birth_time: get_time(),
@@ -82,36 +115,22 @@ impl MuzzleFlash {
         let fade = 1.0 - (self.life as f32 / 5.0);
         
         if let Some(model) = cache.get_model(self.weapon) {
+            let texture = cache.get_texture(self.weapon);
+            let texture_path = cache.get_texture_path(self.weapon);
             for mesh in &model.meshes {
-                super::md3_render::render_md3_mesh_rotated(
+                super::md3_render::render_md3_mesh_rotated_with_additive(
                     mesh,
                     0,
                     screen_x + offset_x,
                     screen_y + offset_y,
                     1.2,
                     Color::from_rgba(255, 255, 255, (fade * 255.0) as u8),
-                    None,
-                    self.angle + std::f32::consts::PI / 2.0,
+                    texture,
+                    texture_path,
+                    self.roll.to_radians(),
+                    true,
                 );
             }
-        } else {
-            let (color, size) = match self.weapon {
-                Weapon::RocketLauncher => (Color::from_rgba(255, 140, 20, 255), 32.0),
-                Weapon::Plasmagun => (Color::from_rgba(80, 180, 255, 255), 24.0),
-                Weapon::BFG => (Color::from_rgba(80, 255, 80, 255), 40.0),
-                Weapon::Railgun => (Color::from_rgba(180, 220, 255, 255), 28.0),
-                Weapon::GrenadeLauncher => (Color::from_rgba(255, 180, 60, 255), 28.0),
-                Weapon::Shotgun => (Color::from_rgba(255, 200, 100, 255), 24.0),
-                _ => (Color::from_rgba(255, 220, 100, 255), 20.0),
-            };
-            
-            let current_size = size * fade;
-            draw_circle(
-                screen_x + offset_x,
-                screen_y + offset_y,
-                current_size,
-                color,
-            );
         }
     }
 }

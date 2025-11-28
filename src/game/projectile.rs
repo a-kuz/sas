@@ -225,21 +225,27 @@ impl Projectile {
                 }
                 
                 if let Some(model) = cache.get_model(super::projectile_model_cache::ProjectileModelType::Rocket) {
+                    let texture = cache.get_texture("q3-resources/models/ammo/rocket/rocket.png");
+                    let angle = self.vel_y.atan2(self.vel_x);
+                    let offset_x = angle.cos() * 8.0;
+                    let offset_y = angle.sin() * 8.0;
+                    
                     for mesh in &model.meshes {
-                        let texture = cache.get_texture("q3-resources/models/ammo/rocket/rocket.png");
-                        let angle = self.vel_y.atan2(self.vel_x);
-                        let offset_x = angle.cos() * 8.0;
-                        let offset_y = angle.sin() * 8.0;
-                        
-                        super::md3_render::render_md3_mesh_rotated(
+                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex(
                             mesh,
                             0,
                             screen_x + offset_x,
                             screen_y + offset_y,
-                            0.8,
+                            1.0,
                             WHITE,
                             texture,
-                            angle + std::f32::consts::PI / 2.0,
+                            Some("q3-resources/models/ammo/rocket/rocket.png"),
+                            false,
+                            angle,
+                            0.0,
+                            0.0,
+                            0.0,
+                            0.0,
                         );
                     }
                 } else {
@@ -265,19 +271,62 @@ impl Projectile {
             Weapon::GrenadeLauncher => {
                 use super::constants::GRENADE_FUSE_SECS;
                 
-                let rotation = self.angle;
-                draw_circle(screen_x, screen_y, 5.0, Color::from_rgba(60, 60, 60, 255));
-                draw_circle(screen_x, screen_y, 4.0, Color::from_rgba(90, 90, 90, 255));
-                draw_circle(screen_x, screen_y, 3.0, Color::from_rgba(110, 110, 110, 255));
+                let has_model = cache.get_model(super::projectile_model_cache::ProjectileModelType::Grenade).is_some();
+                if !has_model {
+                    cache.get_or_load_model(super::projectile_model_cache::ProjectileModelType::Grenade);
+                }
                 
-                let marker_x = screen_x + rotation.to_radians().cos() * 3.0;
-                let marker_y = screen_y + rotation.to_radians().sin() * 3.0;
-                draw_circle(marker_x, marker_y, 1.5, Color::from_rgba(255, 220, 0, 255));
+                let has_texture = cache.get_texture("q3-resources/models/ammo/grenade.png").is_some();
+                if !has_texture {
+                    cache.get_or_load_texture("q3-resources/models/ammo/grenade.png");
+                }
                 
-                if self.life_secs > GRENADE_FUSE_SECS - 0.5 {
-                    let blink = ((self.life / 5) % 2) == 0;
-                    if blink {
-                        draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(255, 0, 0, 180));
+                if let Some(model) = cache.get_model(super::projectile_model_cache::ProjectileModelType::Grenade) {
+                    let texture = cache.get_texture("q3-resources/models/ammo/grenade.png");
+                    let angle = self.vel_y.atan2(self.vel_x);
+                    
+                    for mesh in &model.meshes {
+                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex(
+                            mesh,
+                            0,
+                            screen_x,
+                            screen_y,
+                            1.0,
+                            WHITE,
+                            texture,
+                            Some("q3-resources/models/ammo/grenade.png"),
+                            false,
+                            angle,
+                            self.angle * std::f32::consts::PI / 180.0,
+                            0.0,
+                            0.0,
+                            0.0,
+                        );
+                    }
+                    
+                    draw_circle(screen_x, screen_y, 8.0, Color::from_rgba(150, 255, 120, 60));
+                    
+                    if self.life_secs > GRENADE_FUSE_SECS - 0.5 {
+                        let blink = ((self.life / 5) % 2) == 0;
+                        if blink {
+                            draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(255, 0, 0, 180));
+                        }
+                    }
+                } else {
+                    let rotation = self.angle;
+                    draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(120, 200, 100, 180));
+                    draw_circle(screen_x, screen_y, 4.5, Color::from_rgba(170, 255, 130, 220));
+                    draw_circle(screen_x, screen_y, 3.0, Color::from_rgba(210, 255, 170, 255));
+                    
+                    let marker_x = screen_x + rotation.to_radians().cos() * 3.0;
+                    let marker_y = screen_y + rotation.to_radians().sin() * 3.0;
+                    draw_circle(marker_x, marker_y, 1.8, Color::from_rgba(255, 255, 200, 255));
+                    
+                    if self.life_secs > GRENADE_FUSE_SECS - 0.5 {
+                        let blink = ((self.life / 5) % 2) == 0;
+                        if blink {
+                            draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(255, 0, 0, 180));
+                        }
                     }
                 }
             }

@@ -1,5 +1,6 @@
 pub mod animation;
 pub mod award;
+pub mod award_shader;
 pub mod batched_effects;
 pub mod bg_pmove;
 pub mod bg_combat;
@@ -121,6 +122,7 @@ pub struct GameState {
     pub award_icon_cache: award::AwardIconCache,
     pub time_announcements: award::TimeAnnouncement,
     pub lead_announcements: award::LeadAnnouncement,
+    pub team_advantage_announcements: award::TeamAdvantageAnnouncement,
     pub game_results: award::GameResults,
     pub net_hud: NetHud,
     pub next_projectile_id: u32,
@@ -157,16 +159,10 @@ impl GameState {
             d.target_id == target_id
                 && d.lifetime < combine_time
         }) {
-            println!("[{:.3}] [DAMAGE_NUMBER] ACCUMULATE: target={} old_damage={} +{} = {} lifetime={:.3}", 
-                macroquad::prelude::get_time(),
-                target_id, existing.damage, damage, existing.damage + damage, existing.lifetime);
             existing.add_damage(damage, target_health, target_armor, x, y);
             return;
         }
 
-        println!("[{:.3}] [DAMAGE_NUMBER] NEW: target={} damage={} health={} armor={}", 
-            macroquad::prelude::get_time(),
-            target_id, damage, target_health, target_armor);
         self.damage_numbers
             .push(damage_number::DamageNumber::new(player_id, target_id, x, y, damage, target_health, target_armor));
     }
@@ -722,6 +718,7 @@ impl GameState {
             award_icon_cache: award::AwardIconCache::new(),
             time_announcements: award::TimeAnnouncement::new(),
             lead_announcements: award::LeadAnnouncement::new(),
+            team_advantage_announcements: award::TeamAdvantageAnnouncement::new(),
             game_results: award::GameResults::new(),
             net_hud: NetHud::new(),
             next_projectile_id: 0,
@@ -797,6 +794,7 @@ impl GameState {
             award_icon_cache,
             time_announcements: award::TimeAnnouncement::new(),
             lead_announcements: award::LeadAnnouncement::new(),
+            team_advantage_announcements: award::TeamAdvantageAnnouncement::new(),
             game_results: award::GameResults::new(),
             net_hud: NetHud::new(),
             next_projectile_id: 0,
@@ -1082,7 +1080,91 @@ impl GameState {
             teleport.update();
         }
 
+        let map_ptr = &self.map as *const map::Map;
+        let dt_norm = dt * 60.0;
+        for item in &mut self.map.items {
+            if item.active && item.dropped {
+                let is_moving = item.vel_x.abs() > 0.01 || item.vel_y.abs() > 0.01;
+                
+                if is_moving {
+                    item.vel_y += 0.5 * dt_norm;
+                    if item.vel_y > 15.0 {
+                        item.vel_y = 15.0;
+                    }
+                    
+                    item.pitch += item.spin_pitch * dt_norm;
+                    item.yaw += item.spin_yaw * dt_norm;
+                    item.roll += item.spin_roll * dt_norm;
+                    
+                    item.x += item.vel_x * dt_norm;
+                    item.y += item.vel_y * dt_norm;
+                    
+                    let tile_x = (item.x / 32.0) as i32;
+                    let tile_y = ((item.y + 8.0) / 16.0) as i32;
+                    
+                    let is_solid = unsafe { (*map_ptr).is_solid(tile_x, tile_y) };
+                    
+                    if is_solid {
+                        item.vel_y = -item.vel_y * 0.4;
+                        item.vel_x *= 0.7;
+                        item.spin_pitch *= 0.8;
+                        item.spin_yaw *= 0.8;
+                        item.spin_roll *= 0.8;
+                        
+                        let max_corrections = 16;
+                        let mut correction_count = 0;
+                        while correction_count < max_corrections {
+                            let check_y = ((item.y + 8.0) / 16.0) as i32;
+                            if unsafe { (*map_ptr).is_solid(tile_x, check_y) } {
+                                item.y -= 1.0;
+                                correction_count += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        if item.vel_y.abs() < 0.5 && item.vel_x.abs() < 0.5 {
+                            item.vel_y = 0.0;
+                            item.vel_x *= 0.95;
+                        }
+                    }
+                    
+                    let wall_tile_left = ((item.x - 8.0) / 32.0) as i32;
+                    let wall_tile_right = ((item.x + 8.0) / 32.0) as i32;
+                    let wall_y = (item.y / 16.0) as i32;
+                    
+                    let hit_wall = unsafe { 
+                        (*map_ptr).is_solid(wall_tile_left, wall_y) || (*map_ptr).is_solid(wall_tile_right, wall_y)
+                    };
+                    
+                    if hit_wall {
+                        item.vel_x = -item.vel_x * 0.4;
+                    }
+                } else {
+                    let target_spin = 0.02;
+                    let lerp_factor = 0.05 * dt_norm;
+                    
+                    item.spin_pitch = item.spin_pitch * (1.0 - lerp_factor);
+                    item.spin_yaw = item.spin_yaw * (1.0 - lerp_factor) + target_spin * lerp_factor;
+                    item.spin_roll = item.spin_roll * (1.0 - lerp_factor);
+                    
+                    item.pitch += item.spin_pitch * dt_norm;
+                    item.yaw += item.spin_yaw * dt_norm;
+                    item.roll += item.spin_roll * dt_norm;
+                    
+                    let target_pitch = 0.0;
+                    let target_roll = 0.0;
+                    item.pitch = item.pitch * (1.0 - lerp_factor) + target_pitch * lerp_factor;
+                    item.roll = item.roll * (1.0 - lerp_factor) + target_roll * lerp_factor;
+                }
+            }
+        }
+
         for player in &mut self.players {
+            if player.dead {
+                continue;
+            }
+            
             for item in &mut self.map.items {
                 if !item.active {
                     if item.respawn_time > 0 {
@@ -1149,6 +1231,10 @@ impl GameState {
                             }
                         }
                         RocketLauncher => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED RocketLauncher at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
                             player.has_weapon[4] = true;
                             player.ammo[4] = (player.ammo[4] + 10).min(100);
                             item.active = false;
@@ -1157,6 +1243,10 @@ impl GameState {
                                 .push(crate::audio::events::AudioEvent::WeaponPickup { x: item.x });
                         }
                         Railgun => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED Railgun at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
                             player.has_weapon[6] = true;
                             player.ammo[6] = (player.ammo[6] + 10).min(100);
                             item.active = false;
@@ -1165,6 +1255,10 @@ impl GameState {
                                 .push(crate::audio::events::AudioEvent::WeaponPickup { x: item.x });
                         }
                         Plasmagun => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED Plasmagun at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
                             player.has_weapon[7] = true;
                             player.ammo[7] = (player.ammo[7] + 50).min(200);
                             item.active = false;
@@ -1224,6 +1318,10 @@ impl GameState {
                             );
                         }
                         Shotgun => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED Shotgun at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
                             player.has_weapon[2] = true;
                             player.ammo[2] = (player.ammo[2] + 10).min(100);
                             item.active = false;
@@ -1232,6 +1330,10 @@ impl GameState {
                                 .push(crate::audio::events::AudioEvent::WeaponPickup { x: item.x });
                         }
                         GrenadeLauncher => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED GrenadeLauncher at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
                             player.has_weapon[3] = true;
                             player.ammo[3] = (player.ammo[3] + 10).min(100);
                             item.active = false;
@@ -1240,6 +1342,10 @@ impl GameState {
                                 .push(crate::audio::events::AudioEvent::WeaponPickup { x: item.x });
                         }
                         BFG => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED BFG at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
                             player.has_weapon[8] = true;
                             player.ammo[8] = (player.ammo[8] + 15).min(200);
                             item.active = false;
@@ -1251,6 +1357,16 @@ impl GameState {
                 }
             }
         }
+
+        self.map.items.retain(|item| {
+            if item.dropped && !item.active {
+                println!("[ITEM CLEANUP] Removing dropped {:?} at ({:.1},{:.1})", 
+                    item.item_type, item.x, item.y);
+                false
+            } else {
+                true
+            }
+        });
 
         self.particles.retain_mut(|p| p.update(dt, &self.map));
         self.gibs.retain_mut(|g| g.update(dt, &self.map));
@@ -1274,6 +1390,10 @@ impl GameState {
                         let smoke_x = proj.x - proj.vel_x * 0.5;
                         let smoke_y = proj.y - proj.vel_y * 0.5;
                         self.smokes.push(smoke::Smoke::new(smoke_x, smoke_y, 8.0));
+                    } else if matches!(proj.weapon_type, weapon::Weapon::GrenadeLauncher) {
+                        let smoke_x = proj.x - proj.vel_x * 0.5;
+                        let smoke_y = proj.y - proj.vel_y * 0.5;
+                        self.smokes.push(smoke::Smoke::new(smoke_x, smoke_y, 6.0));
                     }
                 }
             }
@@ -1293,6 +1413,21 @@ impl GameState {
                     proj.y - proj.vel_y * 2.0,
                     30.0,
                     Color::from_rgba(255, 120, 40, 255),
+                    60,
+                ));
+            } else if proj.active && matches!(proj.weapon_type, weapon::Weapon::GrenadeLauncher) {
+                self.lights.push(light::LightPulse::new(
+                    proj.x,
+                    proj.y,
+                    100.0,
+                    Color::from_rgba(150, 255, 120, 170),
+                    80,
+                ));
+                self.lights.push(light::LightPulse::new(
+                    proj.x - proj.vel_x * 2.0,
+                    proj.y - proj.vel_y * 2.0,
+                    25.0,
+                    Color::from_rgba(100, 220, 90, 220),
                     60,
                 ));
             }
@@ -1337,8 +1472,6 @@ impl GameState {
                 );
                 
                 if has_explosion {
-                    println!("[{:.3}] [TIMEOUT] Explosive projectile [{}] {:?} expired/hit wall, adding to explode queue", 
-                        macroquad::prelude::get_time(), proj.id, proj.weapon_type);
                     exploded_projectiles.push((
                         proj.x,
                         proj.y,
@@ -1355,15 +1488,13 @@ impl GameState {
 
         if !self.is_multiplayer {
             let projectiles_to_check = self.projectiles.clone();
+            let mut projectiles_to_remove = Vec::new();
+            
             for proj in &projectiles_to_check {
                 if proj.active {
-                    let has_explosion = matches!(
-                        proj.weapon_type,
-                        weapon::Weapon::RocketLauncher
-                            | weapon::Weapon::GrenadeLauncher
-                            | weapon::Weapon::Plasmagun
-                            | weapon::Weapon::BFG
-                    );
+                    let mut corpse_to_create = None;
+                    let mut hit_player_id = None;
+                    let mut weapon_to_drop = None;
 
                     for player in &mut self.players {
                         if player.id != proj.owner_id && !player.gibbed {
@@ -1382,75 +1513,134 @@ impl GameState {
                                 hitbox_width,
                                 hitbox_height,
                             ) {
-                                if let Some(p) = self.projectiles.iter_mut().find(|p| {
-                                    p.x == proj.x && p.y == proj.y && p.owner_id == proj.owner_id
-                                }) {
-                                    println!("[{:.3}] [DIRECT HIT] Explosive projectile [{}] {:?} hit player {} for {} damage", 
-                                        macroquad::prelude::get_time(), p.id, p.weapon_type, player.id, proj.damage);
-                                    
-                                    let was_alive = !player.dead;
-                                    let (died, gibbed) = player.take_damage(proj.damage);
-                                    
-                                    self.weapon_hit_effects.push(
-                                        weapon_hit_effect::WeaponHitEffect::new_blood(proj.x, proj.y),
-                                    );
-                                    
-                                    if was_alive {
-                                        for _ in 0..3 {
-                                            let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                                0 => gib::GibType::Intestine,
-                                                1 => gib::GibType::Brain,
-                                                _ => gib::GibType::Fist,
-                                            };
-                                            self.gibs.push(gib::Gib::new(
-                                                player.x,
-                                                player.y,
-                                                crate::compat_rand::gen_range_f32(-3.0, 3.0),
-                                                crate::compat_rand::gen_range_f32(-5.0, -2.0),
-                                                gib_type,
-                                            ));
-                                        }
-                                    }
-                                    
-                                    if proj.owner_id == 1 && was_alive {
-                                        self.audio_events.push(
-                                            crate::audio::events::AudioEvent::PlayerHit {
-                                                damage: proj.damage,
-                                            },
-                                        );
-                                        pending_damage_numbers.push((
-                                            proj.owner_id as u32,
-                                            player.id,
+                                let was_alive = !player.dead;
+                                let (died, gibbed) = player.take_damage(proj.damage);
+                                
+                                self.weapon_hit_effects.push(
+                                    weapon_hit_effect::WeaponHitEffect::new_blood(proj.x, proj.y),
+                                );
+                                
+                                if was_alive {
+                                    for _ in 0..3 {
+                                        let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
+                                            0 => gib::GibType::Intestine,
+                                            1 => gib::GibType::Brain,
+                                            _ => gib::GibType::Fist,
+                                        };
+                                        self.gibs.push(gib::Gib::new(
                                             player.x,
                                             player.y,
-                                            proj.damage,
-                                            player.health,
-                                            player.armor,
+                                            crate::compat_rand::gen_range_f32(-3.0, 3.0),
+                                            crate::compat_rand::gen_range_f32(-5.0, -2.0),
+                                            gib_type,
                                         ));
                                     }
-                                    
-                                    if died {
-                                        kills.push((proj.owner_id, player.id, player.was_in_air, proj.weapon_type));
-                                    }
-                                    
-                                    exploded_projectiles.push((
-                                        proj.x,
-                                        proj.y,
-                                        proj.weapon_type,
-                                        proj.owner_id,
-                                        proj.damage,
-                                        proj.explosion_radius(),
-                                        Some(player.id),
-                                    ));
-                                    
-                                    p.active = false;
                                 }
+                                
+                                if proj.owner_id == 1 && was_alive {
+                                    self.audio_events.push(
+                                        crate::audio::events::AudioEvent::PlayerHit {
+                                            damage: proj.damage,
+                                        },
+                                    );
+                                    pending_damage_numbers.push((
+                                        proj.owner_id as u32,
+                                        player.id,
+                                        player.x,
+                                        player.y,
+                                        proj.damage,
+                                        player.health,
+                                        player.armor,
+                                    ));
+                                }
+                                
+                                if died && was_alive {
+                                    weapon_to_drop = Some((player.weapon, player.x, player.y));
+                                    if !gibbed {
+                                        corpse_to_create = Some(player.clone());
+                                    } else {
+                                        self.gibs.extend(gib::spawn_gibs(player.x, player.y));
+                                        self.audio_events.push(
+                                            crate::audio::events::AudioEvent::PlayerGib { x: player.x },
+                                        );
+                                    }
+                                    kills.push((proj.owner_id, player.id, player.was_in_air, proj.weapon_type));
+                                }
+                                
+                                hit_player_id = Some(player.id);
+                                projectiles_to_remove.push(proj.id);
                                 break;
                             }
                         }
                     }
+                    
+                    if let Some(corpse_player) = corpse_to_create {
+                        self.corpses.push(Corpse {
+                            player: corpse_player,
+                            lifetime: 10.0,
+                        });
+                    }
+                    
+                    if let Some((weapon, x, y)) = weapon_to_drop {
+                        if let Some(item_type) = weapon.to_item_type() {
+                            let player = self.players.iter().find(|p| (p.x - x).abs() < 1.0 && (p.y - y).abs() < 1.0);
+                            let (vel_x, vel_y) = if let Some(p) = player {
+                                let base_x = (crate::compat_rand::gen_f32() - 0.5) * 6.0;
+                                let base_y = -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0;
+                                (p.vel_x.clamp(-10.0, 10.0) * 0.3 + base_x, p.vel_y.clamp(-10.0, 10.0) * 0.2 + base_y)
+                            } else {
+                                ((crate::compat_rand::gen_f32() - 0.5) * 6.0, -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0)
+                            };
+                            let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                            let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                            let roll = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                            let spin_pitch = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                            let spin_yaw = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                            let spin_roll = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                            self.map.items.push(map::Item {
+                                x,
+                                y: y - 10.0,
+                                item_type,
+                                respawn_time: 0,
+                                active: true,
+                                vel_x,
+                                vel_y,
+                                dropped: true,
+                                yaw,
+                                spin_yaw,
+                                pitch,
+                                roll,
+                                spin_pitch,
+                                spin_roll,
+                            });
+                        }
+                    }
+                    
+                    if let Some(player_id) = hit_player_id {
+                        let has_explosion = matches!(
+                            proj.weapon_type,
+                            weapon::Weapon::RocketLauncher
+                                | weapon::Weapon::GrenadeLauncher
+                                | weapon::Weapon::Plasmagun
+                                | weapon::Weapon::BFG
+                        );
+                        
+                        if has_explosion {
+                            exploded_projectiles.push((
+                                proj.x,
+                                proj.y,
+                                proj.weapon_type,
+                                proj.owner_id,
+                                proj.damage,
+                                proj.explosion_radius(),
+                                Some(player_id),
+                            ));
+                        }
+                    }
                 }
             }
+            
+            self.projectiles.retain(|p| !projectiles_to_remove.contains(&p.id));
         }
 
         if !self.is_multiplayer {
@@ -1466,6 +1656,7 @@ impl GameState {
                     )
                 {
                     let mut corpse_to_create = None;
+                    let mut weapon_to_drop = None;
                     
                     for player in &mut self.players {
                         if player.id != proj.owner_id && !player.gibbed {
@@ -1533,6 +1724,7 @@ impl GameState {
                                         ));
                                     }
                                     if died && was_alive {
+                                        weapon_to_drop = Some((player.weapon, player.x, player.y));
                                         if !gibbed {
                                             corpse_to_create = Some(player.clone());
                                         } else {
@@ -1557,6 +1749,39 @@ impl GameState {
                             player: corpse_player,
                             lifetime: 10.0,
                         });
+                    }
+                    
+                    if let Some((weapon, x, y)) = weapon_to_drop {
+                        if let Some(item_type) = weapon.to_item_type() {
+                            let player = self.players.iter().find(|p| p.x == x && p.y == y);
+                            let (vel_x, vel_y) = if let Some(p) = player {
+                                (p.vel_x * 0.5, p.vel_y * 0.5)
+                            } else {
+                                (0.0, 0.0)
+                            };
+                            let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                            let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                            let roll = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                            let spin_pitch = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                            let spin_yaw = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                            let spin_roll = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                            self.map.items.push(map::Item {
+                                x,
+                                y: y - 10.0,
+                                item_type,
+                                respawn_time: 0,
+                                active: true,
+                                vel_x,
+                                vel_y,
+                                dropped: true,
+                                yaw,
+                                spin_yaw,
+                                pitch,
+                                roll,
+                                spin_pitch,
+                                spin_roll,
+                            });
+                        }
                     }
                 }
             }
@@ -1685,6 +1910,7 @@ impl GameState {
         for (idx, damage, hit_x, hit_y, owner_id) in hits {
             let player_x = self.players[idx].x;
             let player_y = self.players[idx].y;
+            let player_weapon = self.players[idx].weapon;
             let was_alive = !self.players[idx].dead;
             let (died, gibbed) = self.players[idx].take_damage(damage);
             
@@ -1712,6 +1938,37 @@ impl GameState {
                 let target_health = self.players[idx].health;
                 let target_armor = self.players[idx].armor;
                 pending_damage_numbers.push((owner_id as u32, target_id, player_x, player_y, damage, target_health, target_armor));
+            }
+
+            if died && was_alive {
+                if let Some(item_type) = player_weapon.to_item_type() {
+                    let base_x = (crate::compat_rand::gen_f32() - 0.5) * 6.0;
+                    let base_y = -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0;
+                    let vel_x = self.players[idx].vel_x.clamp(-10.0, 10.0) * 0.3 + base_x;
+                    let vel_y = self.players[idx].vel_y.clamp(-10.0, 10.0) * 0.2 + base_y;
+                    let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let roll = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let spin_pitch = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    let spin_yaw = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    let spin_roll = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    self.map.items.push(map::Item {
+                        x: player_x,
+                        y: player_y - 10.0,
+                        item_type,
+                        respawn_time: 0,
+                        active: true,
+                        vel_x,
+                        vel_y,
+                        dropped: true,
+                        yaw,
+                        spin_yaw,
+                        pitch,
+                        roll,
+                        spin_pitch,
+                        spin_roll,
+                    });
+                }
             }
 
             if died && was_alive && !gibbed {
@@ -1764,6 +2021,34 @@ impl GameState {
                     ));
                 }
             } else if died && was_alive {
+                if let Some(item_type) = player_weapon.to_item_type() {
+                    let base_x = (crate::compat_rand::gen_f32() - 0.5) * 6.0;
+                    let base_y = -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0;
+                    let vel_x = self.players[idx].vel_x.clamp(-10.0, 10.0) * 0.3 + base_x;
+                    let vel_y = self.players[idx].vel_y.clamp(-10.0, 10.0) * 0.2 + base_y;
+                    let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let roll = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let spin_pitch = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    let spin_yaw = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    let spin_roll = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    self.map.items.push(map::Item {
+                        x: player_x,
+                        y: player_y - 10.0,
+                        item_type,
+                        respawn_time: 0,
+                        active: true,
+                        vel_x,
+                        vel_y,
+                        dropped: true,
+                        yaw,
+                        spin_yaw,
+                        pitch,
+                        roll,
+                        spin_pitch,
+                        spin_roll,
+                    });
+                }
                 if owner_id == self.players[idx].id {
                     if let Some(player) = self.players.iter_mut().find(|p| p.id == owner_id) {
                         player.frags -= 1;
@@ -1852,6 +2137,7 @@ impl GameState {
             }
 
             let mut new_corpses = Vec::new();
+            let mut weapons_to_drop = Vec::new();
             
             for player in &mut self.players {
                 if Some(player.id) == direct_hit_player_id {
@@ -1864,10 +2150,6 @@ impl GameState {
 
                 if dist < radius {
                     let damage_points = (damage as f32 - 0.5 * dist).max(0.0);
-                    
-                    println!("[{:.3}] [EXPLOSION] weapon={:?} base_damage={} dist={:.1} radius={:.1} final_damage={:.1}", 
-                        macroquad::prelude::get_time(),
-                        weapon, damage, dist, radius, damage_points);
                     
                     let mass = 200.0;
                     let g_knockback = 1200.0;
@@ -1928,6 +2210,7 @@ impl GameState {
                             }
 
                             if died && was_alive {
+                                weapons_to_drop.push((player.weapon, player.x, player.y));
                                 if !gibbed {
                                     new_corpses.push(player.clone());
                                 } else {
@@ -1935,7 +2218,6 @@ impl GameState {
                                     self.audio_events
                                         .push(crate::audio::events::AudioEvent::PlayerGib { x: player.x });
                                 }
-                                println!("[EXPLOSION KILL] owner={} victim={} weapon={:?}", owner_id, player.id, weapon);
                                 kills.push((owner_id, player.id, false, weapon));
                             }
                         } else if owner_id as u16 == player.id {
@@ -1974,6 +2256,7 @@ impl GameState {
                             }
                             
                             if died && was_alive {
+                                weapons_to_drop.push((player.weapon, player.x, player.y));
                                 if !gibbed {
                                     new_corpses.push(player.clone());
                                 } else {
@@ -1981,11 +2264,45 @@ impl GameState {
                                     self.audio_events
                                         .push(crate::audio::events::AudioEvent::PlayerGib { x: player.x });
                                 }
-                                println!("[EXPLOSION SUICIDE] owner={} weapon={:?}", owner_id, weapon);
                                 kills.push((owner_id, player.id, false, weapon));
                             }
                         }
                     }
+                }
+            }
+            
+            for (weapon, px, py) in weapons_to_drop {
+                if let Some(item_type) = weapon.to_item_type() {
+                    let player = self.players.iter().find(|p| (p.x - px).abs() < 1.0 && (p.y - py).abs() < 1.0);
+                    let (vel_x, vel_y) = if let Some(p) = player {
+                        let base_x = (crate::compat_rand::gen_f32() - 0.5) * 6.0;
+                        let base_y = -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0;
+                        (p.vel_x.clamp(-10.0, 10.0) * 0.3 + base_x, p.vel_y.clamp(-10.0, 10.0) * 0.2 + base_y)
+                    } else {
+                        ((crate::compat_rand::gen_f32() - 0.5) * 6.0, -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0)
+                    };
+                    let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let roll = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
+                    let spin_pitch = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    let spin_yaw = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    let spin_roll = (crate::compat_rand::gen_f32() - 0.5) * 0.3;
+                    self.map.items.push(map::Item {
+                        x: px,
+                        y: py - 10.0,
+                        item_type,
+                        respawn_time: 0,
+                        active: true,
+                        vel_x,
+                        vel_y,
+                        dropped: true,
+                        yaw,
+                        spin_yaw,
+                        pitch,
+                        roll,
+                        spin_pitch,
+                        spin_roll,
+                    });
                 }
             }
             
@@ -2048,21 +2365,14 @@ impl GameState {
 
         let kill_count = kills.len();
 
-        if !kills.is_empty() {
-            println!("[KILLS] Processing {} kills", kills.len());
-        }
-
         for &(killer_id, victim_id, was_airborne, weapon) in &kills {
-            println!("[FRAG] killer_id={} victim_id={} suicide={}", killer_id, victim_id, killer_id == victim_id);
             if killer_id == victim_id {
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == killer_id) {
                     player.frags -= 1;
-                    println!("[FRAG] Suicide: player {} frags now {}", killer_id, player.frags);
                 }
             } else {
                 if let Some(killer) = self.players.iter_mut().find(|p| p.id == killer_id) {
                     killer.frags += 1;
-                    println!("[FRAG] Kill: player {} frags now {}", killer_id, killer.frags);
                 }
             }
             self.check_and_award(killer_id, victim_id, was_airborne, weapon);
@@ -2132,6 +2442,12 @@ impl GameState {
         }
 
         if let Some(announcement) = self.lead_announcements.update(&self.players) {
+            self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
+                announcement: announcement.to_string(),
+            });
+        }
+
+        if let Some(announcement) = self.team_advantage_announcements.update(&self.players) {
             self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
                 announcement: announcement.to_string(),
             });
@@ -2292,7 +2608,6 @@ impl GameState {
                             player.shadow_ly = player.shadow_ly + (target_sy - player.shadow_ly) * lerp;
                             player.shadow_lr = player.shadow_lr + (target_sr - player.shadow_lr) * lerp;
                             
-                            // Render solid black shadow
                             model.render_shadow_with_light(
                                 screen_x,
                                 screen_y,
@@ -2307,7 +2622,8 @@ impl GameState {
                                 player.upper_frame,
                                 weapon_model,
                                 model_yaw_offset,
-                                BLACK, // Solid black
+                                BLACK,
+                                if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun) { player.barrel_spin_angle } else { 0.0 },
                             );
                         }
                     }
@@ -2410,7 +2726,11 @@ impl GameState {
                                         self.ambient_light,
                                     );
                                 }
-                                model.render(screen_x, screen_y, 1.0, item_color);
+                                if item.dropped {
+                                    model.render_with_full_rotation(screen_x, screen_y, 1.0, item_color, item.pitch, item.yaw, item.roll);
+                                } else {
+                                    model.render(screen_x, screen_y, 1.0, item_color);
+                                }
                             } else {
                                 draw_circle(screen_x, screen_y, 8.0, item_color);
                             }
@@ -2558,6 +2878,7 @@ impl GameState {
             for projectile in &self.projectiles {
                 let (r, g, b, rad) = match projectile.weapon_type {
                     weapon::Weapon::RocketLauncher => (255, 180, 80, 160.0),
+                    weapon::Weapon::GrenadeLauncher => (150, 255, 120, 120.0),
                     weapon::Weapon::Plasmagun => (80, 180, 255, 100.0),
                     weapon::Weapon::BFG => (120, 255, 120, 200.0),
                     _ => (0, 0, 0, 0.0),
@@ -2625,7 +2946,7 @@ impl GameState {
                         screen_x,
                         screen_y,
                         color,
-                        1.5,
+                        2.0,
                         flip,
                         rel_angle,
                         player.angle,
@@ -2633,11 +2954,12 @@ impl GameState {
                         player.upper_frame,
                         self.weapon_model_cache.get(player.weapon),
                         false,
-                        None,
+                        Some(&lighting_ctx),
                         0.0,
                         0.0,
-                        0.0, // Added missing somersault_angle argument
+                        0.0,
                         false,
+                        0.0,
                     );
                 }
             }
@@ -2731,7 +3053,7 @@ impl GameState {
                         screen_x,
                         screen_y,
                         color,
-                        1.5,
+                        2.0,
                         flip,
                         pitch,
                         aim_angle,
@@ -2744,6 +3066,7 @@ impl GameState {
                         model_roll,
                         somersault_angle,
                         has_quad_damage,
+                        if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun) { player.barrel_spin_angle } else { 0.0 },
                     );
 
                     if !player.dead {
@@ -2801,13 +3124,6 @@ impl GameState {
                             }
                         }
 
-                        let hp = player.health.max(0).min(100) as f32;
-                        let ratio = hp / 100.0;
-                        let g = (255.0 * ratio) as u8;
-                        let b = (255.0 * ratio) as u8;
-                        let name_color = Color::from_rgba(255, g, b, 160);
-                        draw_text(&player.name, screen_x - 19.0, name_y + 1.0, 12.0, BLACK);
-                        draw_text(&player.name, screen_x - 20.0, name_y, 12.0, name_color);
                     }
                 } else {
                     if !player.dead {
@@ -2858,16 +3174,28 @@ impl GameState {
                     }
                 }
 
-                for gib in &self.gibs {
-                    let sx = gib.x - camera_x;
-                    let sy = gib.y - camera_y;
-                    if sx > -effect_margin
-                        && sx < screen_w + effect_margin
-                        && sy > -effect_margin
-                        && sy < screen_h + effect_margin
-                    {
-                        gib.render(camera_x, camera_y, &self.gib_model_cache);
+                if !self.gibs.is_empty() {
+                    let mut gib_batch = md3_render::MD3Batch::new();
+                    let mut rendered_count = 0;
+                    const MAX_GIBS_PER_FRAME: usize = 150;
+                    
+                    for gib in &self.gibs {
+                        if rendered_count >= MAX_GIBS_PER_FRAME {
+                            break;
+                        }
+                        
+                        let sx = gib.x - camera_x;
+                        let sy = gib.y - camera_y;
+                        if sx > -effect_margin
+                            && sx < screen_w + effect_margin
+                            && sy > -effect_margin
+                            && sy < screen_h + effect_margin
+                        {
+                            gib.render_batched(camera_x, camera_y, &self.gib_model_cache, &mut gib_batch);
+                            rendered_count += 1;
+                        }
                     }
+                    gib_batch.flush(None);
                 }
 
                 for weapon_hit in &self.weapon_hit_effects {
@@ -3024,6 +3352,9 @@ impl GameState {
                 self.players.get(0).map(|p| p.id)
             };
             
+            let award_material = award_shader::get_award_shader_material();
+            gl_use_material(award_material);
+            
             for award in &self.awards {
                 let is_local_award = Some(award.player_id) == local_player_id;
                 
@@ -3034,6 +3365,9 @@ impl GameState {
                         let x = screen_w / 2.0 - size / 2.0;
                         let y = 100.0;
                         let bounce = (award.lifetime * 6.0).sin() * 8.0 * award.scale;
+                        
+                        award_material.set_uniform("time", award.lifetime);
+                        award_material.set_uniform("scale", award.scale);
                         
                         draw_texture_ex(
                             texture,
@@ -3055,16 +3389,22 @@ impl GameState {
                     }
                     
                     let world_x = player.x;
-                    let world_y = player.y - 90.0;
+                    let world_y = player.y - 120.0;
+                    
+                    let screen_x = world_x - camera_x;
+                    let screen_y = world_y - camera_y;
                     
                     if let Some(texture) = self.award_icon_cache.get(&award.award_type) {
                         let size = 48.0 * award.scale;
                         let bounce = (award.lifetime * 6.0).sin() * 4.0 * award.scale;
                         
+                        award_material.set_uniform("time", award.lifetime);
+                        award_material.set_uniform("scale", award.scale);
+                        
                         draw_texture_ex(
                             texture,
-                            world_x - size / 2.0,
-                            world_y - bounce,
+                            screen_x - size / 2.0,
+                            screen_y - bounce,
                             Color::new(1.0, 1.0, 1.0, award.scale),
                             DrawTextureParams {
                                 dest_size: Some(Vec2::new(size, size)),
@@ -3074,6 +3414,8 @@ impl GameState {
                     }
                 }
             }
+            
+            gl_use_default_material();
         }
 
         if let Some(defrag) = &self.defrag_mode {

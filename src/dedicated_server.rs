@@ -1040,6 +1040,8 @@ impl DedicatedServer {
             manual_flip_x: None,
             excellent_count: 0,
             impressive_count: 0,
+            barrel_spin_angle: 0.0,
+            barrel_spin_speed: 0.0,
         }
     }
 

@@ -135,19 +135,20 @@ pub struct WeaponHitEffect {
     pub life: u32,
     pub scale: f32,
     pub rotation: f32,
+    pub frame_time: f32,
 }
 
 impl WeaponHitEffect {
     pub fn new(x: f32, y: f32, weapon: Weapon) -> Self {
         let (effect_type, max_frames, frame_duration, scale) = match weapon {
-            Weapon::MachineGun | Weapon::Shotgun => (HitEffectType::Bullet, 3, 3, 1.0),
-            Weapon::Plasmagun => (HitEffectType::Plasma, 1, 5, 1.2),
-            Weapon::Railgun => (HitEffectType::Rail, 4, 3, 1.5),
-            Weapon::RocketLauncher => (HitEffectType::Rocket, 8, 2, 1.8),
-            Weapon::GrenadeLauncher => (HitEffectType::Grenade, 3, 4, 1.5),
-            Weapon::BFG => (HitEffectType::BFG, 3, 4, 2.0),
-            Weapon::Lightning => (HitEffectType::Lightning, 3, 3, 1.3),
-            _ => (HitEffectType::Bullet, 3, 3, 1.0),
+            Weapon::MachineGun | Weapon::Shotgun => (HitEffectType::Bullet, 3, 4, 1.0),
+            Weapon::Plasmagun => (HitEffectType::Plasma, 1, 6, 1.2),
+            Weapon::Railgun => (HitEffectType::Rail, 4, 4, 1.5),
+            Weapon::RocketLauncher => (HitEffectType::Rocket, 8, 4, 1.8),
+            Weapon::GrenadeLauncher => (HitEffectType::Grenade, 3, 5, 1.5),
+            Weapon::BFG => (HitEffectType::BFG, 3, 5, 2.0),
+            Weapon::Lightning => (HitEffectType::Lightning, 3, 4, 1.3),
+            _ => (HitEffectType::Bullet, 3, 4, 1.0),
         };
 
         let rotation = rand::gen_range(0.0, 360.0);
@@ -162,6 +163,7 @@ impl WeaponHitEffect {
             life: 0,
             scale,
             rotation,
+            frame_time: 0.0,
         }
     }
 
@@ -173,18 +175,21 @@ impl WeaponHitEffect {
             effect_type: HitEffectType::Blood,
             frame: 0,
             max_frames: 5,
-            frame_duration: 2,
+            frame_duration: 3,
             life: 0,
             scale: 1.0,
             rotation,
+            frame_time: 0.0,
         }
     }
 
     pub fn update(&mut self) -> bool {
         self.life += 1;
+        self.frame_time += 1.0;
         
-        if self.life % self.frame_duration == 0 {
+        if self.frame_time >= self.frame_duration as f32 {
             self.frame += 1;
+            self.frame_time = 0.0;
         }
 
         self.frame < self.max_frames
@@ -199,57 +204,97 @@ impl WeaponHitEffect {
             return;
         }
 
-        if let Some(texture) = cache.get_texture(&self.effect_type, self.frame) {
-            let size = 64.0 * self.scale;
+        let size = 64.0 * self.scale;
+        let make_params = || DrawTextureParams {
+            dest_size: Some(Vec2::new(size, size)),
+            rotation: self.rotation.to_radians(),
+            ..Default::default()
+        };
+
+        let blend_factor = self.frame_time / self.frame_duration as f32;
+        let next_frame = (self.frame + 1).min(self.max_frames - 1);
+        
+        let current_texture = cache.get_texture(&self.effect_type, self.frame);
+        let next_texture = if self.frame < self.max_frames - 1 {
+            cache.get_texture(&self.effect_type, next_frame)
+        } else {
+            None
+        };
+
+        let base_alpha = if self.frame == self.max_frames - 1 {
+            1.0 - blend_factor
+        } else {
+            1.0
+        };
+
+        if self.effect_type == HitEffectType::Blood {
+            gl_use_material(get_weapon_hit_material_alpha());
             
-            let alpha = if self.frame == self.max_frames - 1 {
-                let remaining_life = self.frame_duration - (self.life % self.frame_duration);
-                (remaining_life as f32 / self.frame_duration as f32).max(0.0)
-            } else {
-                1.0
-            };
-
-            let params = DrawTextureParams {
-                dest_size: Some(Vec2::new(size, size)),
-                rotation: self.rotation.to_radians(),
-                ..Default::default()
-            };
-
-            if self.effect_type == HitEffectType::Blood {
+            if let Some(texture) = current_texture {
+                let alpha = base_alpha * (1.0 - blend_factor);
                 let color = Color::from_rgba(255, 255, 255, (alpha * 255.0) as u8);
-                gl_use_material(get_weapon_hit_material_alpha());
-                
                 draw_texture_ex(
                     &texture,
                     screen_x - size / 2.0,
                     screen_y - size / 2.0,
                     color,
-                    params,
+                    make_params(),
                 );
-                count_shader!("weapon_hit_alpha");
-                
-                gl_use_default_material();
-            } else {
+            }
+            
+            if let Some(texture) = next_texture {
+                let alpha = base_alpha * blend_factor;
+                let color = Color::from_rgba(255, 255, 255, (alpha * 255.0) as u8);
+                draw_texture_ex(
+                    &texture,
+                    screen_x - size / 2.0,
+                    screen_y - size / 2.0,
+                    color,
+                    make_params(),
+                );
+            }
+            
+            count_shader!("weapon_hit_alpha");
+            gl_use_default_material();
+        } else {
+            gl_use_material(get_weapon_hit_material_additive());
+            
+            if let Some(texture) = current_texture {
+                let alpha = base_alpha * (1.0 - blend_factor);
                 let color = Color::from_rgba(
                     (255.0 * alpha) as u8,
                     (255.0 * alpha) as u8,
                     (255.0 * alpha) as u8,
                     255
                 );
-                
-                gl_use_material(get_weapon_hit_material_additive());
-                
                 draw_texture_ex(
                     &texture,
                     screen_x - size / 2.0,
                     screen_y - size / 2.0,
                     color,
-                    params,
+                    make_params(),
                 );
-                count_shader!("weapon_hit_additive");
-                
-                gl_use_default_material();
             }
+            
+            if let Some(texture) = next_texture {
+                let alpha = base_alpha * blend_factor;
+                let color = Color::from_rgba(
+                    (255.0 * alpha) as u8,
+                    (255.0 * alpha) as u8,
+                    (255.0 * alpha) as u8,
+                    255
+                );
+                draw_texture_ex(
+                    &texture,
+                    screen_x - size / 2.0,
+                    screen_y - size / 2.0,
+                    color,
+                    make_params(),
+                );
+            }
+            
+            count_shader!("weapon_hit_additive");
+            gl_use_default_material();
         }
     }
 }

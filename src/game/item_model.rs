@@ -366,6 +366,10 @@ impl ItemModel {
     }
     
     pub fn render(&self, screen_x: f32, screen_y: f32, scale: f32, base_color: Color) {
+        self.render_with_yaw(screen_x, screen_y, scale, base_color, self.rotation);
+    }
+
+    pub fn render_with_yaw(&self, screen_x: f32, screen_y: f32, scale: f32, base_color: Color, yaw: f32) {
         let render_y = screen_y + self.bob_offset;
         
         draw_ellipse(
@@ -415,7 +419,7 @@ impl ItemModel {
                     effect_scale,
                     effect_color,
                     None,
-                    self.rotation,
+                    yaw,
                 );
             }
         }
@@ -434,7 +438,92 @@ impl ItemModel {
                     final_scale,
                     color,
                     texture,
-                    self.rotation,
+                    yaw,
+                );
+            }
+        }
+    }
+
+    pub fn render_with_full_rotation(&self, screen_x: f32, screen_y: f32, scale: f32, base_color: Color, pitch: f32, yaw: f32, roll: f32) {
+        let render_y = screen_y;
+        
+        draw_ellipse(
+            screen_x,
+            screen_y + 15.0,
+            8.0 * scale,
+            3.0 * scale,
+            0.0,
+            Color::from_rgba(0, 0, 0, 100),
+        );
+        
+        let is_weapon = matches!(self.item_type, 
+            ItemModelType::WeaponGauntlet | ItemModelType::WeaponShotgun |
+            ItemModelType::WeaponMachinegun | ItemModelType::WeaponGrenadeLauncher |
+            ItemModelType::WeaponRocketLauncher | ItemModelType::WeaponLightning |
+            ItemModelType::WeaponRailgun | ItemModelType::WeaponPlasmagun |
+            ItemModelType::WeaponBFG
+        );
+        
+        let mut color = base_color;
+        if is_weapon {
+            let min_brightness = 0.3;
+            color.r = color.r.max(min_brightness);
+            color.g = color.g.max(min_brightness);
+            color.b = color.b.max(min_brightness);
+        }
+        
+        let weapon_scale_multiplier = if is_weapon { 1.5 } else { 1.0 };
+        let final_scale = scale * self.scale_factor * weapon_scale_multiplier;
+        let effect_scale = scale * self.scale_factor;
+        
+        if let Some(ref effect_model) = self.effect_model {
+            let effect_color = Color::from_rgba(
+                (color.r * 255.0) as u8,
+                (color.g * 255.0) as u8,
+                (color.b * 255.0) as u8,
+                255,
+            );
+            
+            for mesh in &effect_model.meshes {
+                let frame = 0.min(mesh.vertices.len().saturating_sub(1));
+                super::md3_render::render_md3_mesh_with_yaw_and_roll(
+                    mesh,
+                    frame,
+                    screen_x,
+                    render_y,
+                    effect_scale,
+                    effect_color,
+                    None,
+                    None,
+                    false,
+                    pitch,
+                    yaw,
+                    roll,
+                    None,
+                );
+            }
+        }
+        
+        if let Some(ref model) = self.model {
+            for mesh in &model.meshes {
+                let mesh_name = Self::get_mesh_name(&mesh.header);
+                let texture = self.textures.get(&mesh_name);
+                let frame = 0.min(mesh.vertices.len().saturating_sub(1));
+                
+                super::md3_render::render_md3_mesh_with_yaw_and_roll(
+                    mesh,
+                    frame,
+                    screen_x,
+                    render_y,
+                    final_scale,
+                    color,
+                    texture,
+                    None,
+                    false,
+                    pitch,
+                    yaw,
+                    roll,
+                    None,
                 );
             }
         }

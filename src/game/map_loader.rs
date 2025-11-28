@@ -173,7 +173,7 @@ impl MapFile {
                     y: item.tile_y * self.tile_height,
                     item_type,
                     respawn_time: 0,
-                    active: true,
+                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
                 })
             })
             .collect();

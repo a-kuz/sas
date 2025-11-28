@@ -295,9 +295,15 @@
         },
         {
           "x_start": 16,
-          "x_end": 24,
+          "x_end": 20,
           "solid": true,
           "texture_id": 728
+        },
+        {
+          "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -318,9 +324,15 @@
         },
         {
           "x_start": 16,
-          "x_end": 24,
+          "x_end": 20,
           "solid": true,
           "texture_id": 728
+        },
+        {
+          "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -341,9 +353,15 @@
         },
         {
           "x_start": 16,
-          "x_end": 24,
+          "x_end": 20,
           "solid": true,
           "texture_id": 728
+        },
+        {
+          "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -364,9 +382,15 @@
         },
         {
           "x_start": 16,
-          "x_end": 24,
+          "x_end": 20,
           "solid": true,
           "texture_id": 728
+        },
+        {
+          "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -389,7 +413,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -410,6 +434,12 @@
         },
         {
           "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 25,
           "x_end": 27,
           "solid": true,
           "texture_id": 728
@@ -439,6 +469,12 @@
         },
         {
           "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 25,
           "x_end": 27,
           "solid": true,
           "texture_id": 728
@@ -447,7 +483,7 @@
           "x_start": 34,
           "x_end": 42,
           "solid": true,
-          "texture_id": 9
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -468,6 +504,12 @@
         },
         {
           "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 25,
           "x_end": 27,
           "solid": true,
           "texture_id": 728
@@ -476,7 +518,7 @@
           "x_start": 34,
           "x_end": 42,
           "solid": true,
-          "texture_id": 9
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -497,6 +539,12 @@
         },
         {
           "x_start": 21,
+          "x_end": 24,
+          "solid": true,
+          "texture_id": 1
+        },
+        {
+          "x_start": 25,
           "x_end": 27,
           "solid": true,
           "texture_id": 728
@@ -519,16 +567,10 @@
           "texture_id": 9
         },
         {
-          "x_start": 16,
-          "x_end": 21,
-          "solid": true,
-          "texture_id": 1
-        },
-        {
-          "x_start": 22,
+          "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -548,16 +590,10 @@
           "texture_id": 9
         },
         {
-          "x_start": 16,
-          "x_end": 21,
-          "solid": true,
-          "texture_id": 1
-        },
-        {
-          "x_start": 22,
+          "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -580,7 +616,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -603,7 +639,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -626,7 +662,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 47,
@@ -649,7 +685,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 47,
@@ -684,7 +720,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 47,
@@ -707,7 +743,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 47,
@@ -736,7 +772,7 @@
           "x_start": 21,
           "x_end": 24,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 47,
@@ -763,9 +799,9 @@
         },
         {
           "x_start": 21,
-          "x_end": 24,
+          "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 47,
@@ -794,7 +830,7 @@
           "x_start": 21,
           "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -817,7 +853,7 @@
           "x_start": 21,
           "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -837,7 +873,7 @@
           "texture_id": 9
         },
         {
-          "x_start": 4,
+          "x_start": 5,
           "x_end": 7,
           "solid": true,
           "texture_id": 492
@@ -846,7 +882,7 @@
           "x_start": 21,
           "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -869,7 +905,7 @@
           "x_start": 21,
           "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -892,7 +928,7 @@
           "x_start": 21,
           "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -921,7 +957,7 @@
           "x_start": 21,
           "x_end": 23,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -944,10 +980,10 @@
           "x_start": 17,
           "x_end": 31,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
-          "x_start": 40,
+          "x_start": 44,
           "x_end": 50,
           "solid": true,
           "texture_id": 1
@@ -973,10 +1009,10 @@
           "x_start": 17,
           "x_end": 31,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
-          "x_start": 40,
+          "x_start": 44,
           "x_end": 50,
           "solid": true,
           "texture_id": 1
@@ -1008,10 +1044,10 @@
           "x_start": 17,
           "x_end": 31,
           "solid": true,
-          "texture_id": 714
+          "texture_id": 1
         },
         {
-          "x_start": 40,
+          "x_start": 44,
           "x_end": 50,
           "solid": true,
           "texture_id": 1
@@ -1043,7 +1079,7 @@
           "x_start": 17,
           "x_end": 31,
           "solid": true,
-          "texture_id": 714
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -1307,12 +1343,6 @@
           "texture_id": 9
         },
         {
-          "x_start": 37,
-          "x_end": 38,
-          "solid": true,
-          "texture_id": 2
-        },
-        {
           "x_start": 51,
           "x_end": 51,
           "solid": true,
@@ -1330,12 +1360,6 @@
           "texture_id": 9
         },
         {
-          "x_start": 37,
-          "x_end": 38,
-          "solid": true,
-          "texture_id": 2
-        },
-        {
           "x_start": 51,
           "x_end": 51,
           "solid": true,
@@ -1351,12 +1375,6 @@
           "x_end": 0,
           "solid": true,
           "texture_id": 9
-        },
-        {
-          "x_start": 37,
-          "x_end": 38,
-          "solid": true,
-          "texture_id": 2
         },
         {
           "x_start": 51,
@@ -1476,12 +1494,6 @@
           "x_end": 0,
           "solid": true,
           "texture_id": 9
-        },
-        {
-          "x_start": 51,
-          "x_end": 51,
-          "solid": true,
-          "texture_id": 9
         }
       ]
     },
@@ -1597,12 +1609,6 @@
           "texture_id": 9
         },
         {
-          "x_start": 29,
-          "x_end": 29,
-          "solid": true,
-          "texture_id": 9
-        },
-        {
           "x_start": 37,
           "x_end": 44,
           "solid": true,
@@ -1707,7 +1713,7 @@
       "tile_y": 61.507812,
       "width_tiles": 2.0,
       "force_x": 0.0,
-      "force_y": -5.0
+      "force_y": -7.0
     },
     {
       "tile_x": 2.1905518,
@@ -1715,13 +1721,6 @@
       "width_tiles": 2.0,
       "force_x": 0.0,
       "force_y": -8.0
-    },
-    {
-      "tile_x": 36.989014,
-      "tile_y": 50.97827,
-      "width_tiles": 2.0,
-      "force_x": 0.0,
-      "force_y": -6.0
     },
     {
       "tile_x": 29.83899,
@@ -1771,47 +1770,47 @@
     }
   ],
   "lights": [
-  {
-    "x": 800.0,
-    "y": 560.0,
-    "radius": 720.0,
-    "r": 230,
-    "g": 230,
-    "b": 245,
-    "intensity": 0.35,
-    "flicker": false
-  },
-  {
-    "x": 1217.0,
-    "y": 805.5,
-    "radius": 380.0,
-    "r": 255,
-    "g": 230,
-    "b": 200,
-    "intensity": 0.8,
-    "flicker": false
-  },
-  {
-    "x": 1582.0,
-    "y": 1078.0,
-    "radius": 320.0,
-    "r": 255,
-    "g": 230,
-    "b": 200,
-    "intensity": 0.9,
-    "flicker": false
-  },
-  {
-    "x": 450.0,
-    "y": 420.0,
-    "radius": 420.0,
-    "r": 255,
-    "g": 230,
-    "b": 200,
-    "intensity": 0.7,
-    "flicker": false
-  }
-],
+    {
+      "x": 800.0,
+      "y": 560.0,
+      "radius": 720.0,
+      "r": 230,
+      "g": 230,
+      "b": 245,
+      "intensity": 0.35,
+      "flicker": false
+    },
+    {
+      "x": 1217.0,
+      "y": 805.5,
+      "radius": 380.0,
+      "r": 255,
+      "g": 230,
+      "b": 200,
+      "intensity": 0.8,
+      "flicker": false
+    },
+    {
+      "x": 1582.0,
+      "y": 1078.0,
+      "radius": 320.0,
+      "r": 255,
+      "g": 230,
+      "b": 200,
+      "intensity": 0.9,
+      "flicker": false
+    },
+    {
+      "x": 450.0,
+      "y": 420.0,
+      "radius": 420.0,
+      "r": 255,
+      "g": 230,
+      "b": 200,
+      "intensity": 0.7,
+      "flicker": false
+    }
+  ],
   "background_elements": [
     {
       "x": 96.0,
@@ -2013,17 +2012,6 @@
     },
     {
       "x": 288.0,
-      "y": 672.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 288.0,
       "y": 800.0,
       "width": 128.00002,
       "height": 128.00002,
@@ -2102,17 +2090,6 @@
     {
       "x": 416.0,
       "y": 544.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 416.0,
-      "y": 288.0,
       "width": 128.00002,
       "height": 128.00002,
       "texture_name": "q3-resources/textures/base_support/surface2.png",
@@ -2608,17 +2585,6 @@
     {
       "x": 1184.0,
       "y": 672.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1184.0,
-      "y": 800.0,
       "width": 128.00002,
       "height": 128.00002,
       "texture_name": "q3-resources/textures/base_support/surface2.png",

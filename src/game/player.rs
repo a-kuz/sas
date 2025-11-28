@@ -63,6 +63,8 @@ pub struct Player {
     pub manual_flip_x: Option<bool>,
     pub excellent_count: u32,
     pub impressive_count: u32,
+    pub barrel_spin_angle: f32,
+    pub barrel_spin_speed: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -174,6 +176,23 @@ impl Player {
             self.somersault_time -= dt;
             if self.somersault_time < 0.0 {
                 self.somersault_time = 0.0;
+            }
+        }
+
+        if matches!(self.weapon, Weapon::MachineGun) {
+            if self.barrel_spin_speed > 0.0 {
+                self.barrel_spin_speed -= super::constants::BARREL_SPIN_FRICTION * dt;
+                if self.barrel_spin_speed < 0.0 {
+                    self.barrel_spin_speed = 0.0;
+                }
+            }
+        } else {
+            self.barrel_spin_speed = 0.0;
+        }
+        if self.barrel_spin_speed > 0.0 {
+            self.barrel_spin_angle += self.barrel_spin_speed * dt;
+            if self.barrel_spin_angle > std::f32::consts::TAU {
+                self.barrel_spin_angle -= std::f32::consts::TAU;
             }
         }
     }
@@ -349,6 +368,8 @@ impl Player {
             manual_flip_x: None,
             excellent_count: 0,
             impressive_count: 0,
+            barrel_spin_angle: 0.0,
+            barrel_spin_speed: 0.0,
         }
     }
 
@@ -571,12 +592,7 @@ impl Player {
             );
         }
 
-        let name_y = screen_y - 28.0;
-        let name_color = Color::from_rgba(230, 230, 240, 255);
-        draw_text(&self.name, screen_x - 19.0, name_y + 1.0, 16.0, BLACK);
-        draw_text(&self.name, screen_x - 20.0, name_y, 16.0, name_color);
-
-        let health_bar_y = name_y + 4.0;
+        let health_bar_y = screen_y - 24.0;
         draw_rectangle(
             screen_x - 16.0,
             health_bar_y,
@@ -616,12 +632,8 @@ impl Player {
     }
 
     pub fn spawn(&mut self, x: f32, y: f32, map: &Map) {
-        println!("[{:.3}] [Player] spawn() called with x={}, y={}", 
-            macroquad::prelude::get_time(), x, y);
         self.x = x;
         let aligned_y = ((y / 16.0).round() * 16.0) + 8.0;
-        println!("[{:.3}] [Player] aligned_y = {}", 
-            macroquad::prelude::get_time(), aligned_y);
         self.y = aligned_y;
         self.vel_x = 0.0;
         self.vel_y = 0.0;
@@ -629,7 +641,7 @@ impl Player {
         self.armor = 0;
         self.dead = false;
         self.gibbed = false;
-        self.weapon = Weapon::Gauntlet;
+        self.weapon = Weapon::MachineGun;
         self.refire = 0.0;
         self.weapon_switch_time = 0.0;
         self.animation = super::animation::PlayerAnimation::new();
@@ -647,6 +659,16 @@ impl Player {
         self.idle_time = 0.0;
         self.idle_yaw = 0.0;
 
+        self.has_weapon = [true, true, false, false, false, false, false, false, false];
+        self.ammo = [0, 100, 0, 0, 0, 0, 0, 0, 0];
+        
+        self.powerups.quad = 0;
+        self.powerups.regen = 0;
+        self.powerups.battle = 0;
+        self.powerups.flight = 0;
+        self.powerups.haste = 0;
+        self.powerups.invis = 0;
+
         println!(
             "[Player] Before fix_stuck_position: x={}, y={}",
             self.x, self.y
@@ -656,10 +678,12 @@ impl Player {
             "[Player] After fix_stuck_position: x={}, y={}",
             self.x, self.y
         );
+        self.barrel_spin_angle = 0.0;
+        self.barrel_spin_speed = 0.0;
     }
 
     pub fn take_damage(&mut self, damage: i32) -> (bool, bool) {
-        const GIB_HEALTH: i32 = -40;
+        const GIB_HEALTH: i32 = -150;
 
         if self.dead {
             let was_gibbed = self.gibbed;

@@ -267,8 +267,8 @@ pub async fn init_audio() -> AudioSystem {
     audio.load_sound("1_minute", "q3-resources/sound/feedback/1_minute.wav").await;
     audio.load_sound("prepare", "q3-resources/sound/feedback/prepare.wav").await;
     
-    audio.load_sound("taken_the_lead", "q3-resources/sound/feedback/taken_lead.wav").await;
-    audio.load_sound("tied_for_the_lead", "q3-resources/sound/feedback/tied_lead.wav").await;
+    audio.load_sound("taken_the_lead", "q3-resources/sound/feedback/takenlead.wav").await;
+    audio.load_sound("tied_for_the_lead", "q3-resources/sound/feedback/tiedlead.wav").await;
 
     audio
 }

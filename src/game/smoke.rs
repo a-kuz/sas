@@ -106,9 +106,9 @@ fn get_volumetric_smoke_material() -> &'static Material {
         }"#;
         
         let fragment_shader = r#"#version 100
-        precision highp float;
+        precision mediump float;
         
-        varying highp vec2 uv;
+        varying mediump vec2 uv;
         
         uniform float iTime;
         uniform vec2 iResolution;
@@ -142,7 +142,7 @@ fn get_volumetric_smoke_material() -> &'static Material {
             float amplitude = 0.5;
             float frequency = 1.0;
             
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 3; i++) {
                 value += amplitude * noise(p * frequency);
                 frequency *= 2.0;
                 amplitude *= 0.5;
@@ -157,31 +157,27 @@ fn get_volumetric_smoke_material() -> &'static Material {
             float dist = length(toCenter);
             
             float angle = atan(toCenter.y, toCenter.x) + rotation;
+            float swirlPhase = angle + time * 0.5 + dist * 3.0;
             
-            vec2 swirl = vec2(
-                cos(angle + time * 0.5 + dist * 3.0),
-                sin(angle + time * 0.5 + dist * 3.0)
-            );
+            vec2 swirl = vec2(cos(swirlPhase), sin(swirlPhase));
             
-            vec2 turbulentP = p + swirl * 0.1 * (1.0 - smokeAge);
+            float ageFactor = 1.0 - smokeAge;
+            vec2 turbulentP = p + swirl * 0.1 * ageFactor;
             
-            float n1 = fbm(turbulentP * 3.0 + vec2(time * 0.3, time * 0.5));
+            float timeX = time * 0.3;
+            float timeY = time * 0.5;
+            float n1 = fbm(turbulentP * 3.0 + vec2(timeX, timeY));
             float n2 = fbm(turbulentP * 5.0 - vec2(time * 0.2, time * 0.4));
-            float n3 = fbm(turbulentP * 8.0 + vec2(time * 0.15, -time * 0.25));
             
-            float wispy = n1 * 0.5 + n2 * 0.3 + n3 * 0.2;
+            float wispy = n1 * 0.6 + n2 * 0.4;
             
             float radialFade = 1.0 - smoothstep(0.2, 0.8, dist);
             
             float density = wispy * radialFade;
-
             density = pow(density, 1.5 - smokeAge * 0.5);
-
             density *= densityMultiplier;
 
-            float depthGradient = 1.0 - abs(p.x - 0.5) * 0.5;
-            depthGradient *= 1.0 - abs(p.y - 0.5) * 0.3;
-
+            float depthGradient = (1.0 - abs(p.x - 0.5) * 0.5) * (1.0 - abs(p.y - 0.5) * 0.3);
             density *= depthGradient;
 
             float edgeFade = smoothstep(0.0, 0.1, dist) * smoothstep(1.0, 0.7, dist);
@@ -201,21 +197,21 @@ fn get_volumetric_smoke_material() -> &'static Material {
         }
         
         void main() {
-            vec2 fragCoord = uv * iResolution;
-            vec2 p = fragCoord / iResolution.xy;
+            vec2 p = uv;
             
             float time = iTime + turbulenceOffset;
             
             vec3 smoke = volumetricSmoke(p, time);
             
-            float layerOffset1 = 0.05 * sin(time * 2.0);
-            float layerOffset2 = 0.03 * cos(time * 3.0);
-            vec3 layer1 = volumetricSmoke(p + vec2(layerOffset1, layerOffset2), time + 0.5);
-            vec3 layer2 = volumetricSmoke(p - vec2(layerOffset2, layerOffset1), time + 1.0);
+            float layerScale = 1.0 - smokeAge * 0.5;
+            if (layerScale > 0.3) {
+                float layerOffset1 = 0.05 * sin(time * 2.0);
+                float layerOffset2 = 0.03 * cos(time * 3.0);
+                vec3 layer1 = volumetricSmoke(p + vec2(layerOffset1, layerOffset2) * layerScale, time + 0.5);
+                smoke = smoke + layer1 * 0.5 * layerScale;
+            }
             
-            smoke = smoke + layer1 * 0.6 + layer2 * 0.4;
-            
-            float totalDensity = (smoke.r + smoke.g + smoke.b) / 3.0;
+            float totalDensity = (smoke.r + smoke.g + smoke.b) * 0.333333;
             float alpha = totalDensity * smokeAlpha;
             
             alpha = clamp(alpha, 0.0, 0.95);

@@ -75,5 +75,19 @@ impl Weapon {
             Weapon::BFG => "BFG10K",
         }
     }
+
+    pub fn to_item_type(&self) -> Option<super::map::ItemType> {
+        match self {
+            Weapon::Gauntlet => None,
+            Weapon::MachineGun => None,
+            Weapon::Shotgun => Some(super::map::ItemType::Shotgun),
+            Weapon::GrenadeLauncher => Some(super::map::ItemType::GrenadeLauncher),
+            Weapon::RocketLauncher => Some(super::map::ItemType::RocketLauncher),
+            Weapon::Lightning => None,
+            Weapon::Railgun => Some(super::map::ItemType::Railgun),
+            Weapon::Plasmagun => Some(super::map::ItemType::Plasmagun),
+            Weapon::BFG => Some(super::map::ItemType::BFG),
+        }
+    }
 }
 

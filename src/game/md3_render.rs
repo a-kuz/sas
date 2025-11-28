@@ -37,6 +37,7 @@ pub struct MD3BatchItem {
     pub flip_x: bool,
     pub pitch_angle: f32,
     pub yaw_angle: f32,
+    pub roll_angle: f32,
 }
 
 pub struct MD3Batch {
@@ -50,7 +51,7 @@ impl MD3Batch {
         Self {
             items: Vec::new(),
             vertices: Vec::with_capacity(10000),
-            indices: Vec::with_capacity(15000),
+            indices: Vec::with_capacity(5000),
         }
     }
 
@@ -66,6 +67,7 @@ impl MD3Batch {
         flip_x: bool,
         pitch_angle: f32,
         yaw_angle: f32,
+        roll_angle: f32,
     ) {
         self.items.push(MD3BatchItem {
             mesh: mesh as *const Mesh,
@@ -78,6 +80,7 @@ impl MD3Batch {
             flip_x,
             pitch_angle,
             yaw_angle,
+            roll_angle,
         });
     }
 
@@ -90,8 +93,10 @@ impl MD3Batch {
         self.indices.clear();
 
         let mut texture_to_use: Option<Texture2D> = None;
+        let mut items_to_process = Vec::new();
+        std::mem::swap(&mut items_to_process, &mut self.items);
 
-        for item in &self.items {
+        for item in &items_to_process {
             let mesh = unsafe { &*item.mesh };
             
             if item.frame_idx >= mesh.vertices.len() {
@@ -114,6 +119,8 @@ impl MD3Batch {
             let sin_p = pitch.sin();
             let cos_y = item.yaw_angle.cos();
             let sin_y = item.yaw_angle.sin();
+            let cos_r = item.roll_angle.cos();
+            let sin_r = item.roll_angle.sin();
 
             for triangle in &mesh.triangles {
                 let v0_idx = triangle.vertex[0] as usize;
@@ -142,11 +149,14 @@ impl MD3Batch {
                     let rz = -vy * sin_p + vz * cos_p;
 
                     let yx = vx * cos_y - ry * sin_y;
-                    let _yy = vx * sin_y + ry * cos_y;
+                    let yy = vx * sin_y + ry * cos_y;
+
+                    let rx = yx * cos_r - rz * sin_r;
+                    let rr = yx * sin_r + rz * cos_r;
 
                     let pos = Vec3::new(
-                        item.screen_x + yx,
-                        item.screen_y - rz,
+                        item.screen_x + rx,
+                        item.screen_y - rr,
                         0.0
                     );
 
@@ -175,6 +185,12 @@ impl MD3Batch {
                 let tc1 = &mesh.tex_coords[v1_idx];
                 let tc2 = &mesh.tex_coords[v2_idx];
 
+                let base = self.vertices.len();
+                
+                if base + 3 > 9000 {
+                    self.draw_current_batch(&texture_to_use, lighting_context);
+                }
+                
                 let base = self.vertices.len() as u16;
                 
                 self.vertices.push(Vertex {
@@ -219,33 +235,49 @@ impl MD3Batch {
             }
         }
 
-        if !self.vertices.is_empty() {
-            if let Some(tex) = &texture_to_use {
-                let mesh_data = macroquad::models::Mesh {
-                    vertices: self.vertices.clone(),
-                    indices: self.indices.clone(),
-                    texture: Some(tex.clone()),
-                };
+        self.draw_current_batch(&texture_to_use, lighting_context);
+        self.items.clear();
+    }
+    
+    fn draw_current_batch(&mut self, texture_to_use: &Option<Texture2D>, lighting_context: Option<&LightingContext>) {
+        if self.vertices.is_empty() {
+            return;
+        }
+        
+        if let Some(tex) = texture_to_use {
+            let vertices = std::mem::take(&mut self.vertices);
+            let indices = std::mem::take(&mut self.indices);
+            
+            let mesh_data = macroquad::models::Mesh {
+                vertices,
+                indices,
+                texture: Some(tex.clone()),
+            };
 
-                if let Some(ctx) = lighting_context {
-                    let material = get_model_lit_material();
-                    gl_use_material(material);
+            if let Some(ctx) = lighting_context {
+                let material = get_model_lit_material();
+                gl_use_material(material);
 
-                    let avg_x = self.items.iter().map(|i| i.screen_x).sum::<f32>() / self.items.len() as f32;
-                    let avg_y = self.items.iter().map(|i| i.screen_y).sum::<f32>() / self.items.len() as f32;
-                    
-                    apply_lighting_uniforms(material, ctx, avg_x + ctx.camera_x, avg_y + ctx.camera_y);
-                    draw_mesh(&mesh_data);
-                    count_shader!("md3_batched_lit");
-                    gl_use_default_material();
+                let avg_x = if !self.items.is_empty() {
+                    self.items.iter().map(|i| i.screen_x).sum::<f32>() / self.items.len() as f32
                 } else {
-                    draw_mesh(&mesh_data);
-                    count_shader!("md3_batched");
-                }
+                    0.0
+                };
+                let avg_y = if !self.items.is_empty() {
+                    self.items.iter().map(|i| i.screen_y).sum::<f32>() / self.items.len() as f32
+                } else {
+                    0.0
+                };
+                
+                apply_lighting_uniforms(material, ctx, avg_x + ctx.camera_x, avg_y + ctx.camera_y);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_batched_lit");
+                gl_use_default_material();
+            } else {
+                draw_mesh(&mesh_data);
+                count_shader!("md3_batched");
             }
         }
-
-        self.items.clear();
     }
 }
 
@@ -326,6 +358,36 @@ pub fn render_md3_mesh_batched(
         flip_x,
         pitch_angle,
         yaw_angle,
+        0.0,
+    );
+}
+
+pub fn render_md3_mesh_batched_with_roll(
+    batch: &mut MD3Batch,
+    mesh: &Mesh,
+    frame_idx: usize,
+    screen_x: f32,
+    screen_y: f32,
+    scale: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    flip_x: bool,
+    pitch_angle: f32,
+    yaw_angle: f32,
+    roll_angle: f32,
+) {
+    batch.add_mesh(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture.cloned(),
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        roll_angle,
     );
 }
 
@@ -862,6 +924,21 @@ pub fn render_md3_mesh_rotated(
     texture: Option<&Texture2D>,
     rotation: f32,
 ) {
+    render_md3_mesh_rotated_with_additive(mesh, frame_idx, screen_x, screen_y, scale, color, texture, None, rotation, false)
+}
+
+pub fn render_md3_mesh_rotated_with_additive(
+    mesh: &Mesh,
+    frame_idx: usize,
+    screen_x: f32,
+    screen_y: f32,
+    scale: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    rotation: f32,
+    force_additive: bool,
+) {
     if mesh.vertices.len() <= frame_idx {
         return;
     }
@@ -1000,8 +1077,23 @@ pub fn render_md3_mesh_rotated(
                 texture: Some(tex.clone()),
             };
             
-            draw_mesh(&mesh_data);
-            count_shader!(&format!("md3_rotated:{}", mesh_name));
+            let use_additive = force_additive || if let Some(path) = texture_path {
+                let path_lower = path.to_lowercase();
+                path_lower.contains("_f.") || path_lower.contains("/f_") || path_lower.contains("flash")
+            } else {
+                false
+            };
+            
+            if use_additive {
+                let material = shader::create_model_additive_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!(&format!("md3_rotated_additive:{}", mesh_name));
+                gl_use_default_material();
+            } else {
+                draw_mesh(&mesh_data);
+                count_shader!(&format!("md3_rotated:{}", mesh_name));
+            }
         }
     }
 }
@@ -1179,7 +1271,7 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex(
     pivot_y: f32,
     roll_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, 0.0, false);
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex_shader(
@@ -1199,7 +1291,7 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex_shader(
     pivot_y: f32,
     roll_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, shader_textures, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, shader_textures, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, 0.0, false);
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad(
@@ -1218,7 +1310,7 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad(
     pivot_y: f32,
     roll_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, true);
+    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, 0.0, true);
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw(
@@ -1235,7 +1327,47 @@ pub fn render_md3_mesh_with_pivot_and_yaw(
     pivot_x: f32,
     pivot_y: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, None, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, 0.0, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, None, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, 0.0, 0.0, false);
+}
+
+pub fn render_md3_mesh_with_pivot_and_yaw_ex_with_barrel(
+    mesh: &Mesh,
+    frame_idx: usize,
+    origin_x: f32,
+    origin_y: f32,
+    scale: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    flip_x: bool,
+    angle: f32,
+    yaw_angle: f32,
+    pivot_x: f32,
+    pivot_y: f32,
+    roll_angle: f32,
+    barrel_spin_angle: f32,
+) {
+    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, barrel_spin_angle, false);
+}
+
+pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad_with_barrel(
+    mesh: &Mesh,
+    frame_idx: usize,
+    origin_x: f32,
+    origin_y: f32,
+    scale: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    flip_x: bool,
+    angle: f32,
+    yaw_angle: f32,
+    pivot_x: f32,
+    pivot_y: f32,
+    roll_angle: f32,
+    barrel_spin_angle: f32,
+) {
+    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, barrel_spin_angle, true);
 }
 
 fn render_md3_mesh_with_pivot_and_yaw_internal(
@@ -1254,6 +1386,7 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
     pivot_x: f32,
     pivot_y: f32,
     roll_angle: f32,
+    barrel_spin_angle: f32,
     use_quad_shader: bool,
 ) {
     
@@ -1276,6 +1409,8 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
     let sin_y = yaw_angle.sin();
     let cos_r = roll_angle.cos();
     let sin_r = roll_angle.sin();
+    let cos_barrel = barrel_spin_angle.cos();
+    let sin_barrel = barrel_spin_angle.sin();
 
     let mut all_vertices: Vec<Vertex> = Vec::with_capacity(mesh.triangles.len() * 3);
     let mut all_indices: Vec<u16> = Vec::with_capacity(mesh.triangles.len() * 3);
@@ -1299,9 +1434,16 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
         let v2 = &frame_verts[v2_idx];
 
         let transform_vertex_and_normal = |v: &super::md3::Vertex| -> (Vec3, Vec3) {
-            let vx = v.vertex[0] as f32 / 64.0 * scale * x_mult;
-            let _vy = v.vertex[1] as f32 / 64.0 * scale;
-            let vz = v.vertex[2] as f32 / 64.0 * scale;
+            let mut vx = v.vertex[0] as f32 / 64.0 * scale * x_mult;
+            let mut vy = v.vertex[1] as f32 / 64.0 * scale;
+            let mut vz = v.vertex[2] as f32 / 64.0 * scale;
+
+            if barrel_spin_angle.abs() > 0.001 {
+                let vy_rot = vy * cos_barrel - vz * sin_barrel;
+                let vz_rot = vy * sin_barrel + vz * cos_barrel;
+                vy = vy_rot;
+                vz = vz_rot;
+            }
 
             let dx = vx;
             let dy = -vz;
@@ -1319,9 +1461,16 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
             let final_y = origin_y + (roll_dy + pivot_y);
 
             let n = decode_md3_normal(v.normal);
-            let nx = n.x * x_mult;
-            let ny = n.y;
-            let nz = n.z;
+            let mut nx = n.x * x_mult;
+            let mut ny = n.y;
+            let mut nz = n.z;
+
+            if barrel_spin_angle.abs() > 0.001 {
+                let ny_rot = ny * cos_barrel - nz * sin_barrel;
+                let nz_rot = ny * sin_barrel + nz * cos_barrel;
+                ny = ny_rot;
+                nz = nz_rot;
+            }
 
             let n_dx = nx;
             let n_dy = -nz;

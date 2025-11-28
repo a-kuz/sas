@@ -294,10 +294,11 @@ impl PlayerModel {
             .to_string()
     }
     
-    pub fn render_simple(&self, screen_x: f32, screen_y: f32, color: Color, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, _debug_md3: bool, lighting_context: Option<&super::md3_render::LightingContext>, model_yaw_offset: f32, model_roll: f32, somersault_angle: f32, has_quad_damage: bool) {
+    pub fn render_simple(&self, screen_x: f32, screen_y: f32, color: Color, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, _debug_md3: bool, lighting_context: Option<&super::md3_render::LightingContext>, model_yaw_offset: f32, model_roll: f32, somersault_angle: f32, has_quad_damage: bool, barrel_roll: f32) {
         let draw_gun = crate::cvar::get_cvar_integer("cg_drawGun");
         let _weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
-        let base_y = screen_y - 10.0;
+        let base_y_offset = 20.0 * (scale / 1.5);
+        let base_y = screen_y - base_y_offset;
         let torso_offset_y = 0.0;
         let x_mult = if flip_x { -1.0 } else { 1.0 };
         
@@ -498,7 +499,7 @@ impl PlayerModel {
                         safe_frame,
                         origin_x,
                         origin_y,
-                        scale * 0.8,
+                        scale * 1.0,
                         weapon_color,
                         texture,
                         flip_x,
@@ -513,7 +514,7 @@ impl PlayerModel {
                             safe_frame,
                             origin_x,
                             origin_y,
-                            scale * 0.8,
+                            scale * 1.0,
                             weapon_color,
                             texture,
                             None,
@@ -532,10 +533,16 @@ impl PlayerModel {
                 if !base_model.tags.is_empty() {
                     let tags_frame0 = &base_model.tags[0];
                     if let Some(tag) = tags_frame0.iter().find(|t| Self::get_tag_name(t) == "tag_barrel") {
-                        let tx = tag.position[0] / 64.0 * scale * 0.8;
-                        let tz = tag.position[2] / 64.0 * scale * 0.8;
-                        barrel_dx = tx * if flip_x { -1.0 } else { 1.0 };
-                        barrel_dy = -tz;
+                        let bx = (tag.position[0] * scale) * if flip_x { -1.0 } else { 1.0 };
+                        let bz = -(tag.position[2] * scale);
+                        let r1x = bx * cos_p - bz * sin_p;
+                        let r1y = bx * sin_p + bz * cos_p;
+                        let r2x = r1x * cos_y - r1y * sin_y;
+                        let r2y = r1x * sin_y + r1y * cos_y;
+                        let r3x = r2x * cos_r - r2y * sin_r;
+                        let r3y = r2x * sin_r + r2y * cos_r;
+                        barrel_dx = r3x;
+                        barrel_dy = r3y;
                     }
                 }
 
@@ -544,27 +551,31 @@ impl PlayerModel {
                         let mesh_name = Self::get_mesh_name(&mesh.header);
                         let texture = weapon.textures.get(&mesh_name);
                         let safe_frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                        super::md3_render::render_md3_mesh_with_pivot(
+                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_with_barrel(
                             mesh,
                             safe_frame,
                             origin_x + barrel_dx,
                             origin_y + barrel_dy,
-                            scale * 0.8,
+                            scale * 1.0,
                             weapon_color,
                             texture,
+                            None,
                             flip_x,
                             weapon_angle,
                             0.0,
                             0.0,
+                            0.0,
+                            0.0,
+                            barrel_roll,
                         );
 
                         if has_quad_damage {
-                            super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                            super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad_with_barrel(
                                 mesh,
                                 safe_frame,
                                 origin_x + barrel_dx,
                                 origin_y + barrel_dy,
-                                scale * 0.8,
+                                scale * 1.0,
                                 weapon_color,
                                 texture,
                                 None,
@@ -574,6 +585,7 @@ impl PlayerModel {
                                 0.0,
                                 0.0,
                                 0.0,
+                                barrel_roll,
                             );
                         }
                     }
@@ -663,10 +675,11 @@ impl PlayerModel {
         }
     }
 
-    pub fn render_shadow_with_light(&self, screen_x: f32, screen_y: f32, light_sx: f32, light_sy: f32, light_radius: f32, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, model_yaw_offset: f32, color: Color) {
+    pub fn render_shadow_with_light(&self, screen_x: f32, screen_y: f32, light_sx: f32, light_sy: f32, light_radius: f32, scale: f32, flip_x: bool, pitch: f32, aim_angle: f32, lower_frame: usize, upper_frame: usize, weapon_model: Option<&crate::game::weapon_model_cache::WeaponModel>, model_yaw_offset: f32, color: Color, barrel_roll: f32) {
         let draw_gun = crate::cvar::get_cvar_integer("cg_drawGun");
         let weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
-        let base_y = screen_y - 10.0;
+        let base_y_offset = 20.0 * (scale / 1.5);
+        let base_y = screen_y - base_y_offset;
         let torso_offset_y = 0.0;
         let x_mult = if flip_x { -1.0 } else { 1.0 };
         let shadow_color = color;
@@ -776,7 +789,7 @@ impl PlayerModel {
                         safe_frame,
                         origin_x,
                         origin_y,
-                        shadow_scale * 0.8,
+                        shadow_scale * 1.0,
                         shadow_color,
                         None,
                         flip_x,
@@ -791,28 +804,34 @@ impl PlayerModel {
                 if !base_model.tags.is_empty() {
                     let tags_frame0 = &base_model.tags[0];
                     if let Some(tag) = tags_frame0.iter().find(|t| Self::get_tag_name(t) == "tag_barrel") {
-                        let tx = tag.position[0] / 64.0 * shadow_scale * 0.8;
-                        let tz = tag.position[2] / 64.0 * shadow_scale * 0.8;
-                        barrel_dx = tx * if flip_x { -1.0 } else { 1.0 };
-                        barrel_dy = -tz;
+                        let bx = (tag.position[0] * shadow_scale) * if flip_x { -1.0 } else { 1.0 };
+                        let bz = -(tag.position[2] * shadow_scale);
+                        let rdx = bx * cos_p - bz * sin_p;
+                        let rdy = bx * sin_p + bz * cos_p;
+                        barrel_dx = rdx;
+                        barrel_dy = rdy;
                     }
                 }
 
                 for child_model in weapon.models.iter().skip(1) {
                     for mesh in &child_model.meshes {
                         let safe_frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                        super::md3_render::render_md3_mesh_with_pivot(
+                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_with_barrel(
                             mesh,
                             safe_frame,
                             origin_x + barrel_dx,
                             origin_y + barrel_dy,
-                            shadow_scale * 0.8,
+                            shadow_scale * 1.0,
                             shadow_color,
+                            None,
                             None,
                             flip_x,
                             weapon_angle,
                             0.0,
                             0.0,
+                            0.0,
+                            0.0,
+                            barrel_roll,
                         );
                     }
                 }
@@ -927,8 +946,9 @@ impl PlayerModel {
         let draw_gun = crate::cvar::get_cvar_integer("cg_drawGun");
         let weapon_to_render = if draw_gun == 0 { None } else { weapon_model };
         
-        let scale = 1.5;
-        let base_y = player_y - 10.0;
+        let scale = 2.0;
+        let base_y_offset = 20.0 * (scale / 1.5);
+        let base_y = player_y - base_y_offset;
         let torso_offset_y = 0.0;
         let x_mult = if flip_x { -1.0 } else { 1.0 };
         
@@ -978,16 +998,11 @@ impl PlayerModel {
                 if !base_model.tags.is_empty() {
                     let tags_frame0 = &base_model.tags[0];
                     if let Some(tag) = tags_frame0.iter().find(|t| Self::get_tag_name(t) == "tag_barrel") {
-                        let tx = tag.position[0] / 64.0 * scale * 0.8;
-                        let tz = tag.position[2] / 64.0 * scale * 0.8;
-                        
-                        let _base_dir = if flip_x { std::f32::consts::PI } else { 0.0 };
-                        // ИСПРАВЛЕНИЕ: используем aim_angle вместо сложной формулы
+                        let tx = tag.position[0] * scale;
+                        let tz = tag.position[2] * scale;
                         let weapon_angle = aim_angle;
-                        
                         let barrel_local_x = tx * weapon_angle.cos() - (-tz) * weapon_angle.sin();
                         let barrel_local_y = tx * weapon_angle.sin() + (-tz) * weapon_angle.cos();
-                        
                         barrel_world_x = weapon_origin_x + barrel_local_x * if flip_x { -1.0 } else { 1.0 };
                         barrel_world_y = weapon_origin_y + barrel_local_y;
                     }

@@ -178,14 +178,64 @@ impl Gib {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
         
-        let screen_w = macroquad::window::screen_width();
-        let screen_h = macroquad::window::screen_height();
-        let margin = 100.0;
-        
-        if screen_x < -margin || screen_x > screen_w + margin || 
-           screen_y < -margin || screen_y > screen_h + margin {
-            return;
+        let alpha = if self.life > 300 {
+            ((600 - self.life) as f32 / 300.0).clamp(0.0, 1.0)
+        } else {
+            1.0
+        };
+
+        if let Some(model) = cache.models.get(&self.gib_type) {
+            let color = Color::from_rgba(255, 255, 255, (255.0 * alpha) as u8);
+            
+            for mesh in &model.meshes {
+                let safe_frame = 0;
+                crate::game::md3_render::render_md3_mesh_with_yaw_and_roll(
+                    mesh,
+                    safe_frame,
+                    screen_x,
+                    screen_y,
+                    1.2,
+                    color,
+                    cache.texture.as_ref(),
+                    None,
+                    false,
+                    self.pitch,
+                    self.yaw,
+                    self.roll,
+                    None,
+                );
+            }
+        } else {
+            draw_circle(screen_x, screen_y, self.size, Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8));
         }
+        
+        if self.life < 40 {
+            let screen_w = macroquad::window::screen_width();
+            let screen_h = macroquad::window::screen_height();
+            let margin = 100.0;
+            let blood_trail = (self.life as f32 * 0.7) as i32;
+            let vel_mag = (self.vel_x * self.vel_x + self.vel_y * self.vel_y).sqrt();
+            
+            if vel_mag.is_finite() && vel_mag < 50.0 {
+                for i in 0..blood_trail {
+                    let trail_x = screen_x - self.vel_x * (i as f32 * 0.4);
+                    let trail_y = screen_y - self.vel_y * (i as f32 * 0.4);
+                    
+                    if trail_x.is_finite() && trail_y.is_finite() &&
+                       trail_x >= -margin && trail_x <= screen_w + margin &&
+                       trail_y >= -margin && trail_y <= screen_h + margin {
+                        let trail_alpha = ((blood_trail - i) as f32 / blood_trail as f32) * 0.5;
+                        let size = 2.0 - (i as f32 / blood_trail as f32) * 1.0;
+                        draw_circle(trail_x, trail_y, size, Color::from_rgba(200, 10, 10, (255.0 * trail_alpha) as u8));
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn render_batched(&self, camera_x: f32, camera_y: f32, cache: &GibModelCache, batch: &mut crate::game::md3_render::MD3Batch) {
+        let screen_x = self.x - camera_x;
+        let screen_y = self.y - camera_y;
         
         let alpha = if self.life > 300 {
             ((600 - self.life) as f32 / 300.0).clamp(0.0, 1.0)
@@ -196,31 +246,31 @@ impl Gib {
         if let Some(model) = cache.models.get(&self.gib_type) {
             let color = Color::from_rgba(255, 255, 255, (255.0 * alpha) as u8);
             
-            // Render MD3 model
             for mesh in &model.meshes {
-                let safe_frame = 0; // Gibs usually have 1 frame or we just use the first
-                crate::game::md3_render::render_md3_mesh_with_yaw_and_roll(
+                let safe_frame = 0;
+                crate::game::md3_render::render_md3_mesh_batched_with_roll(
+                    batch,
                     mesh,
                     safe_frame,
                     screen_x,
                     screen_y,
-                    1.0, // Scale
+                    1.2,
                     color,
                     cache.texture.as_ref(),
-                    None,
-                    false, // flip_x
+                    false,
                     self.pitch,
                     self.yaw,
                     self.roll,
-                    None, // lighting context (optional, could add if needed)
                 );
             }
         } else {
-            // Fallback rendering if model not found
             draw_circle(screen_x, screen_y, self.size, Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8));
         }
         
         if self.life < 40 {
+            let screen_w = macroquad::window::screen_width();
+            let screen_h = macroquad::window::screen_height();
+            let margin = 100.0;
             let blood_trail = (self.life as f32 * 0.7) as i32;
             let vel_mag = (self.vel_x * self.vel_x + self.vel_y * self.vel_y).sqrt();
             
@@ -252,13 +302,11 @@ pub fn spawn_gibs(x: f32, y: f32) -> Vec<Gib> {
     
     let mega_explosion = gen_bool(0.1);
     
-    // Always spawn essential parts
     gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Skull));
     gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Chest));
     gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Abdomen));
     
-    // Random limbs
-    let limb_count = if mega_explosion { gen_range_usize(150, 500) } else { gen_range_usize(3, 6) };
+    let limb_count = if mega_explosion { gen_range_usize(15, 30) } else { gen_range_usize(3, 6) };
     for _ in 0..limb_count {
         let limb_type = match gen_range_usize(0, 4) {
             0 => GibType::Arm,
@@ -269,13 +317,12 @@ pub fn spawn_gibs(x: f32, y: f32) -> Vec<Gib> {
         gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, limb_type));
     }
     
-    // Organs
-    let organ_count = if mega_explosion { gen_range_usize(100, 750) } else { gen_range_usize(2, 5) };
+    let organ_count = if mega_explosion { gen_range_usize(10, 40) } else { gen_range_usize(2, 5) };
     for _ in 0..organ_count {
         let organ_type = match gen_range_usize(0, 3) {
             0 => GibType::Brain,
             1 => GibType::Intestine,
-            _ => GibType::Fist, // Why fist? Quake 3 has fist gibs.
+            _ => GibType::Fist,
         };
         gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, organ_type));
     }

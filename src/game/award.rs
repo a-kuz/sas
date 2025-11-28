@@ -218,6 +218,56 @@ impl LeadAnnouncement {
     }
 }
 
+pub struct TeamAdvantageAnnouncement {
+    pub current_leading_player: Option<u16>,
+    pub previous_leading_player: Option<u16>,
+}
+
+impl TeamAdvantageAnnouncement {
+    pub fn new() -> Self {
+        Self {
+            current_leading_player: None,
+            previous_leading_player: None,
+        }
+    }
+
+    pub fn update(&mut self, players: &[super::player::Player]) -> Option<&'static str> {
+        let mut sorted_players: Vec<_> = players.iter().filter(|p| !p.dead).collect();
+        sorted_players.sort_by(|a, b| b.frags.cmp(&a.frags));
+
+        if sorted_players.len() < 2 {
+            return None;
+        }
+
+        let top_score = sorted_players[0].frags;
+        let tied_count = sorted_players.iter().filter(|p| p.frags == top_score).count();
+
+        let new_leader = if tied_count > 1 {
+            None
+        } else {
+            Some(sorted_players[0].id)
+        };
+
+        let announcement = match (self.current_leading_player, new_leader) {
+            (None, None) => None,
+            (None, Some(_)) => Some("taken_the_lead"),
+            (Some(_), None) => Some("tied_for_the_lead"),
+            (Some(prev), Some(curr)) if prev != curr => Some("taken_the_lead"),
+            _ => None,
+        };
+
+        self.previous_leading_player = self.current_leading_player;
+        self.current_leading_player = new_leader;
+
+        announcement
+    }
+
+    pub fn reset(&mut self) {
+        self.current_leading_player = None;
+        self.previous_leading_player = None;
+    }
+}
+
 pub struct GameResults {
     pub show: bool,
     pub start_time: f32,
@@ -363,6 +413,7 @@ impl GameResults {
                         0.0,
                         0.0,
                         Some(*id) == self.winner_id,
+                        0.0,
                     );
                 }
             }

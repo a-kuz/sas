@@ -37,9 +37,9 @@ pub const POWERUP_DURATION_INVIS: u16 = 1800;
 pub const POWERUP_DURATION_FLIGHT: u16 = 60 * 60;
 pub const POWERUP_DURATION_BATTLE: u16 = 30 * 60;
 
-pub const PLAYER_HITBOX_WIDTH: f32 = 42.0;
-pub const PLAYER_HITBOX_HEIGHT: f32 = 72.0;
-pub const PLAYER_HITBOX_HEIGHT_CROUCH: f32 = 36.0;
+pub const PLAYER_HITBOX_WIDTH: f32 = 56.0;
+pub const PLAYER_HITBOX_HEIGHT: f32 = 96.0;
+pub const PLAYER_HITBOX_HEIGHT_CROUCH: f32 = 48.0;
 
 pub const CROUCH_SPEED_MULT: f32 = 0.6;
 
@@ -47,4 +47,8 @@ pub const HASTE_SPEED_MULT: f32 = 1.3;
 pub const HASTE_JUMP_MULT: f32 = 1.2;
 
 pub const STARTING_HEALTH: i32 = 125;
+
+pub const BARREL_SPIN_ACCEL_IMPULSE: f32 = 10.0;
+pub const BARREL_SPIN_MAX_SPEED: f32 = 40.0;
+pub const BARREL_SPIN_FRICTION: f32 = 20.0;
 
