@@ -2492,7 +2492,20 @@ impl GameState {
 
         let kill_count = kills.len();
 
+        let local_player_id = if self.is_multiplayer {
+            self.network_client.as_ref().and_then(|c| c.player_id())
+        } else {
+            self.players.get(0).map(|p| p.id)
+        };
+
         for &(killer_id, victim_id, was_airborne, weapon) in &kills {
+            let old_leader = self.lead_announcements.current_leader;
+            
+            let scores_before: Vec<_> = self.players.iter().map(|p| (p.id, p.frags)).collect();
+            let top_score_before = scores_before.iter().map(|(_, f)| *f).max().unwrap_or(0);
+            let local_score_before = scores_before.iter().find(|(id, _)| Some(*id) == local_player_id).map(|(_, f)| *f).unwrap_or(0);
+            let was_local_in_lead_group = old_leader == local_player_id || (old_leader.is_none() && local_score_before == top_score_before);
+            
             if killer_id == victim_id {
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == killer_id) {
                     player.frags -= 1;
@@ -2502,7 +2515,25 @@ impl GameState {
                     killer.frags += 1;
                 }
             }
+            
+            let scores_after: Vec<_> = self.players.iter().map(|p| (p.id, p.frags)).collect();
+            
+            println!("Kill: killer={}, victim={}, old_leader={:?}", killer_id, victim_id, old_leader);
+            println!("  Scores before: {:?}", scores_before);
+            println!("  Scores after: {:?}", scores_after);
+            
             self.check_and_award(killer_id, victim_id, was_airborne, weapon);
+
+            if let Some(local_id) = local_player_id {
+                if killer_id == local_id || was_local_in_lead_group {
+                    if let Some(announcement) = self.lead_announcements.update(&self.players, local_player_id, Some(killer_id), old_leader, was_local_in_lead_group) {
+                        println!("  -> Announcement: {}", announcement);
+                        self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
+                            announcement: announcement.to_string(),
+                        });
+                    }
+                }
+            }
         }
 
         if let Some(ref mut story) = self.story_mode {
@@ -2568,17 +2599,6 @@ impl GameState {
             });
         }
 
-        if let Some(announcement) = self.lead_announcements.update(&self.players) {
-            self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
-                announcement: announcement.to_string(),
-            });
-        }
-
-        if let Some(announcement) = self.team_advantage_announcements.update(&self.players) {
-            self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
-                announcement: announcement.to_string(),
-            });
-        }
 
         if self.match_time >= self.time_limit && !self.game_results.show {
             self.game_results.trigger(&self.players, self.match_time);

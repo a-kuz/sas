@@ -411,7 +411,7 @@ impl ItemModel {
             
             for mesh in &effect_model.meshes {
                 let frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                super::md3_render::render_md3_mesh_rotated(
+                super::md3_render::render_md3_mesh_with_yaw(
                     mesh,
                     frame,
                     screen_x,
@@ -419,7 +419,10 @@ impl ItemModel {
                     effect_scale,
                     effect_color,
                     None,
+                    false,
+                    0.0,
                     yaw,
+                    None,
                 );
             }
         }
@@ -430,7 +433,7 @@ impl ItemModel {
                 let texture = self.textures.get(&mesh_name);
                 let frame = 0.min(mesh.vertices.len().saturating_sub(1));
                 
-                super::md3_render::render_md3_mesh_rotated(
+                super::md3_render::render_md3_mesh_with_yaw(
                     mesh,
                     frame,
                     screen_x,
@@ -438,7 +441,10 @@ impl ItemModel {
                     final_scale,
                     color,
                     texture,
+                    false,
+                    0.0,
                     yaw,
+                    None,
                 );
             }
         }

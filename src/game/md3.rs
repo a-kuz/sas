@@ -23,6 +23,7 @@ pub struct MD3Header {
 pub struct Tag {
     pub name: [u8; 64],
     pub position: [f32; 3],
+    pub axis: [[f32; 3]; 3],
 }
 
 #[derive(Debug, Clone)]
@@ -113,17 +114,33 @@ impl MD3Model {
                     .map_err(|e| format!("Failed to read tag: {}", e))?;
                 
                 let mut name = [0u8; 64];
-                let mut position = [0f32; 3];
                 name.copy_from_slice(&tag_bytes[0..64]);
-                unsafe {
-                    std::ptr::copy_nonoverlapping(
-                        tag_bytes[64..76].as_ptr(),
-                        position.as_mut_ptr() as *mut u8,
-                        12
-                    );
+
+                let mut position = [0f32; 3];
+                for i in 0..3 {
+                    let start = 64 + i * 4;
+                    position[i] = f32::from_le_bytes([
+                        tag_bytes[start],
+                        tag_bytes[start + 1],
+                        tag_bytes[start + 2],
+                        tag_bytes[start + 3],
+                    ]);
+                }
+
+                let mut axis = [[0f32; 3]; 3];
+                for row in 0..3 {
+                    for col in 0..3 {
+                        let start = 76 + (row * 3 + col) * 4;
+                        axis[row][col] = f32::from_le_bytes([
+                            tag_bytes[start],
+                            tag_bytes[start + 1],
+                            tag_bytes[start + 2],
+                            tag_bytes[start + 3],
+                        ]);
+                    }
                 }
                 
-                tags[frame_idx].push(Tag { name, position });
+                tags[frame_idx].push(Tag { name, position, axis });
             }
         }
         
@@ -266,17 +283,33 @@ impl MD3Model {
                 let tag_bytes = &data[offset..offset + 112];
                 
                 let mut name = [0u8; 64];
-                let mut position = [0f32; 3];
                 name.copy_from_slice(&tag_bytes[0..64]);
-                unsafe {
-                    std::ptr::copy_nonoverlapping(
-                        tag_bytes[64..76].as_ptr(),
-                        position.as_mut_ptr() as *mut u8,
-                        12
-                    );
+
+                let mut position = [0f32; 3];
+                for i in 0..3 {
+                    let start = 64 + i * 4;
+                    position[i] = f32::from_le_bytes([
+                        tag_bytes[start],
+                        tag_bytes[start + 1],
+                        tag_bytes[start + 2],
+                        tag_bytes[start + 3],
+                    ]);
                 }
-                
-                tags[frame_idx].push(Tag { name, position });
+
+                let mut axis = [[0f32; 3]; 3];
+                for row in 0..3 {
+                    for col in 0..3 {
+                        let start = 76 + (row * 3 + col) * 4;
+                        axis[row][col] = f32::from_le_bytes([
+                            tag_bytes[start],
+                            tag_bytes[start + 1],
+                            tag_bytes[start + 2],
+                            tag_bytes[start + 3],
+                        ]);
+                    }
+                }
+
+                tags[frame_idx].push(Tag { name, position, axis });
                 offset += 112;
             }
         }

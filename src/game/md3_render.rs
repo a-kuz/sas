@@ -232,8 +232,8 @@ impl MD3Batch {
                 });
 
                 self.indices.push(base);
-                self.indices.push(base + 1);
                 self.indices.push(base + 2);
+                self.indices.push(base + 1);
             }
         }
 
@@ -615,6 +615,41 @@ pub fn render_md3_mesh_with_yaw_and_roll_quad(
     render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, texture_path, None, flip_x, pitch_angle, yaw_angle, roll_angle, lighting_context, true);
 }
 
+pub fn render_md3_mesh_xyz_shader(
+    mesh: &Mesh,
+    frame_idx: usize,
+    screen_x: f32,
+    screen_y: f32,
+    scale: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    shader_textures: Option<&[Texture2D]>,
+    flip_x: bool,
+    rot_x: f32,
+    rot_y: f32,
+    rot_z: f32,
+    lighting_context: Option<&LightingContext>,
+) {
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        shader_textures,
+        flip_x,
+        rot_x,
+        rot_y,
+        rot_z,
+        lighting_context,
+        false,
+    );
+}
+
 pub fn render_md3_mesh_with_yaw(
     mesh: &Mesh,
     frame_idx: usize,
@@ -765,9 +800,16 @@ fn render_md3_mesh_internal(
             all_vertices.push(Vertex { position: Vec3::new(x0, y0, z0), uv: Vec2::new(tc0.coord[0], tc0.coord[1]), color: [ (color.r * 255.0) as u8, (color.g * 255.0) as u8, (color.b * 255.0) as u8, (color.a * 255.0) as u8 ], normal: Vec4::new(n0.x, n0.y, n0.z, 0.0) });
             all_vertices.push(Vertex { position: Vec3::new(x1, y1, z1), uv: Vec2::new(tc1.coord[0], tc1.coord[1]), color: [ (color.r * 255.0) as u8, (color.g * 255.0) as u8, (color.b * 255.0) as u8, (color.a * 255.0) as u8 ], normal: Vec4::new(n1.x, n1.y, n1.z, 0.0) });
             all_vertices.push(Vertex { position: Vec3::new(x2, y2, z2), uv: Vec2::new(tc2.coord[0], tc2.coord[1]), color: [ (color.r * 255.0) as u8, (color.g * 255.0) as u8, (color.b * 255.0) as u8, (color.a * 255.0) as u8 ], normal: Vec4::new(n2.x, n2.y, n2.z, 0.0) });
-            all_indices.push(base);
-            all_indices.push(base + 1);
-            all_indices.push(base + 2);
+            let area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+            if area >= 0.0 {
+                all_indices.push(base);
+                all_indices.push(base + 1);
+                all_indices.push(base + 2);
+            } else {
+                all_indices.push(base);
+                all_indices.push(base + 2);
+                all_indices.push(base + 1);
+            }
         } else {
             // no texture path: draw immediate
             draw_triangle(Vec2::new(x0, y0), Vec2::new(x1, y1), Vec2::new(x2, y2), color);
@@ -1120,9 +1162,16 @@ pub fn render_md3_mesh_rotated_with_additive(
                 normal: Vec4::new(n2.x, n2.y, n2.z, 0.0),
             });
             
-            all_indices.push(base);
-            all_indices.push(base + 1);
-            all_indices.push(base + 2);
+            let area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
+            if area >= 0.0 {
+                all_indices.push(base);
+                all_indices.push(base + 1);
+                all_indices.push(base + 2);
+            } else {
+                all_indices.push(base);
+                all_indices.push(base + 2);
+                all_indices.push(base + 1);
+            }
         } else {
             draw_triangle(
                 Vec2::new(x0, y0),

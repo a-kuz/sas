@@ -196,6 +196,7 @@ impl AudioSystem {
                 self.play(announcement, 0.8);
             }
             AudioEvent::LeadChange { announcement } => {
+                println!("[AUDIO] Playing LeadChange sound: {}", announcement);
                 self.play(announcement, 0.8);
             }
             AudioEvent::MatchStart => {
@@ -269,6 +270,7 @@ pub async fn init_audio() -> AudioSystem {
     
     audio.load_sound("taken_the_lead", "q3-resources/sound/feedback/takenlead.wav").await;
     audio.load_sound("tied_for_the_lead", "q3-resources/sound/feedback/tiedlead.wav").await;
+    audio.load_sound("lost_the_lead", "q3-resources/sound/feedback/lostlead.wav").await;
 
     audio
 }

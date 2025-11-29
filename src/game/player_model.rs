@@ -308,6 +308,9 @@ impl PlayerModel {
         } else {
             0.0
         };
+        let torso_yaw = legs_yaw * 0.5;
+        let torso_roll_extra = -pitch * 0.25;
+        let weapon_yaw = legs_yaw * 0.4;
         
         let legs_total_yaw = model_yaw_offset + legs_yaw;
         
@@ -413,7 +416,7 @@ impl PlayerModel {
                 let texture_path = self.texture_paths.get(&mesh_name);
                 let shader_textures = self.shader_textures.get(&mesh_name);
                 let safe_frame = upper_frame.min(mesh.vertices.len().saturating_sub(1));
-                super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_shader(
+                super::md3_render::render_md3_mesh_xyz_shader(
                     mesh,
                     safe_frame,
                     torso_origin_x,
@@ -425,14 +428,13 @@ impl PlayerModel {
                     shader_textures.map(|v| v.as_slice()),
                     flip_x,
                     pitch,
-                    model_yaw_offset,
-                    0.0,
-                    0.0,
-                    effective_model_roll,
+                    model_yaw_offset + torso_yaw,
+                    effective_model_roll + torso_roll_extra,
+                    lighting_context,
                 );
 
                 if has_quad_damage && !Self::should_skip_quad_for_texture(texture_path.map(|s| s.as_str())) {
-                    super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                    super::md3_render::render_md3_mesh_xyz_shader(
                         mesh,
                         safe_frame,
                         torso_origin_x,
@@ -441,12 +443,12 @@ impl PlayerModel {
                         color,
                         texture,
                         texture_path.map(|s| s.as_str()),
+                        shader_textures.map(|v| v.as_slice()),
                         flip_x,
                         pitch,
-                        model_yaw_offset,
-                        0.0,
-                        0.0,
-                        effective_model_roll,
+                        model_yaw_offset + torso_yaw,
+                        effective_model_roll + torso_roll_extra,
+                        lighting_context,
                     );
                 }
             }
@@ -461,8 +463,9 @@ impl PlayerModel {
 
             let cos_p = pitch.cos();
             let sin_p = pitch.sin();
-            let cos_y = model_yaw_offset.cos();
-            let sin_y = model_yaw_offset.sin();
+            let torso_weapon_yaw = model_yaw_offset + weapon_yaw;
+            let cos_y = torso_weapon_yaw.cos();
+            let sin_y = torso_weapon_yaw.sin();
             let cos_r = effective_model_roll.cos();
             let sin_r = effective_model_roll.sin();
             
@@ -494,7 +497,7 @@ impl PlayerModel {
                     let mesh_name = Self::get_mesh_name(&mesh.header);
                     let texture = weapon.textures.get(&mesh_name);
                     let safe_frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                    super::md3_render::render_md3_mesh_with_pivot(
+                    super::md3_render::render_md3_mesh_with_yaw_and_roll(
                         mesh,
                         safe_frame,
                         origin_x,
@@ -502,14 +505,16 @@ impl PlayerModel {
                         scale * 1.0,
                         weapon_color,
                         texture,
+                        None,
                         flip_x,
                         weapon_angle,
+                        torso_weapon_yaw,
                         0.0,
-                        0.0,
+                        None,
                     );
 
                     if has_quad_damage {
-                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                        super::md3_render::render_md3_mesh_with_yaw_and_roll_quad(
                             mesh,
                             safe_frame,
                             origin_x,
@@ -520,10 +525,9 @@ impl PlayerModel {
                             None,
                             flip_x,
                             weapon_angle,
+                            torso_weapon_yaw,
                             0.0,
-                            0.0,
-                            0.0,
-                            0.0,
+                            None,
                         );
                     }
                 }
@@ -551,7 +555,7 @@ impl PlayerModel {
                         let mesh_name = Self::get_mesh_name(&mesh.header);
                         let texture = weapon.textures.get(&mesh_name);
                         let safe_frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                        super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_with_barrel(
+                        super::md3_render::render_md3_mesh_with_yaw_and_roll(
                             mesh,
                             safe_frame,
                             origin_x + barrel_dx,
@@ -562,15 +566,13 @@ impl PlayerModel {
                             None,
                             flip_x,
                             weapon_angle,
-                            0.0,
-                            0.0,
-                            0.0,
-                            0.0,
+                            torso_weapon_yaw,
                             barrel_roll,
+                            None,
                         );
 
                         if has_quad_damage {
-                            super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad_with_barrel(
+                            super::md3_render::render_md3_mesh_with_yaw_and_roll_quad(
                                 mesh,
                                 safe_frame,
                                 origin_x + barrel_dx,
@@ -581,11 +583,9 @@ impl PlayerModel {
                                 None,
                                 flip_x,
                                 weapon_angle,
-                                0.0,
-                                0.0,
-                                0.0,
-                                0.0,
+                                torso_weapon_yaw,
                                 barrel_roll,
+                                None,
                             );
                         }
                     }
@@ -599,8 +599,9 @@ impl PlayerModel {
 
             let cos_p = pitch.cos();
             let sin_p = pitch.sin();
-            let cos_y = model_yaw_offset.cos();
-            let sin_y = model_yaw_offset.sin();
+            let torso_head_yaw = model_yaw_offset + torso_yaw;
+            let cos_y = torso_head_yaw.cos();
+            let sin_y = torso_head_yaw.sin();
             
             let head_x = head_tag_x * x_mult;
             let head_z = -head_tag_z;
@@ -635,7 +636,7 @@ impl PlayerModel {
                 let texture_path = self.texture_paths.get(&mesh_name);
                 let shader_textures = self.shader_textures.get(&mesh_name);
                 let safe_frame = 0.min(mesh.vertices.len().saturating_sub(1));
-                super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_shader(
+                super::md3_render::render_md3_mesh_with_yaw_and_roll_shader(
                     mesh,
                     safe_frame,
                     head_origin_x,
@@ -647,14 +648,13 @@ impl PlayerModel {
                     shader_textures.map(|v| v.as_slice()),
                     flip_x,
                     pitch + head_angle,
-                    model_yaw_offset,
-                    0.0,
-                    0.0,
+                    torso_head_yaw,
                     -effective_model_roll,
+                    lighting_context,
                 );
 
                 if has_quad_damage && !Self::should_skip_quad_for_texture(texture_path.map(|s| s.as_str())) {
-                    super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex_quad(
+                    super::md3_render::render_md3_mesh_with_yaw_and_roll_quad(
                         mesh,
                         safe_frame,
                         head_origin_x,
@@ -662,13 +662,12 @@ impl PlayerModel {
                         scale,
                         color,
                         texture,
-                        None,
+                        texture_path.map(|s| s.as_str()),
                         flip_x,
                         pitch + head_angle,
-                        model_yaw_offset,
-                        0.0,
-                        0.0,
+                        torso_head_yaw,
                         -effective_model_roll,
+                        lighting_context,
                     );
                 }
             }

@@ -170,21 +170,21 @@ impl TimeAnnouncement {
 
 pub struct LeadAnnouncement {
     pub current_leader: Option<u16>,
-    pub previous_leader: Option<u16>,
 }
 
 impl LeadAnnouncement {
     pub fn new() -> Self {
         Self {
             current_leader: None,
-            previous_leader: None,
         }
     }
 
-    pub fn update(&mut self, players: &[super::player::Player]) -> Option<&'static str> {
-        if players.is_empty() {
+    pub fn update(&mut self, players: &[super::player::Player], local_player_id: Option<u16>, killer_id: Option<u16>, old_leader: Option<u16>, was_local_in_lead_group: bool) -> Option<&'static str> {
+        if players.is_empty() || local_player_id.is_none() {
             return None;
         }
+
+        let local_id = local_player_id.unwrap();
 
         let mut sorted_players: Vec<_> = players.iter().collect();
         sorted_players.sort_by(|a, b| b.frags.cmp(&a.frags));
@@ -198,15 +198,56 @@ impl LeadAnnouncement {
             Some(sorted_players[0].id)
         };
 
-        let announcement = match (self.previous_leader, new_leader) {
-            (None, None) => None,
-            (None, Some(_)) => Some("taken_the_lead"),
-            (Some(_), None) => Some("tied_for_the_lead"),
-            (Some(prev), Some(curr)) if prev != curr => Some("taken_the_lead"),
-            _ => None,
+        let local_score = players.iter().find(|p| p.id == local_id).map(|p| p.frags).unwrap_or(0);
+        
+        let was_local_sole_leader = old_leader == Some(local_id);
+        let is_local_leader = new_leader == Some(local_id);
+        let is_local_tied_for_lead = tied_count > 1 && local_score == top_score;
+        let is_local_in_lead_group = is_local_leader || is_local_tied_for_lead;
+
+        println!("    LeadAnnouncement::update: local_id={}, killer_id={:?}", local_id, killer_id);
+        println!("      old_leader={:?}, new_leader={:?}", old_leader, new_leader);
+        println!("      was_local_in_lead_group={}, is_local_in_lead_group={}", was_local_in_lead_group, is_local_in_lead_group);
+        println!("      was_local_sole_leader={}, is_local_leader={}, is_local_tied_for_lead={}", was_local_sole_leader, is_local_leader, is_local_tied_for_lead);
+        println!("      top_score={}, tied_count={}, local_score={}", top_score, tied_count, local_score);
+
+        let announcement = if let Some(killer) = killer_id {
+            if killer == local_id {
+                if !was_local_in_lead_group && is_local_leader {
+                    println!("      -> Case: local killer became sole leader from behind");
+                    Some("taken_the_lead")
+                } else if !was_local_in_lead_group && is_local_tied_for_lead {
+                    println!("      -> Case: local killer tied for lead");
+                    Some("tied_for_the_lead")
+                } else if was_local_in_lead_group && is_local_leader && !was_local_sole_leader {
+                    println!("      -> Case: local killer became sole leader from tied");
+                    Some("taken_the_lead")
+                } else if was_local_in_lead_group && !is_local_in_lead_group {
+                    println!("      -> Case: local lost lead group (suicide)");
+                    Some("lost_the_lead")
+                } else if was_local_sole_leader && is_local_tied_for_lead {
+                    println!("      -> Case: local sole leader now tied (suicide)");
+                    Some("tied_for_the_lead")
+                } else {
+                    println!("      -> Case: local killer no announcement");
+                    None
+                }
+            } else {
+                if was_local_in_lead_group && !is_local_in_lead_group {
+                    println!("      -> Case: local lost lead group");
+                    Some("lost_the_lead")
+                } else if was_local_sole_leader && is_local_tied_for_lead {
+                    println!("      -> Case: local sole leader now tied by other");
+                    Some("tied_for_the_lead")
+                } else {
+                    println!("      -> Case: other killer no announcement");
+                    None
+                }
+            }
+        } else {
+            None
         };
 
-        self.previous_leader = self.current_leader;
         self.current_leader = new_leader;
 
         announcement
@@ -214,7 +255,6 @@ impl LeadAnnouncement {
 
     pub fn reset(&mut self) {
         self.current_leader = None;
-        self.previous_leader = None;
     }
 }
 
