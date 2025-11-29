@@ -83,6 +83,7 @@ pub fn create_model_additive_material() -> &'static Material {
                     )),
                     depth_test: miniquad::Comparison::LessOrEqual,
                     depth_write: false,
+                    cull_face: miniquad::CullFace::Back,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -667,6 +668,7 @@ pub fn create_model_lit_material() -> Material {
             pipeline_params: PipelineParams {
                 depth_test: miniquad::Comparison::LessOrEqual,
                 depth_write: true,
+                cull_face: miniquad::CullFace::Back,
                 ..Default::default()
             },
             ..Default::default()

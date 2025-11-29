@@ -272,6 +272,7 @@ pub struct GameResults {
     pub show: bool,
     pub start_time: f32,
     pub winner_id: Option<u16>,
+    pub winner_weapon: Option<super::weapon::Weapon>,
     pub scores: Vec<(u16, String, i32, u32, u32)>,
     pub player_models: Vec<(u16, String, usize, usize)>,
 }
@@ -282,6 +283,7 @@ impl GameResults {
             show: false,
             start_time: 0.0,
             winner_id: None,
+            winner_weapon: None,
             scores: Vec::new(),
             player_models: Vec::new(),
         }
@@ -299,6 +301,9 @@ impl GameResults {
         player_scores.sort_by(|a, b| b.2.cmp(&a.2));
         
         self.winner_id = player_scores.first().map(|s| s.0);
+        self.winner_weapon = self.winner_id.and_then(|id| {
+            players.iter().find(|p| p.id == id).map(|p| p.weapon.clone())
+        });
         self.scores = player_scores;
         
         self.player_models = players
@@ -307,7 +312,7 @@ impl GameResults {
             .collect();
     }
 
-    pub fn draw(&self, current_time: f32, model_cache: &mut super::model_cache::ModelCache, award_icon_cache: &AwardIconCache, _camera_x: f32, _camera_y: f32) {
+    pub fn draw(&self, current_time: f32, model_cache: &mut super::model_cache::ModelCache, award_icon_cache: &AwardIconCache, weapon_model_cache: &super::weapon_model_cache::WeaponModelCache, _camera_x: f32, _camera_y: f32) {
         if !self.show {
             return;
         }
@@ -321,8 +326,8 @@ impl GameResults {
         
         let title = "MATCH RESULTS";
         let title_size = 60.0;
-        let title_w = measure_text(title, None, title_size as u16, 1.0).width;
-        draw_text(
+        let title_w = crate::render::measure_q3_banner_string(title, title_size);
+        crate::render::draw_q3_banner_string(
             title,
             screen_w / 2.0 - title_w / 2.0,
             screen_h * 0.15,
@@ -331,7 +336,7 @@ impl GameResults {
         );
         
         let podium_y = screen_h * 0.65;
-        let model_scale = 2.5;
+        let model_scale = screen_h * 0.7 / 120.0;
         
         for (i, (id, name, frags, excellent, impressive)) in self.scores.iter().enumerate() {
             let x_offset = match i {
@@ -359,41 +364,79 @@ impl GameResults {
                     let (lower_frame, upper_frame) = if let Some(config) = &model.anim_config {
                         let time_elapsed = current_time - self.start_time;
                         
-                        let (legs_anim, torso_anim) = match i {
-                            0 => {
-                                (&config.legs_idle, &config.torso_attack)
+                        if i == 0 {
+                            if let Some(victory_anim) = &config.both_victory {
+                                let fps = victory_anim.fps as f32;
+                                let frame_in_anim = (time_elapsed * fps) as usize;
+                                let frame_offset = if victory_anim.looping_frames > 0 {
+                                    frame_in_anim % victory_anim.looping_frames
+                                } else {
+                                    frame_in_anim.min(victory_anim.num_frames.saturating_sub(1))
+                                };
+                                let frame = (victory_anim.first_frame + frame_offset).min(190);
+                                (frame, frame)
+                            } else {
+                                let legs_fps = config.legs_idle.fps as f32;
+                                let legs_frame_in_anim = (time_elapsed * legs_fps) as usize;
+                                let legs_frame_offset = if config.legs_idle.looping_frames > 0 {
+                                    legs_frame_in_anim % config.legs_idle.looping_frames
+                                } else {
+                                    legs_frame_in_anim.min(config.legs_idle.num_frames.saturating_sub(1))
+                                };
+                                let lower = (config.legs_idle.first_frame + legs_frame_offset).min(190);
+                                
+                                let torso_fps = config.torso_stand.fps as f32;
+                                let torso_frame_in_anim = (time_elapsed * torso_fps) as usize;
+                                let torso_frame_offset = if config.torso_stand.looping_frames > 0 {
+                                    torso_frame_in_anim % config.torso_stand.looping_frames
+                                } else {
+                                    torso_frame_in_anim.min(config.torso_stand.num_frames.saturating_sub(1))
+                                };
+                                let upper = (config.torso_stand.first_frame + torso_frame_offset).min(152);
+                                
+                                (lower, upper)
                             }
-                            1 => {
-                                (&config.legs_idle, &config.torso_stand)
-                            }
-                            2 => {
-                                (&config.death1, &config.death1)
-                            }
-                            _ => (&config.legs_idle, &config.torso_stand),
-                        };
-                        
-                        let legs_fps = legs_anim.fps as f32;
-                        let legs_frame_in_anim = (time_elapsed * legs_fps) as usize;
-                        let legs_frame_offset = if legs_anim.looping_frames > 0 {
-                            legs_frame_in_anim % legs_anim.looping_frames
                         } else {
-                            legs_frame_in_anim.min(legs_anim.num_frames.saturating_sub(1))
-                        };
-                        let lower = (legs_anim.first_frame + legs_frame_offset).min(190);
-                        
-                        let torso_fps = torso_anim.fps as f32;
-                        let torso_frame_in_anim = (time_elapsed * torso_fps) as usize;
-                        let torso_frame_offset = if torso_anim.looping_frames > 0 {
-                            torso_frame_in_anim % torso_anim.looping_frames
-                        } else {
-                            torso_frame_in_anim.min(torso_anim.num_frames.saturating_sub(1))
-                        };
-                        let upper = (torso_anim.first_frame + torso_frame_offset).min(152);
-                        
-                        (lower, upper)
+                            let (legs_anim, torso_anim) = match i {
+                                1 => {
+                                    (&config.legs_idle, &config.torso_stand)
+                                }
+                                2 => {
+                                    (&config.death1, &config.death1)
+                                }
+                                _ => (&config.legs_idle, &config.torso_stand),
+                            };
+                            
+                            let legs_fps = legs_anim.fps as f32;
+                            let legs_frame_in_anim = (time_elapsed * legs_fps) as usize;
+                            let legs_frame_offset = if legs_anim.looping_frames > 0 {
+                                legs_frame_in_anim % legs_anim.looping_frames
+                            } else {
+                                legs_frame_in_anim.min(legs_anim.num_frames.saturating_sub(1))
+                            };
+                            let lower = (legs_anim.first_frame + legs_frame_offset).min(190);
+                            
+                            let torso_fps = torso_anim.fps as f32;
+                            let torso_frame_in_anim = (time_elapsed * torso_fps) as usize;
+                            let torso_frame_offset = if torso_anim.looping_frames > 0 {
+                                torso_frame_in_anim % torso_anim.looping_frames
+                            } else {
+                                torso_frame_in_anim.min(torso_anim.num_frames.saturating_sub(1))
+                            };
+                            let upper = (torso_anim.first_frame + torso_frame_offset).min(152);
+                            
+                            (lower, upper)
+                        }
                     } else {
                         let frame = ((current_time * 10.0) as usize) % 40;
                         (frame, frame)
+                    };
+                    
+                    let is_winner = Some(*id) == self.winner_id;
+                    let weapon_model = if is_winner {
+                        self.winner_weapon.and_then(|w| weapon_model_cache.get(w))
+                    } else {
+                        None
                     };
                     
                     model.render_simple(
@@ -406,13 +449,13 @@ impl GameResults {
                         0.0,
                         lower_frame,
                         upper_frame,
-                        None,
+                        weapon_model,
                         false,
                         None,
+                        -std::f32::consts::PI / 2.0,
                         0.0,
                         0.0,
-                        0.0,
-                        Some(*id) == self.winner_id,
+                        is_winner,
                         0.0,
                     );
                 }

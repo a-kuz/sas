@@ -1126,6 +1126,9 @@ impl GameState {
                         if item.vel_y.abs() < 0.5 && item.vel_x.abs() < 0.5 {
                             item.vel_y = 0.0;
                             item.vel_x *= 0.95;
+                            if item.dropped {
+                                item.y -= 30.0;
+                            }
                         }
                     }
                     
@@ -1514,6 +1517,37 @@ impl GameState {
                                 hitbox_height,
                             ) {
                                 let was_alive = !player.dead;
+                                
+                                let weapon_drop_pos = if was_alive {
+                                    if let Some(model) = self.model_cache.get(&player.model) {
+                                        let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
+                                        let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                                        let mut rel_angle = player.angle - base_dir;
+                                        while rel_angle > std::f32::consts::PI {
+                                            rel_angle -= 2.0 * std::f32::consts::PI;
+                                        }
+                                        while rel_angle < -std::f32::consts::PI {
+                                            rel_angle += 2.0 * std::f32::consts::PI;
+                                        }
+                                        let pitch = rel_angle;
+                                        let weapon_model = self.weapon_model_cache.get(player.weapon);
+                                        model.get_barrel_position(
+                                            player.x,
+                                            player.y,
+                                            flip,
+                                            pitch,
+                                            player.angle,
+                                            player.lower_frame,
+                                            player.upper_frame,
+                                            weapon_model,
+                                        )
+                                    } else {
+                                        (player.x, player.y)
+                                    }
+                                } else {
+                                    (player.x, player.y)
+                                };
+                                
                                 let (died, gibbed) = player.take_damage(proj.damage);
                                 
                                 self.weapon_hit_effects.push(
@@ -1555,7 +1589,7 @@ impl GameState {
                                 }
                                 
                                 if died && was_alive {
-                                    weapon_to_drop = Some((player.weapon, player.x, player.y));
+                                    weapon_to_drop = Some((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
                                     if !gibbed {
                                         corpse_to_create = Some(player.clone());
                                     } else {
@@ -1684,6 +1718,37 @@ impl GameState {
                                         macroquad::prelude::get_time(), p.id, proj.weapon_type, player.id, proj.damage);
                                     
                                     let was_alive = !player.dead;
+                                    
+                                    let weapon_drop_pos = if was_alive {
+                                        if let Some(model) = self.model_cache.get(&player.model) {
+                                            let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
+                                            let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                                            let mut rel_angle = player.angle - base_dir;
+                                            while rel_angle > std::f32::consts::PI {
+                                                rel_angle -= 2.0 * std::f32::consts::PI;
+                                            }
+                                            while rel_angle < -std::f32::consts::PI {
+                                                rel_angle += 2.0 * std::f32::consts::PI;
+                                            }
+                                            let pitch = rel_angle;
+                                            let weapon_model = self.weapon_model_cache.get(player.weapon);
+                                            model.get_barrel_position(
+                                                player.x,
+                                                player.y,
+                                                flip,
+                                                pitch,
+                                                player.angle,
+                                                player.lower_frame,
+                                                player.upper_frame,
+                                                weapon_model,
+                                            )
+                                        } else {
+                                            (player.x, player.y)
+                                        }
+                                    } else {
+                                        (player.x, player.y)
+                                    };
+                                    
                                     let (died, gibbed) = player.take_damage(proj.damage);
 
                                     self.weapon_hit_effects.push(
@@ -1724,7 +1789,7 @@ impl GameState {
                                         ));
                                     }
                                     if died && was_alive {
-                                        weapon_to_drop = Some((player.weapon, player.x, player.y));
+                                        weapon_to_drop = Some((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
                                         if !gibbed {
                                             corpse_to_create = Some(player.clone());
                                         } else {
@@ -2173,6 +2238,37 @@ impl GameState {
                         if player.id != owner_id {
                             let actual_damage = damage_points as i32;
                             let was_alive = !player.dead;
+                            
+                            let weapon_drop_pos = if was_alive {
+                                if let Some(model) = self.model_cache.get(&player.model) {
+                                    let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
+                                    let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                                    let mut rel_angle = player.angle - base_dir;
+                                    while rel_angle > std::f32::consts::PI {
+                                        rel_angle -= 2.0 * std::f32::consts::PI;
+                                    }
+                                    while rel_angle < -std::f32::consts::PI {
+                                        rel_angle += 2.0 * std::f32::consts::PI;
+                                    }
+                                    let pitch = rel_angle;
+                                    let weapon_model = self.weapon_model_cache.get(player.weapon);
+                                    model.get_barrel_position(
+                                        player.x,
+                                        player.y,
+                                        flip,
+                                        pitch,
+                                        player.angle,
+                                        player.lower_frame,
+                                        player.upper_frame,
+                                        weapon_model,
+                                    )
+                                } else {
+                                    (player.x, player.y)
+                                }
+                            } else {
+                                (player.x, player.y)
+                            };
+                            
                             let (died, gibbed) = player.take_damage(actual_damage);
                             
                             if was_alive && actual_damage > 5 {
@@ -2210,7 +2306,7 @@ impl GameState {
                             }
 
                             if died && was_alive {
-                                weapons_to_drop.push((player.weapon, player.x, player.y));
+                                weapons_to_drop.push((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
                                 if !gibbed {
                                     new_corpses.push(player.clone());
                                 } else {
@@ -2223,6 +2319,37 @@ impl GameState {
                         } else if owner_id as u16 == player.id {
                             let self_damage = (damage_points * 0.5) as i32;
                             let was_alive = !player.dead;
+                            
+                            let weapon_drop_pos = if was_alive {
+                                if let Some(model) = self.model_cache.get(&player.model) {
+                                    let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
+                                    let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                                    let mut rel_angle = player.angle - base_dir;
+                                    while rel_angle > std::f32::consts::PI {
+                                        rel_angle -= 2.0 * std::f32::consts::PI;
+                                    }
+                                    while rel_angle < -std::f32::consts::PI {
+                                        rel_angle += 2.0 * std::f32::consts::PI;
+                                    }
+                                    let pitch = rel_angle;
+                                    let weapon_model = self.weapon_model_cache.get(player.weapon);
+                                    model.get_barrel_position(
+                                        player.x,
+                                        player.y,
+                                        flip,
+                                        pitch,
+                                        player.angle,
+                                        player.lower_frame,
+                                        player.upper_frame,
+                                        weapon_model,
+                                    )
+                                } else {
+                                    (player.x, player.y)
+                                }
+                            } else {
+                                (player.x, player.y)
+                            };
+                            
                             let (died, gibbed) = player.take_damage(self_damage);
                             
                             if was_alive && self_damage > 5 {
@@ -2256,7 +2383,7 @@ impl GameState {
                             }
                             
                             if died && was_alive {
-                                weapons_to_drop.push((player.weapon, player.x, player.y));
+                                weapons_to_drop.push((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
                                 if !gibbed {
                                     new_corpses.push(player.clone());
                                 } else {
@@ -2727,7 +2854,7 @@ impl GameState {
                                     );
                                 }
                                 if item.dropped {
-                                    model.render_with_full_rotation(screen_x, screen_y, 1.0, item_color, item.pitch, item.yaw, item.roll);
+                                    model.render_with_full_rotation(screen_x, screen_y, 1.33, item_color, item.pitch, item.yaw, item.roll);
                                 } else {
                                     model.render(screen_x, screen_y, 1.0, item_color);
                                 }
@@ -2952,7 +3079,7 @@ impl GameState {
                         player.angle,
                         player.lower_frame,
                         player.upper_frame,
-                        self.weapon_model_cache.get(player.weapon),
+                        None,
                         false,
                         Some(&lighting_ctx),
                         0.0,
@@ -3422,7 +3549,7 @@ impl GameState {
             defrag.render(camera_x, camera_y);
         }
         
-        self.game_results.draw(self.match_time, &mut self.model_cache, &self.award_icon_cache, camera_x, camera_y);
+        self.game_results.draw(self.match_time, &mut self.model_cache, &self.award_icon_cache, &self.weapon_model_cache, camera_x, camera_y);
     }
 
     pub fn render_messages(&self) {

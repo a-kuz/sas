@@ -13,11 +13,13 @@ pub struct AnimConfig {
     pub death1: AnimRange,
     pub torso_attack: AnimRange,
     pub torso_stand: AnimRange,
+    pub torso_gesture: AnimRange,
     pub legs_run: AnimRange,
     pub legs_jump: AnimRange,
     pub legs_idle: AnimRange,
     pub legs_walkcr: AnimRange,
     pub legs_idlecr: AnimRange,
+    pub both_victory: Option<AnimRange>,
 }
 
 impl AnimConfig {
@@ -44,12 +46,15 @@ impl AnimConfig {
     
     fn parse_content(content: &str) -> Result<Self, String> {
         let mut anims: Vec<AnimRange> = Vec::new();
+        let mut both_victory: Option<AnimRange> = None;
         
         for line in content.lines() {
             let line = line.trim();
             if line.is_empty() || line.starts_with("//") || line.starts_with("sex") {
                 continue;
             }
+            
+            let is_victory = line.to_uppercase().contains("BOTH_VICTORY") || line.to_uppercase().contains("VICTORY");
             
             let parts: Vec<&str> = line.split_whitespace().collect();
             if parts.len() >= 4 {
@@ -59,12 +64,18 @@ impl AnimConfig {
                     parts[2].parse::<usize>(),
                     parts[3].parse::<usize>(),
                 ) {
-                    anims.push(AnimRange {
+                    let anim_range = AnimRange {
                         first_frame: first,
                         num_frames: num,
                         looping_frames: loop_frames,
                         fps,
-                    });
+                    };
+                    
+                    if is_victory {
+                        both_victory = Some(anim_range.clone());
+                    }
+                    
+                    anims.push(anim_range);
                 }
             }
         }
@@ -85,11 +96,13 @@ impl AnimConfig {
             death1: anims[0].clone(),
             torso_attack: anims[7].clone(),
             torso_stand: anims[11].clone(),
+            torso_gesture: anims[6].clone(),
             legs_walkcr: anims[13].clone(),
             legs_run: anims[15].clone(),
             legs_jump: anims[18].clone(),
             legs_idle: anims[22].clone(),
             legs_idlecr: anims[23].clone(),
+            both_victory,
         })
     }
 }

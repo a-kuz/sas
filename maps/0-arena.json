@@ -770,7 +770,7 @@
         },
         {
           "x_start": 21,
-          "x_end": 24,
+          "x_end": 23,
           "solid": true,
           "texture_id": 1
         },
@@ -1100,15 +1100,9 @@
         },
         {
           "x_start": 17,
-          "x_end": 25,
-          "solid": true,
-          "texture_id": 706
-        },
-        {
-          "x_start": 28,
           "x_end": 31,
           "solid": true,
-          "texture_id": 706
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -1129,51 +1123,9 @@
         },
         {
           "x_start": 17,
-          "x_end": 17,
-          "solid": true,
-          "texture_id": 706
-        },
-        {
-          "x_start": 18,
-          "x_end": 19,
-          "solid": true,
-          "texture_id": 728
-        },
-        {
-          "x_start": 20,
-          "x_end": 21,
-          "solid": true,
-          "texture_id": 706
-        },
-        {
-          "x_start": 22,
-          "x_end": 23,
-          "solid": true,
-          "texture_id": 728
-        },
-        {
-          "x_start": 24,
-          "x_end": 25,
-          "solid": true,
-          "texture_id": 706
-        },
-        {
-          "x_start": 26,
-          "x_end": 27,
-          "solid": true,
-          "texture_id": 728
-        },
-        {
-          "x_start": 28,
-          "x_end": 29,
-          "solid": true,
-          "texture_id": 706
-        },
-        {
-          "x_start": 30,
           "x_end": 31,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -1194,51 +1146,9 @@
         },
         {
           "x_start": 17,
-          "x_end": 17,
-          "solid": true,
-          "texture_id": 492
-        },
-        {
-          "x_start": 18,
-          "x_end": 19,
-          "solid": true,
-          "texture_id": 728
-        },
-        {
-          "x_start": 20,
-          "x_end": 21,
-          "solid": true,
-          "texture_id": 492
-        },
-        {
-          "x_start": 22,
-          "x_end": 23,
-          "solid": true,
-          "texture_id": 728
-        },
-        {
-          "x_start": 24,
-          "x_end": 25,
-          "solid": true,
-          "texture_id": 492
-        },
-        {
-          "x_start": 26,
-          "x_end": 27,
-          "solid": true,
-          "texture_id": 728
-        },
-        {
-          "x_start": 28,
-          "x_end": 29,
-          "solid": true,
-          "texture_id": 492
-        },
-        {
-          "x_start": 30,
           "x_end": 31,
           "solid": true,
-          "texture_id": 728
+          "texture_id": 1
         },
         {
           "x_start": 51,
@@ -1460,12 +1370,6 @@
           "x_end": 16,
           "solid": true,
           "texture_id": 9
-        },
-        {
-          "x_start": 51,
-          "x_end": 51,
-          "solid": true,
-          "texture_id": 9
         }
       ]
     },
@@ -1475,12 +1379,6 @@
         {
           "x_start": 0,
           "x_end": 0,
-          "solid": true,
-          "texture_id": 9
-        },
-        {
-          "x_start": 51,
-          "x_end": 51,
           "solid": true,
           "texture_id": 9
         }
@@ -1647,7 +1545,7 @@
   ],
   "items": [
     {
-      "tile_x": 45.65747,
+      "tile_x": 48.28247,
       "tile_y": 67.46753,
       "item_type": "Railgun"
     },
@@ -1723,8 +1621,8 @@
       "force_y": -8.0
     },
     {
-      "tile_x": 29.83899,
-      "tile_y": 39.13672,
+      "tile_x": 29.96399,
+      "tile_y": 38.88672,
       "width_tiles": 2.0,
       "force_x": 0.0,
       "force_y": -7.0
@@ -1744,27 +1642,34 @@
       "force_y": -5.5
     },
     {
-      "tile_x": 44.225952,
-      "tile_y": 39.209717,
+      "tile_x": 44.100952,
+      "tile_y": 38.959717,
       "width_tiles": 2.0,
       "force_x": 0.0,
       "force_y": -6.0
+    },
+    {
+      "tile_x": 45.089844,
+      "tile_y": 68.34741,
+      "width_tiles": 2.0,
+      "force_x": 0.0,
+      "force_y": -5.0
     }
   ],
   "teleporters": [
     {
-      "tile_x": 50.93982,
-      "tile_y": 62.049072,
+      "tile_x": 51.06482,
+      "tile_y": 59.049072,
       "width_tiles": 1.0,
-      "height_tiles": 7.0,
+      "height_tiles": 10.0,
       "dest_tile_x": 5.881592,
       "dest_tile_y": 33.55713
     },
     {
       "tile_x": 24.01892,
-      "tile_y": 34.19409,
-      "width_tiles": 1.0,
-      "height_tiles": 5.75,
+      "tile_y": 32.19409,
+      "width_tiles": 0.875,
+      "height_tiles": 7.75,
       "dest_tile_x": 3.2884521,
       "dest_tile_y": 67.076904
     }
@@ -2617,17 +2522,6 @@
     },
     {
       "x": 1312.0,
-      "y": 1056.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1312.0,
       "y": 31.999992,
       "width": 128.00002,
       "height": 128.00002,
@@ -2673,17 +2567,6 @@
     {
       "x": 1312.0,
       "y": 544.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1440.0,
-      "y": 1056.0,
       "width": 128.00002,
       "height": 128.00002,
       "texture_name": "q3-resources/textures/base_support/surface2.png",
