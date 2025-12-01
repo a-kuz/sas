@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
 use super::tools::EditorTool;
 use super::tools::SelectedObject;
+use macroquad::prelude::*;
 
 pub struct HelpPanel {
     scroll_offset: f32,
@@ -14,8 +14,9 @@ impl HelpPanel {
             max_scroll: 0.0,
         }
     }
-    
-    pub fn render(&mut self, 
+
+    pub fn render(
+        &mut self,
         current_tool: EditorTool,
         selected_object: &Option<SelectedObject>,
         map_name: &str,
@@ -26,34 +27,54 @@ impl HelpPanel {
         let panel_height = 700.0;
         let panel_x = screen_width() / 2.0 - panel_width / 2.0;
         let panel_y = screen_height() / 2.0 - panel_height / 2.0;
-        
-        draw_rectangle(panel_x, panel_y, panel_width, panel_height, Color::from_rgba(0, 0, 0, 240));
+
+        draw_rectangle(
+            panel_x,
+            panel_y,
+            panel_width,
+            panel_height,
+            Color::from_rgba(0, 0, 0, 240),
+        );
         draw_rectangle_lines(panel_x, panel_y, panel_width, panel_height, 2.0, WHITE);
-        
+
         let mouse_wheel_y = mouse_wheel().1;
         if mouse_wheel_y != 0.0 {
             self.scroll_offset -= mouse_wheel_y * 20.0;
         }
-        
+
         let mut y = panel_y + 30.0 - self.scroll_offset;
         let line_height = 20.0;
         let content_start_y = panel_y + 60.0;
         let content_end_y = panel_y + panel_height - 20.0;
-        
-        draw_text("MAP EDITOR HELP", panel_x + 250.0, panel_y + 30.0, 24.0, YELLOW);
-        draw_text(&format!("Map: {} | Zoom: {:.1}x | Ambient: {:.2}", map_name, zoom, ambient_light), 
-            panel_x + 20.0, panel_y + 55.0, 16.0, GRAY);
-        
+
+        draw_text(
+            "MAP EDITOR HELP",
+            panel_x + 250.0,
+            panel_y + 30.0,
+            24.0,
+            YELLOW,
+        );
+        draw_text(
+            &format!(
+                "Map: {} | Zoom: {:.1}x | Ambient: {:.2}",
+                map_name, zoom, ambient_light
+            ),
+            panel_x + 20.0,
+            panel_y + 55.0,
+            16.0,
+            GRAY,
+        );
+
         y = content_start_y - self.scroll_offset;
-        
+
         let sections = self.get_help_sections(current_tool, selected_object);
-        
+
         for section in &sections {
             if y > content_start_y - 30.0 && y < content_end_y {
                 draw_text(&section.title, panel_x + 20.0, y, 20.0, YELLOW);
             }
             y += line_height + 5.0;
-            
+
             for line in &section.lines {
                 if y > content_start_y - 30.0 && y < content_end_y {
                     let color = if line.is_empty() { WHITE } else { WHITE };
@@ -61,32 +82,56 @@ impl HelpPanel {
                 }
                 y += line_height;
             }
-            
+
             y += 10.0;
         }
-        
+
         self.max_scroll = (y - content_start_y - panel_height + 100.0).max(0.0);
         self.scroll_offset = self.scroll_offset.max(0.0).min(self.max_scroll);
-        
+
         if self.max_scroll > 0.0 {
             let scrollbar_height = panel_height - 100.0;
             let scrollbar_x = panel_x + panel_width - 15.0;
             let scrollbar_y = panel_y + 60.0;
-            
-            draw_rectangle(scrollbar_x, scrollbar_y, 8.0, scrollbar_height, Color::from_rgba(100, 100, 100, 100));
-            
-            let thumb_height = (scrollbar_height * (panel_height / (y - content_start_y))).max(20.0);
-            let thumb_y = scrollbar_y + (self.scroll_offset / self.max_scroll) * (scrollbar_height - thumb_height);
-            
-            draw_rectangle(scrollbar_x, thumb_y, 8.0, thumb_height, Color::from_rgba(200, 200, 200, 200));
+
+            draw_rectangle(
+                scrollbar_x,
+                scrollbar_y,
+                8.0,
+                scrollbar_height,
+                Color::from_rgba(100, 100, 100, 100),
+            );
+
+            let thumb_height =
+                (scrollbar_height * (panel_height / (y - content_start_y))).max(20.0);
+            let thumb_y = scrollbar_y
+                + (self.scroll_offset / self.max_scroll) * (scrollbar_height - thumb_height);
+
+            draw_rectangle(
+                scrollbar_x,
+                thumb_y,
+                8.0,
+                thumb_height,
+                Color::from_rgba(200, 200, 200, 200),
+            );
         }
-        
-        draw_text("Press H or F1 to close | Scroll to navigate", panel_x + 20.0, panel_y + panel_height - 10.0, 16.0, GRAY);
+
+        draw_text(
+            "Press H or F1 to close | Scroll to navigate",
+            panel_x + 20.0,
+            panel_y + panel_height - 10.0,
+            16.0,
+            GRAY,
+        );
     }
-    
-    fn get_help_sections(&self, current_tool: EditorTool, selected_object: &Option<SelectedObject>) -> Vec<HelpSection> {
+
+    fn get_help_sections(
+        &self,
+        current_tool: EditorTool,
+        selected_object: &Option<SelectedObject>,
+    ) -> Vec<HelpSection> {
         let mut sections = vec![];
-        
+
         sections.push(HelpSection {
             title: "GLOBAL CONTROLS (Always Available)".to_string(),
             lines: vec![
@@ -103,7 +148,7 @@ impl HelpPanel {
                 "".to_string(),
             ],
         });
-        
+
         match current_tool {
             EditorTool::Draw => {
                 sections.push(HelpSection {
@@ -129,7 +174,7 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
+            }
             EditorTool::Erase => {
                 sections.push(HelpSection {
                     title: "ERASE TOOL (Current)".to_string(),
@@ -140,7 +185,7 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
+            }
             EditorTool::Light => {
                 sections.push(HelpSection {
                     title: "LIGHT TOOL (Current)".to_string(),
@@ -159,7 +204,7 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
+            }
             EditorTool::Background => {
                 sections.push(HelpSection {
                     title: "BACKGROUND TOOL (Current)".to_string(),
@@ -174,7 +219,7 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
+            }
             EditorTool::Item => {
                 sections.push(HelpSection {
                     title: "ITEM TOOL (Current)".to_string(),
@@ -184,7 +229,7 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
+            }
             EditorTool::JumpPad => {
                 sections.push(HelpSection {
                     title: "JUMP PAD TOOL (Current)".to_string(),
@@ -196,7 +241,7 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
+            }
             EditorTool::Teleporter => {
                 sections.push(HelpSection {
                     title: "TELEPORTER TOOL (Current)".to_string(),
@@ -209,10 +254,10 @@ impl HelpPanel {
                         "".to_string(),
                     ],
                 });
-            },
-            _ => {},
+            }
+            _ => {}
         }
-        
+
         if selected_object.is_some() {
             sections.push(HelpSection {
                 title: "OBJECT SELECTED".to_string(),
@@ -223,7 +268,7 @@ impl HelpPanel {
                 ],
             });
         }
-        
+
         sections.push(HelpSection {
             title: "NAVIGATION GRAPH".to_string(),
             lines: vec![
@@ -235,7 +280,7 @@ impl HelpPanel {
                 "".to_string(),
             ],
         });
-        
+
         sections.push(HelpSection {
             title: "AMBIENT LIGHT".to_string(),
             lines: vec![
@@ -243,7 +288,7 @@ impl HelpPanel {
                 "".to_string(),
             ],
         });
-        
+
         sections
     }
 }

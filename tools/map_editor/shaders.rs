@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use macroquad::miniquad;
+use macroquad::prelude::*;
 use std::sync::OnceLock;
 
 static BG_ADDITIVE_MATERIAL: OnceLock<Material> = OnceLock::new();
@@ -53,13 +53,14 @@ pub fn get_bg_additive_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
 pub fn parse_shader_file(path: &str) -> Vec<(String, Vec<String>, bool, bool)> {
     let mut results = Vec::new();
-    
+
     if let Ok(content) = std::fs::read_to_string(path) {
         let mut current_shader: Option<String> = None;
         let mut in_shader = false;
@@ -67,14 +68,14 @@ pub fn parse_shader_file(path: &str) -> Vec<(String, Vec<String>, bool, bool)> {
         let mut textures = Vec::new();
         let mut is_additive = false;
         let mut has_wave = false;
-        
+
         for line in content.lines() {
             let trimmed = line.trim();
-            
+
             if trimmed.starts_with("//") || trimmed.is_empty() {
                 continue;
             }
-            
+
             if !in_shader && !trimmed.starts_with("{") && !trimmed.contains("//") {
                 current_shader = Some(trimmed.to_string());
                 textures.clear();
@@ -83,11 +84,11 @@ pub fn parse_shader_file(path: &str) -> Vec<(String, Vec<String>, bool, bool)> {
                 in_shader = true;
                 continue;
             }
-            
+
             if trimmed.contains("{") {
                 brace_count += trimmed.matches("{").count();
             }
-            
+
             if trimmed.contains("}") {
                 brace_count -= trimmed.matches("}").count();
                 if brace_count == 0 && in_shader {
@@ -100,11 +101,14 @@ pub fn parse_shader_file(path: &str) -> Vec<(String, Vec<String>, bool, bool)> {
                     textures.clear();
                 }
             }
-            
+
             if in_shader {
-                if trimmed.starts_with("map ") || trimmed.starts_with("clampmap ") || trimmed.starts_with("animmap ") {
+                if trimmed.starts_with("map ")
+                    || trimmed.starts_with("clampmap ")
+                    || trimmed.starts_with("animmap ")
+                {
                     let parts: Vec<&str> = trimmed.split_whitespace().collect();
-                    
+
                     if parts[0] == "animmap" && parts.len() > 2 {
                         for part in &parts[2..] {
                             textures.push(part.replace(".tga", ".png"));
@@ -116,18 +120,21 @@ pub fn parse_shader_file(path: &str) -> Vec<(String, Vec<String>, bool, bool)> {
                         }
                     }
                 }
-                
-                if trimmed.contains("blendFunc ADD") || trimmed.contains("blendFunc GL_ONE GL_ONE") {
+
+                if trimmed.contains("blendFunc ADD") || trimmed.contains("blendFunc GL_ONE GL_ONE")
+                {
                     is_additive = true;
                 }
-                
-                if trimmed.contains("wave ") || trimmed.contains("tcMod turb") || trimmed.contains("tcMod scroll") {
+
+                if trimmed.contains("wave ")
+                    || trimmed.contains("tcMod turb")
+                    || trimmed.contains("tcMod scroll")
+                {
                     has_wave = true;
                 }
             }
         }
     }
-    
+
     results
 }
-

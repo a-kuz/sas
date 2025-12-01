@@ -1,6 +1,6 @@
+use macroquad::prelude::Color;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use macroquad::prelude::Color;
 
 lazy_static::lazy_static! {
     static ref CVAR_REGISTRY: Arc<RwLock<CvarRegistry>> = Arc::new(RwLock::new(CvarRegistry::new()));
@@ -40,15 +40,15 @@ impl Cvar {
     }
 
     pub fn get_integer(&self) -> i32 {
-        self.value.parse::<i32>().unwrap_or_else(|_| {
-            self.default_value.parse::<i32>().unwrap_or(0)
-        })
+        self.value
+            .parse::<i32>()
+            .unwrap_or_else(|_| self.default_value.parse::<i32>().unwrap_or(0))
     }
 
     pub fn get_float(&self) -> f32 {
-        self.value.parse::<f32>().unwrap_or_else(|_| {
-            self.default_value.parse::<f32>().unwrap_or(0.0)
-        })
+        self.value
+            .parse::<f32>()
+            .unwrap_or_else(|_| self.default_value.parse::<f32>().unwrap_or(0.0))
     }
 
     pub fn get_bool(&self) -> bool {
@@ -85,7 +85,8 @@ impl CvarRegistry {
     pub fn register(&mut self, name: &str, default_value: &str, flags: u32) {
         let name_lower = name.to_lowercase();
         if !self.cvars.contains_key(&name_lower) {
-            self.cvars.insert(name_lower.clone(), Cvar::new(name, default_value, flags));
+            self.cvars
+                .insert(name_lower.clone(), Cvar::new(name, default_value, flags));
         }
     }
 
@@ -107,7 +108,8 @@ impl CvarRegistry {
 
     pub fn find_matches(&self, prefix: &str) -> Vec<String> {
         let prefix_lower = prefix.to_lowercase();
-        let mut matches: Vec<String> = self.cvars
+        let mut matches: Vec<String> = self
+            .cvars
             .keys()
             .filter(|name| name.starts_with(&prefix_lower))
             .cloned()
@@ -118,7 +120,10 @@ impl CvarRegistry {
 }
 
 pub fn register_cvar(name: &str, default_value: &str, flags: u32) {
-    CVAR_REGISTRY.write().unwrap().register(name, default_value, flags);
+    CVAR_REGISTRY
+        .write()
+        .unwrap()
+        .register(name, default_value, flags);
 }
 
 pub fn get_cvar(name: &str) -> Option<Cvar> {
@@ -154,7 +159,7 @@ pub fn init_default_cvars() {
     register_cvar("cg_drawFPS", "1", CVAR_ARCHIVE);
     register_cvar("cg_drawGun", "1", CVAR_ARCHIVE);
     register_cvar("cg_crosshairSize", "24", CVAR_ARCHIVE);
-    
+
     register_cvar("net_showPackets", "0", CVAR_ARCHIVE);
     register_cvar("net_showDrop", "0", CVAR_ARCHIVE);
     register_cvar("net_showSync", "0", CVAR_ARCHIVE);
@@ -174,10 +179,10 @@ pub fn init_default_cvars() {
     register_cvar("cl_yawspeed", "1.0", CVAR_ARCHIVE);
     register_cvar("m_grab", "1", CVAR_ARCHIVE);
     register_cvar("m_show_cursor", "0", CVAR_ARCHIVE);
-    
+
     register_cvar("cl_timeNudge", "0", CVAR_ARCHIVE);
     register_cvar("cl_autoNudge", "0", CVAR_ARCHIVE);
-    
+
     load_config();
 }
 
@@ -190,7 +195,7 @@ pub fn load_config() {
                 if line.is_empty() || line.starts_with("//") {
                     continue;
                 }
-                
+
                 let parts: Vec<&str> = line.split_whitespace().collect();
                 if parts.len() >= 3 && parts[0] == "seta" {
                     set_cvar(parts[1], parts[2..].join(" ").trim_matches('"'));
@@ -205,13 +210,13 @@ pub fn save_config() {
     {
         let registry = CVAR_REGISTRY.read().unwrap();
         let mut lines = Vec::new();
-        
+
         for (name, cvar) in &registry.cvars {
             if (cvar.flags & CVAR_ARCHIVE) != 0 {
                 lines.push(format!("seta {} \"{}\"", name, cvar.value));
             }
         }
-        
+
         lines.sort();
         let content = lines.join("\n") + "\n";
         let _ = std::fs::write("sas_config.cfg", content);
@@ -223,11 +228,10 @@ pub fn apply_gamma(mut color: Color) -> Color {
     if (gamma - 1.0).abs() < 0.01 {
         return color;
     }
-    
+
     let gamma_clamped = gamma.max(0.5).min(3.0);
     color.r = color.r.powf(1.0 / gamma_clamped);
     color.g = color.g.powf(1.0 / gamma_clamped);
     color.b = color.b.powf(1.0 / gamma_clamped);
     color
 }
-

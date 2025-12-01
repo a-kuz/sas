@@ -16,7 +16,9 @@ pub struct WeaponModelCache {
 
 impl WeaponModelCache {
     pub fn new() -> Self {
-        Self { models: HashMap::new() }
+        Self {
+            models: HashMap::new(),
+        }
     }
 
     fn weapon_path(weapon: Weapon) -> String {
@@ -33,12 +35,10 @@ impl WeaponModelCache {
         };
         get_resource_path(relative)
     }
-    
+
     fn extra_paths(weapon: Weapon) -> Vec<String> {
         let relatives: Vec<&str> = match weapon {
-            Weapon::MachineGun => vec![
-                "models/weapons2/machinegun/machinegun_barrel.md3",
-            ],
+            Weapon::MachineGun => vec!["models/weapons2/machinegun/machinegun_barrel.md3"],
             _ => Vec::new(),
         };
         relatives.iter().map(|p| get_resource_path(p)).collect()
@@ -51,15 +51,9 @@ impl WeaponModelCache {
                 "models/weapons2/gauntlet/gauntlet3.png",
                 "models/weapons2/gauntlet/gauntlet4.png",
             ],
-            Weapon::MachineGun => vec![
-                "models/weapons2/machinegun/machinegun.png",
-            ],
-            Weapon::Shotgun => vec![
-                "models/weapons2/shotgun/shotgun.png",
-            ],
-            Weapon::GrenadeLauncher => vec![
-                "models/weapons2/grenadel/grenadel.png",
-            ],
+            Weapon::MachineGun => vec!["models/weapons2/machinegun/machinegun.png"],
+            Weapon::Shotgun => vec!["models/weapons2/shotgun/shotgun.png"],
+            Weapon::GrenadeLauncher => vec!["models/weapons2/grenadel/grenadel.png"],
             Weapon::RocketLauncher => vec![
                 "models/weapons2/rocketl/rocketl.png",
                 "models/weapons2/rocketl/rocketl2.png",
@@ -74,9 +68,7 @@ impl WeaponModelCache {
                 "models/weapons2/railgun/railgun3.png",
                 "models/weapons2/railgun/railgun4.png",
             ],
-            Weapon::Plasmagun => vec![
-                "models/weapons2/plasma/plasma.png",
-            ],
+            Weapon::Plasmagun => vec!["models/weapons2/plasma/plasma.png"],
             Weapon::BFG => vec![
                 "models/weapons2/bfg/f_bfg.png",
                 "models/weapons2/bfg/f_bfg2.png",
@@ -87,7 +79,7 @@ impl WeaponModelCache {
     pub async fn preload(&mut self, weapon: Weapon) {
         if !self.models.contains_key(&weapon) {
             let main_model_result;
-            
+
             #[cfg(target_arch = "wasm32")]
             {
                 main_model_result = MD3Model::load_async(Self::weapon_path(weapon)).await;
@@ -96,10 +88,10 @@ impl WeaponModelCache {
             {
                 main_model_result = MD3Model::load(Self::weapon_path(weapon));
             }
-            
+
             if let Ok(main_model) = main_model_result {
                 let mut models = vec![main_model];
-                
+
                 for path in Self::extra_paths(weapon) {
                     #[cfg(target_arch = "wasm32")]
                     {
@@ -143,11 +135,8 @@ impl WeaponModelCache {
             }
         }
     }
-    
+
     pub fn get(&self, weapon: Weapon) -> Option<&WeaponModel> {
         self.models.get(&weapon)
     }
 }
-
-
-

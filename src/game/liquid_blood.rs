@@ -63,7 +63,8 @@ impl LiquidBloodManager {
     }
 
     pub fn add_blood(&mut self, x: f32, y: f32, amount: f32, vel_x: f32, vel_y: f32) {
-        self.droplets.push(BloodDroplet::new(x, y, amount, vel_x, vel_y));
+        self.droplets
+            .push(BloodDroplet::new(x, y, amount, vel_x, vel_y));
     }
 
     pub fn update(&mut self, dt: f32, map_width: f32, map_height: f32) {
@@ -72,8 +73,14 @@ impl LiquidBloodManager {
 
         // Initialize render target if needed
         if self.blood_render_target.is_none() {
-            self.blood_render_target = Some(render_target(self.texture_size as u32, self.texture_size as u32));
-            self.blood_texture = self.blood_render_target.as_ref().map(|rt| rt.texture.clone());
+            self.blood_render_target = Some(render_target(
+                self.texture_size as u32,
+                self.texture_size as u32,
+            ));
+            self.blood_texture = self
+                .blood_render_target
+                .as_ref()
+                .map(|rt| rt.texture.clone());
         }
 
         // Render blood buffer

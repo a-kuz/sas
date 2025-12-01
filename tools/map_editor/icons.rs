@@ -12,6 +12,7 @@ pub struct ItemIcons {
     pub weapon_shotgun: Option<Texture2D>,
     pub weapon_grenade: Option<Texture2D>,
     pub weapon_rocket: Option<Texture2D>,
+    pub weapon_lightning: Option<Texture2D>,
     pub weapon_railgun: Option<Texture2D>,
     pub weapon_plasma: Option<Texture2D>,
     pub weapon_bfg: Option<Texture2D>,
@@ -35,6 +36,7 @@ impl ItemIcons {
             weapon_shotgun: None,
             weapon_grenade: None,
             weapon_rocket: None,
+            weapon_lightning: None,
             weapon_railgun: None,
             weapon_plasma: None,
             weapon_bfg: None,
@@ -46,7 +48,7 @@ impl ItemIcons {
             powerup_invis: None,
         }
     }
-    
+
     pub async fn load_all(&mut self) {
         self.health_small = Self::load_icon("q3-resources/icons/iconh_green.png").await;
         self.health_medium = Self::load_icon("q3-resources/icons/iconh_yellow.png").await;
@@ -57,6 +59,7 @@ impl ItemIcons {
         self.weapon_shotgun = Self::load_icon("q3-resources/icons/iconw_shotgun.png").await;
         self.weapon_grenade = Self::load_icon("q3-resources/icons/iconw_grenade.png").await;
         self.weapon_rocket = Self::load_icon("q3-resources/icons/iconw_rocket.png").await;
+        self.weapon_lightning = Self::load_icon("q3-resources/icons/iconw_lightning.png").await;
         self.weapon_railgun = Self::load_icon("q3-resources/icons/iconw_railgun.png").await;
         self.weapon_plasma = Self::load_icon("q3-resources/icons/iconw_plasma.png").await;
         self.weapon_bfg = Self::load_icon("q3-resources/icons/iconw_bfg.png").await;
@@ -67,20 +70,20 @@ impl ItemIcons {
         self.powerup_haste = Self::load_icon("q3-resources/icons/haste.png").await;
         self.powerup_invis = Self::load_icon("q3-resources/icons/invis.png").await;
     }
-    
+
     async fn load_icon(path: &str) -> Option<Texture2D> {
         match load_texture(path).await {
             Ok(texture) => {
                 texture.set_filter(FilterMode::Linear);
                 Some(texture)
-            },
+            }
             Err(e) => {
                 println!("[Editor] Failed to load icon {}: {}", path, e);
                 None
             }
         }
     }
-    
+
     pub fn get_icon(&self, item_type: &map::ItemType) -> Option<&Texture2D> {
         match item_type {
             map::ItemType::Health25 => self.health_small.as_ref(),
@@ -91,6 +94,7 @@ impl ItemIcons {
             map::ItemType::Shotgun => self.weapon_shotgun.as_ref(),
             map::ItemType::GrenadeLauncher => self.weapon_grenade.as_ref(),
             map::ItemType::RocketLauncher => self.weapon_rocket.as_ref(),
+            map::ItemType::LightningGun => self.weapon_lightning.as_ref(),
             map::ItemType::Railgun => self.weapon_railgun.as_ref(),
             map::ItemType::Plasmagun => self.weapon_plasma.as_ref(),
             map::ItemType::BFG => self.weapon_bfg.as_ref(),
@@ -103,4 +107,3 @@ impl ItemIcons {
         }
     }
 }
-

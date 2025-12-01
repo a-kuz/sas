@@ -60,7 +60,10 @@ pub fn get_award_shader_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 uniforms: vec![
                     UniformDesc::new("time", UniformType::Float1),
@@ -69,13 +72,18 @@ pub fn get_award_shader_material() -> &'static Material {
                 pipeline_params: PipelineParams {
                     color_blend: Some(macroquad::miniquad::BlendState::new(
                         macroquad::miniquad::Equation::Add,
-                        macroquad::miniquad::BlendFactor::Value(macroquad::miniquad::BlendValue::SourceAlpha),
+                        macroquad::miniquad::BlendFactor::Value(
+                            macroquad::miniquad::BlendValue::SourceAlpha,
+                        ),
                         macroquad::miniquad::BlendFactor::One,
                     )),
                     ..Default::default()
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
+
+

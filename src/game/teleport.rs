@@ -44,12 +44,36 @@ impl Teleport {
 
         // Side emitters (yellow/orange frames)
         let side_w = 8.0;
-        draw_rectangle(left - 6.0, base_y, side_w, portal_height, Color::from_rgba(210, 170, 60, 220));
-        draw_rectangle(right - side_w + 6.0, base_y, side_w, portal_height, Color::from_rgba(210, 170, 60, 220));
+        draw_rectangle(
+            left - 6.0,
+            base_y,
+            side_w,
+            portal_height,
+            Color::from_rgba(210, 170, 60, 220),
+        );
+        draw_rectangle(
+            right - side_w + 6.0,
+            base_y,
+            side_w,
+            portal_height,
+            Color::from_rgba(210, 170, 60, 220),
+        );
         for i in 0..5 {
             let a = 200 - i * 28;
-            draw_rectangle(left - 6.0 + i as f32, base_y, 1.0, portal_height, Color::from_rgba(255, 220, 100, a as u8));
-            draw_rectangle(right + 6.0 - i as f32, base_y, 1.0, portal_height, Color::from_rgba(255, 220, 100, a as u8));
+            draw_rectangle(
+                left - 6.0 + i as f32,
+                base_y,
+                1.0,
+                portal_height,
+                Color::from_rgba(255, 220, 100, a as u8),
+            );
+            draw_rectangle(
+                right + 6.0 - i as f32,
+                base_y,
+                1.0,
+                portal_height,
+                Color::from_rgba(255, 220, 100, a as u8),
+            );
         }
 
         // Inner portal body (dark blue)
@@ -69,8 +93,20 @@ impl Teleport {
         let bar_width = inner_right - inner_left;
         let mut y = base_y + portal_height - offset;
         while y >= base_y {
-            draw_rectangle(inner_left, y - 2.0, bar_width, 4.0, Color::from_rgba(220, 230, 240, 210));
-            draw_rectangle(inner_left, y - 1.0, bar_width, 2.0, Color::from_rgba(255, 255, 255, 230));
+            draw_rectangle(
+                inner_left,
+                y - 2.0,
+                bar_width,
+                4.0,
+                Color::from_rgba(220, 230, 240, 210),
+            );
+            draw_rectangle(
+                inner_left,
+                y - 1.0,
+                bar_width,
+                2.0,
+                Color::from_rgba(255, 255, 255, 230),
+            );
             y -= bar_gap;
         }
 
@@ -85,4 +121,3 @@ impl Teleport {
         );
     }
 }
-

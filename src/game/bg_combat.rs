@@ -22,14 +22,17 @@ pub fn apply_damage(
     target_id: u16,
 ) -> (bool, CombatEvent) {
     *target_health -= damage;
-    
+
     let died = *target_health <= 0;
-    
-    (died, CombatEvent {
-        attacker_id,
-        target_id,
-        damage,
-    })
+
+    (
+        died,
+        CombatEvent {
+            attacker_id,
+            target_id,
+            damage,
+        },
+    )
 }
 
 pub fn respawn_player(
@@ -47,4 +50,3 @@ pub fn respawn_player(
     *vel_x = 0.0;
     *vel_y = 0.0;
 }
-

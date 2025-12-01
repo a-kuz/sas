@@ -1,7 +1,7 @@
-use macroquad::prelude::*;
+use crate::compat_rand::*;
 use crate::game::map::Map;
 use crate::game::particle::Particle;
-use crate::compat_rand::*;
+use macroquad::prelude::*;
 
 const RAIL_BEAM_DURATION: f32 = 0.8;
 const RAIL_CORE_WIDTH: f32 = 4.0;
@@ -75,10 +75,10 @@ impl RailBeam {
 
         let t = self.life / self.max_life;
         let fade = 1.0 - (t * t);
-        
+
         let rail_width = crate::cvar::get_cvar_float("r_railWidth");
         let width_scale = (rail_width / 16.0).max(0.01).min(15.0);
-        
+
         let core_color = Color::from_rgba(
             (self.color.r * 255.0) as u8,
             (self.color.g * 255.0) as u8,
@@ -87,7 +87,7 @@ impl RailBeam {
         );
 
         let inner_color = Color::from_rgba(255, 255, 255, (fade * 255.0) as u8);
-        
+
         draw_line(
             screen_start_x,
             screen_start_y,
@@ -109,13 +109,24 @@ impl RailBeam {
 }
 
 impl RailRing {
-    pub fn new(beam_start_x: f32, beam_start_y: f32, beam_end_x: f32, beam_end_y: f32, 
-               distance: f32, rotation: f32, color: Color) -> Self {
+    pub fn new(
+        beam_start_x: f32,
+        beam_start_y: f32,
+        beam_end_x: f32,
+        beam_end_y: f32,
+        distance: f32,
+        rotation: f32,
+        color: Color,
+    ) -> Self {
         let beam_dx = beam_end_x - beam_start_x;
         let beam_dy = beam_end_y - beam_start_y;
         let beam_length = (beam_dx * beam_dx + beam_dy * beam_dy).sqrt();
-        
-        let t = if beam_length > 0.0 { distance / beam_length } else { 0.0 };
+
+        let t = if beam_length > 0.0 {
+            distance / beam_length
+        } else {
+            0.0
+        };
         let x = beam_start_x + beam_dx * t;
         let y = beam_start_y + beam_dy * t;
 
@@ -197,7 +208,6 @@ impl RailExplosion {
 
     pub fn create_particles(&self) -> Vec<Particle> {
         let mut particles = Vec::new();
-        
 
         for _ in 0..15 {
             let angle = gen_range_f32(0.0, std::f32::consts::PI * 2.0);
@@ -225,11 +235,16 @@ impl RailgunEffects {
         }
     }
 
-    pub fn fire_railgun(&mut self, start_x: f32, start_y: f32, end_x: f32, end_y: f32, 
-                       player_color: Color) {
+    pub fn fire_railgun(
+        &mut self,
+        start_x: f32,
+        start_y: f32,
+        end_x: f32,
+        end_y: f32,
+        player_color: Color,
+    ) {
         let beam = RailBeam::new(start_x, start_y, end_x, end_y, player_color);
         self.beams.push(beam);
-
 
         let explosion = RailExplosion::new(end_x, end_y, player_color);
         self.explosions.push(explosion);
@@ -237,7 +252,7 @@ impl RailgunEffects {
 
     pub fn get_linear_lights(&self) -> Vec<super::map::LinearLight> {
         let mut lights = Vec::new();
-        
+
         for beam in &self.beams {
             let t = beam.life / beam.max_life;
             let fade = 1.0 - (t * t);
@@ -255,13 +270,13 @@ impl RailgunEffects {
                 });
             }
         }
-        
+
         lights
     }
 
     pub fn get_explosion_lights(&self) -> Vec<super::map::LightSource> {
         let mut lights = Vec::new();
-        
+
         for explosion in &self.explosions {
             let t = explosion.life / explosion.max_life;
             let fade = 1.0 - (t * t);
@@ -278,7 +293,7 @@ impl RailgunEffects {
                 });
             }
         }
-        
+
         lights
     }
 
@@ -299,7 +314,7 @@ impl RailgunEffects {
 
     pub fn create_explosion_particles(&self) -> Vec<Particle> {
         let mut all_particles = Vec::new();
-        
+
         for explosion in &self.explosions {
             if explosion.life < 0.1 {
                 let particles = explosion.create_particles();

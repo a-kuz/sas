@@ -1,10 +1,13 @@
-use crate::game::{GameState, player::Player, weapon::Weapon};
 use crate::audio;
+use crate::game::{player::Player, weapon::Weapon, GameState};
 
 pub struct BotHandler;
 
 impl BotHandler {
-    pub fn process_bot_ai(game_state: &mut GameState, dt: f32) -> Vec<(f32, f32, f32, u16, Weapon)> {
+    pub fn process_bot_ai(
+        game_state: &mut GameState,
+        dt: f32,
+    ) -> Vec<(f32, f32, f32, u16, Weapon)> {
         if game_state.is_local_multiplayer {
             return Vec::new();
         }
@@ -72,16 +75,57 @@ impl BotHandler {
 
             if let Some(ai) = &mut bot.bot_ai {
                 let bot_snapshot = Self::create_bot_snapshot_from_values(
-                    bot_id, bot_x, bot_y, bot_vel_y, bot_weapon, bot_has_weapon, bot_ammo,
-                    bot_name, bot_model, bot_cx, bot_cy, bot_vel_x, bot_angle, bot_direction,
-                    bot_health, bot_armor, bot_frags, bot_deaths, bot_team, bot_dead, bot_gibbed,
-                    bot_is_bot, bot_crouch, bot_refire, bot_weapon_switch_time, bot_powerups,
-                    bot_animation, bot_was_in_air, bot_respawn_timer, bot_lower_frame, bot_upper_frame,
-                    bot_animation_time, bot_debug_anim, bot_prev_legs_anim_id, bot_lower_next_frame,
-                    bot_upper_next_frame, bot_lower_fps, bot_upper_fps, bot_frame_timer,
-                    bot_upper_frame_timer, bot_shadow_lx, bot_shadow_ly, bot_shadow_lr,
+                    bot_id,
+                    bot_x,
+                    bot_y,
+                    bot_vel_y,
+                    bot_weapon,
+                    bot_has_weapon,
+                    bot_ammo,
+                    bot_name,
+                    bot_model,
+                    bot_cx,
+                    bot_cy,
+                    bot_vel_x,
+                    bot_angle,
+                    bot_direction,
+                    bot_health,
+                    bot_armor,
+                    bot_frags,
+                    bot_deaths,
+                    bot_team,
+                    bot_dead,
+                    bot_gibbed,
+                    bot_is_bot,
+                    bot_crouch,
+                    bot_refire,
+                    bot_weapon_switch_time,
+                    bot_powerups,
+                    bot_animation,
+                    bot_was_in_air,
+                    bot_respawn_timer,
+                    bot_lower_frame,
+                    bot_upper_frame,
+                    bot_animation_time,
+                    bot_debug_anim,
+                    bot_prev_legs_anim_id,
+                    bot_lower_next_frame,
+                    bot_upper_next_frame,
+                    bot_lower_fps,
+                    bot_upper_fps,
+                    bot_frame_timer,
+                    bot_upper_frame_timer,
+                    bot_shadow_lx,
+                    bot_shadow_ly,
+                    bot_shadow_lr,
                 );
-                ai.think(&bot_snapshot, &players_snapshot, &game_state.map, &game_state.projectiles, game_state.nav_graph.as_ref());
+                ai.think(
+                    &bot_snapshot,
+                    &players_snapshot,
+                    &game_state.map,
+                    &game_state.projectiles,
+                    game_state.nav_graph.as_ref(),
+                );
 
                 ai_move_direction = ai.move_direction;
                 ai_want_jump = ai.want_jump;
@@ -122,7 +166,6 @@ impl BotHandler {
                 }
             }
 
-            
             if let Some(action) = Self::handle_bot_shooting(
                 bot,
                 ai_rocket_jump_timer,
@@ -140,18 +183,49 @@ impl BotHandler {
     }
 
     fn create_bot_snapshot_from_values(
-        bot_id: u16, bot_x: f32, bot_y: f32, bot_vel_y: f32, bot_weapon: Weapon,
-        bot_has_weapon: [bool; 9], bot_ammo: [u8; 9], bot_name: String, bot_model: String,
-        bot_cx: f32, bot_cy: f32, bot_vel_x: f32, bot_angle: f32, bot_direction: i8,
-        bot_health: i32, bot_armor: i32, bot_frags: i32, bot_deaths: i32, bot_team: u8,
-        bot_dead: bool, bot_gibbed: bool, bot_is_bot: bool, bot_crouch: bool,
-        bot_refire: f32, bot_weapon_switch_time: f32,         bot_powerups: crate::game::player::PowerUps,
-        bot_animation: crate::game::animation::PlayerAnimation, bot_was_in_air: bool,
-        bot_respawn_timer: f32, bot_lower_frame: f32, bot_upper_frame: f32,
-        bot_animation_time: f32, bot_debug_anim: String, bot_prev_legs_anim_id: u32,
-        bot_lower_next_frame: f32, bot_upper_next_frame: f32, bot_lower_fps: f32,
-        bot_upper_fps: f32, bot_frame_timer: f32, bot_upper_frame_timer: f32,
-        bot_shadow_lx: f32, bot_shadow_ly: f32, bot_shadow_lr: f32,
+        bot_id: u16,
+        bot_x: f32,
+        bot_y: f32,
+        bot_vel_y: f32,
+        bot_weapon: Weapon,
+        bot_has_weapon: [bool; 9],
+        bot_ammo: [u8; 9],
+        bot_name: String,
+        bot_model: String,
+        bot_cx: f32,
+        bot_cy: f32,
+        bot_vel_x: f32,
+        bot_angle: f32,
+        bot_direction: i8,
+        bot_health: i32,
+        bot_armor: i32,
+        bot_frags: i32,
+        bot_deaths: i32,
+        bot_team: u8,
+        bot_dead: bool,
+        bot_gibbed: bool,
+        bot_is_bot: bool,
+        bot_crouch: bool,
+        bot_refire: f32,
+        bot_weapon_switch_time: f32,
+        bot_powerups: crate::game::player::PowerUps,
+        bot_animation: crate::game::animation::PlayerAnimation,
+        bot_was_in_air: bool,
+        bot_respawn_timer: f32,
+        bot_lower_frame: f32,
+        bot_upper_frame: f32,
+        bot_animation_time: f32,
+        bot_debug_anim: String,
+        bot_prev_legs_anim_id: u32,
+        bot_lower_next_frame: f32,
+        bot_upper_next_frame: f32,
+        bot_lower_fps: f32,
+        bot_upper_fps: f32,
+        bot_frame_timer: f32,
+        bot_upper_frame_timer: f32,
+        bot_shadow_lx: f32,
+        bot_shadow_ly: f32,
+        bot_shadow_lr: f32,
     ) -> Player {
         Player {
             id: bot_id,
@@ -205,12 +279,17 @@ impl BotHandler {
             idle_time: 0.0,
             idle_yaw: 0.0,
             somersault_time: 0.0,
+            somersault_axis_y: false,
             hp_decay_timer: 0.0,
             manual_flip_x: None,
             excellent_count: 0,
             impressive_count: 0,
             barrel_spin_angle: 0.0,
             barrel_spin_speed: 0.0,
+            landing_time: 0.0,
+            moving_backward: false,
+            weapon_raising: false,
+            weapon_raise_time: 0.0,
         }
     }
 
@@ -223,21 +302,25 @@ impl BotHandler {
         model_cache: &mut crate::game::model_cache::ModelCache,
         weapon_model_cache: &crate::game::weapon_model_cache::WeaponModelCache,
     ) -> Option<(f32, f32, f32, u16, Weapon)> {
-        if ai_rocket_jump_timer > 0 && ai_rocket_jump_timer > 180 && bot.refire <= 0.0 && bot.weapon_switch_time <= 0.0 {
+        if ai_rocket_jump_timer > 0
+            && ai_rocket_jump_timer > 180
+            && bot.refire <= 0.0
+            && bot.weapon_switch_time <= 0.0
+        {
             if bot.weapon != Weapon::RocketLauncher && bot.has_weapon[4] {
                 bot.weapon = Weapon::RocketLauncher;
                 bot.weapon_switch_time = bot.weapon.switch_time_seconds();
             } else if bot.weapon == Weapon::RocketLauncher && bot.ammo[4] > 0 {
                 let angle = std::f32::consts::PI / 2.0;
-                
+
                 bot.refire = bot.weapon.refire_time_seconds();
                 bot.ammo[4] = bot.ammo[4].saturating_sub(1);
-                
+
                 let flip = false;
                 let pitch = 0.0;
-                
+
                 let weapon_model = weapon_model_cache.get(bot.weapon);
-                
+
                 let (shoot_x, shoot_y) = if let Some(bot_model) = model_cache.get_mut(&bot.model) {
                     bot_model.get_barrel_position(
                         bot.x,
@@ -252,7 +335,7 @@ impl BotHandler {
                 } else {
                     (bot.x, bot.y + 10.0)
                 };
-                
+
                 return Some((shoot_x, shoot_y, angle, bot.id, bot.weapon));
             }
         } else if ai_want_shoot && bot.refire <= 0.0 && bot.weapon_switch_time <= 0.0 {
@@ -266,8 +349,8 @@ impl BotHandler {
                     if bot.ammo[weapon_idx] >= bot.weapon.ammo_per_shot() || bot.weapon as u8 == 0 {
                         bot.refire = bot.weapon.refire_time_seconds();
                         if bot.weapon as u8 > 0 {
-                            bot.ammo[weapon_idx] = bot.ammo[weapon_idx]
-                                .saturating_sub(bot.weapon.ammo_per_shot());
+                            bot.ammo[weapon_idx] =
+                                bot.ammo[weapon_idx].saturating_sub(bot.weapon.ammo_per_shot());
                         }
 
                         let flip = angle.abs() > std::f32::consts::PI / 2.0;
@@ -283,24 +366,25 @@ impl BotHandler {
 
                         let weapon_model = weapon_model_cache.get(bot.weapon);
 
-                        let (shoot_x, shoot_y) = if let Some(bot_model) = model_cache.get_mut(&bot.model) {
-                            bot_model.get_barrel_position(
-                                bot.x,
-                                bot.y,
-                                flip,
-                                pitch,
-                                angle,
-                                bot.lower_frame as usize,
-                                bot.upper_frame as usize,
-                                weapon_model,
-                            )
-                        } else {
-                            let weapon_offset = 20.0;
-                            (
-                                bot.x + angle.cos() * weapon_offset,
-                                bot.y - 24.0 + angle.sin() * weapon_offset,
-                            )
-                        };
+                        let (shoot_x, shoot_y) =
+                            if let Some(bot_model) = model_cache.get_mut(&bot.model) {
+                                bot_model.get_barrel_position(
+                                    bot.x,
+                                    bot.y,
+                                    flip,
+                                    pitch,
+                                    angle,
+                                    bot.lower_frame as usize,
+                                    bot.upper_frame as usize,
+                                    weapon_model,
+                                )
+                            } else {
+                                let weapon_offset = 20.0;
+                                (
+                                    bot.x + angle.cos() * weapon_offset,
+                                    bot.y - 24.0 + angle.sin() * weapon_offset,
+                                )
+                            };
 
                         return Some((shoot_x, shoot_y, angle, bot.id, bot.weapon));
                     }
@@ -316,16 +400,20 @@ impl BotHandler {
         bot_actions: Vec<(f32, f32, f32, u16, Weapon)>,
     ) -> Vec<(f32, f32, f32, u16, Weapon)> {
         for (bot_x, _bot_y, _angle, bot_id, weapon) in &bot_actions {
-            let has_quad = game_state.players.iter()
+            let has_quad = game_state
+                .players
+                .iter()
                 .find(|p| p.id == *bot_id)
                 .map(|p| p.powerups.quad > 0)
                 .unwrap_or(false);
-            
-            game_state.audio_events.push(audio::events::AudioEvent::WeaponFire { 
-                weapon: *weapon, 
-                x: *bot_x,
-                has_quad,
-            });
+
+            game_state
+                .audio_events
+                .push(audio::events::AudioEvent::WeaponFire {
+                    weapon: *weapon,
+                    x: *bot_x,
+                    has_quad,
+                });
         }
 
         bot_actions

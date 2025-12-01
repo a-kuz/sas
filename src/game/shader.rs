@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use macroquad::miniquad;
+use macroquad::prelude::*;
 use std::sync::OnceLock;
 
 static MODEL_ADDITIVE_MATERIAL: OnceLock<Material> = OnceLock::new();
@@ -62,7 +62,10 @@ pub fn create_model_additive_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 uniforms: vec![
                     UniformDesc::new("cameraPos", UniformType::Float2),
@@ -88,7 +91,8 @@ pub fn create_model_additive_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -177,7 +181,8 @@ pub fn create_muzzle_flash_material() -> Material {
             fragment: fragment_shader,
         },
         MaterialParams::default(),
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 pub fn create_deferred_lighting_material() -> Material {
@@ -325,7 +330,10 @@ pub fn create_deferred_lighting_material() -> Material {
     }"#;
 
     load_material(
-        ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+        ShaderSource::Glsl {
+            vertex: vertex_shader,
+            fragment: fragment_shader,
+        },
         MaterialParams {
             uniforms: vec![
                 UniformDesc::new("screenToWorld", UniformType::Float2),
@@ -334,10 +342,15 @@ pub fn create_deferred_lighting_material() -> Material {
                 UniformDesc::new("time", UniformType::Float1),
                 UniformDesc::new("ambientLight", UniformType::Float1),
             ],
-            textures: vec!["sceneTexture".to_string(), "lightData".to_string(), "obstacleTex".to_string()],
+            textures: vec![
+                "sceneTexture".to_string(),
+                "lightData".to_string(),
+                "obstacleTex".to_string(),
+            ],
             ..Default::default()
         },
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 pub fn create_hybrid_lighting_material() -> Material {
@@ -542,7 +555,10 @@ pub fn create_hybrid_lighting_material() -> Material {
     }"#;
 
     load_material(
-        ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+        ShaderSource::Glsl {
+            vertex: vertex_shader,
+            fragment: fragment_shader,
+        },
         MaterialParams {
             uniforms: vec![
                 UniformDesc::new("screenToWorld", UniformType::Float2),
@@ -555,17 +571,17 @@ pub fn create_hybrid_lighting_material() -> Material {
                 UniformDesc::new("disableShadows", UniformType::Int1),
             ],
             textures: vec![
-                "sceneTexture".to_string(), 
+                "sceneTexture".to_string(),
                 "lightmapTexture".to_string(),
                 "dynamicLightData".to_string(),
                 "linearLightData".to_string(),
-                "obstacleTex".to_string()
+                "obstacleTex".to_string(),
             ],
             ..Default::default()
         },
-    ).unwrap()
+    )
+    .unwrap()
 }
-
 
 pub fn create_model_lit_material() -> Material {
     let vertex_shader = r#"#version 100
@@ -652,7 +668,10 @@ pub fn create_model_lit_material() -> Material {
     }"#;
 
     load_material(
-        ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+        ShaderSource::Glsl {
+            vertex: vertex_shader,
+            fragment: fragment_shader,
+        },
         MaterialParams {
             uniforms: vec![
                 UniformDesc::new("cameraPos", UniformType::Float2),
@@ -673,7 +692,8 @@ pub fn create_model_lit_material() -> Material {
             },
             ..Default::default()
         },
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 pub fn create_railgun_beam_material() -> Material {
@@ -798,7 +818,8 @@ pub fn create_railgun_beam_material() -> Material {
             ],
             ..Default::default()
         },
-    ).unwrap()
+    )
+    .unwrap()
 }
 
 pub fn create_overlay_lighting_material() -> &'static Material {
@@ -1478,7 +1499,10 @@ pub fn create_quad_damage_outline_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 uniforms: vec![
                     UniformDesc::new("time", UniformType::Float1),
@@ -1495,7 +1519,8 @@ pub fn create_quad_damage_outline_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -1594,7 +1619,10 @@ pub fn create_liquid_blood_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 uniforms: vec![
                     UniformDesc::new("screenSize", UniformType::Float2),
@@ -1607,6 +1635,7 @@ pub fn create_liquid_blood_material() -> &'static Material {
                 textures: vec!["bloodBuffer".to_string(), "obstacleTex".to_string()],
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }

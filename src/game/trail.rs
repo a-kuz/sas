@@ -22,11 +22,10 @@ impl Trail {
 
         let alpha = (1.0 - (self.life as f32 / self.max_life as f32)) * 0.8;
         let size = self.size * (1.0 - (self.life as f32 / self.max_life as f32) * 0.5);
-        
+
         let mut color = self.color;
         color.a = alpha;
-        
+
         draw_circle(screen_x, screen_y, size, color);
     }
 }
-

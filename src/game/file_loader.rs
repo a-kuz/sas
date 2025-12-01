@@ -2,21 +2,20 @@ pub async fn load_file_bytes(path: &str) -> Result<Vec<u8>, String> {
     #[cfg(target_arch = "wasm32")]
     {
         use macroquad::prelude::*;
-        load_file(path).await
+        load_file(path)
+            .await
             .map_err(|e| format!("Failed to load file {}: {:?}", path, e))
     }
-    
+
     #[cfg(not(target_arch = "wasm32"))]
     {
-        std::fs::read(path)
-            .map_err(|e| format!("Failed to read file {}: {}", path, e))
+        std::fs::read(path).map_err(|e| format!("Failed to read file {}: {}", path, e))
     }
 }
 
 pub async fn load_file_string(path: &str) -> Result<String, String> {
     let bytes = load_file_bytes(path).await?;
-    String::from_utf8(bytes)
-        .map_err(|e| format!("Failed to decode UTF-8 from {}: {}", path, e))
+    String::from_utf8(bytes).map_err(|e| format!("Failed to decode UTF-8 from {}: {}", path, e))
 }
 
 pub fn read_dir(path: &str) -> Result<Vec<String>, String> {
@@ -29,15 +28,15 @@ pub fn read_dir(path: &str) -> Result<Vec<String>, String> {
         }
         Ok(Vec::new())
     }
-    
+
     #[cfg(not(target_arch = "wasm32"))]
     {
         Ok(std::fs::read_dir(path)
             .map_err(|e| format!("Failed to read directory {}: {}", path, e))?
             .filter_map(|entry| {
-                entry.ok().and_then(|e| {
-                    e.file_name().to_str().map(|s| s.to_string())
-                })
+                entry
+                    .ok()
+                    .and_then(|e| e.file_name().to_str().map(|s| s.to_string()))
             })
             .collect::<Vec<_>>())
     }
@@ -57,4 +56,3 @@ fn get_model_skin_files(_model_name: &str) -> Vec<String> {
         "lower_blue.skin".to_string(),
     ]
 }
-

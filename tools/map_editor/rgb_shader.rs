@@ -63,27 +63,19 @@ pub fn get_rgb_shift_material() -> &'static Material {
                 fragment: fragment_shader,
             },
             MaterialParams {
-                uniforms: vec![
-                    UniformDesc::new("time", UniformType::Float1),
-                ],
+                uniforms: vec![UniformDesc::new("time", UniformType::Float1)],
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
-pub fn render_rgb_texture(
-    texture: &Texture2D,
-    x: f32,
-    y: f32,
-    width: f32,
-    height: f32,
-    time: f32,
-) {
+pub fn render_rgb_texture(texture: &Texture2D, x: f32, y: f32, width: f32, height: f32, time: f32) {
     let material = get_rgb_shift_material();
     gl_use_material(material);
     material.set_uniform("time", time);
-    
+
     draw_texture_ex(
         texture,
         x,
@@ -94,7 +86,6 @@ pub fn render_rgb_texture(
             ..Default::default()
         },
     );
-    
+
     gl_use_default_material();
 }
-

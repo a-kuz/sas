@@ -103,22 +103,19 @@ impl JumpPad {
     }
 
     pub fn check_collision(&self, px: f32, py: f32) -> bool {
-        px >= self.x && 
-        px <= self.x + self.width &&
-        py >= self.y - 20.0 &&
-        py <= self.y + 20.0
+        px >= self.x && px <= self.x + self.width && py >= self.y - 20.0 && py <= self.y + 20.0
     }
 
     pub fn render(&self, camera_x: f32, camera_y: f32) {
         use macroquad::prelude::*;
-        
+
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
         let width = self.width;
 
         let time = macroquad::time::get_time() as f32;
         let pulse = (time * 1.5).sin() * 0.5 + 0.5;
-        
+
         let height = 10.0;
         let inner_height = 6.0;
 
@@ -212,6 +209,7 @@ pub enum ItemType {
     Shotgun,
     GrenadeLauncher,
     RocketLauncher,
+    LightningGun,
     Railgun,
     Plasmagun,
     BFG,
@@ -231,7 +229,7 @@ impl Map {
             _ => Self::soldat_map(),
         }
     }
-    
+
     pub async fn new_async(name: &str) -> Self {
         if let Ok(map) = Self::load_from_file_async(name).await {
             return map;
@@ -250,7 +248,7 @@ impl Map {
         let map_file = MapFile::load_from_file(&path)?;
         Ok(map_file.to_map())
     }
-    
+
     pub async fn load_from_file_async(name: &str) -> Result<Self, Box<dyn std::error::Error>> {
         use super::map_loader::MapFile;
         let path = format!("maps/{}.json", name);
@@ -261,21 +259,31 @@ impl Map {
     pub fn soldat_map() -> Self {
         let width = 60;
         let height = 34;
-        let mut tiles = vec![vec![Tile { 
-            solid: false, 
-            texture_id: 0,
-            shader_name: None,
-            detail_texture: None,
-            glow_texture: None,
-            blend_alpha: 1.0,
-        }; height]; width];
+        let mut tiles = vec![
+            vec![
+                Tile {
+                    solid: false,
+                    texture_id: 0,
+                    shader_name: None,
+                    detail_texture: None,
+                    glow_texture: None,
+                    blend_alpha: 1.0,
+                };
+                height
+            ];
+            width
+        ];
 
         // Floor
-        for x in 0..width { tiles[x][height - 2].solid = true; }
+        for x in 0..width {
+            tiles[x][height - 2].solid = true;
+        }
 
         // Top border
-        for x in 0..width { tiles[x][0].solid = true; }
-        
+        for x in 0..width {
+            tiles[x][0].solid = true;
+        }
+
         // Side borders
         for y in 1..height - 1 {
             tiles[0][y].solid = true;
@@ -283,38 +291,138 @@ impl Map {
         }
 
         // Platforms from image (rescaled and adjusted)
-        for x in 0..10 { tiles[x][8].solid = true; }
-        for y in 9..14 { tiles[9][y].solid = true; }
-        
-        for x in width - 10..width { tiles[x][8].solid = true; }
-        for y in 9..14 { tiles[width - 10][y].solid = true; }
+        for x in 0..10 {
+            tiles[x][8].solid = true;
+        }
+        for y in 9..14 {
+            tiles[9][y].solid = true;
+        }
 
-        for x in 20..40 { tiles[x][12].solid = true; }
+        for x in width - 10..width {
+            tiles[x][8].solid = true;
+        }
+        for y in 9..14 {
+            tiles[width - 10][y].solid = true;
+        }
 
-        for x in 5..20 { tiles[x][18].solid = true; }
-        for x in width - 20..width - 5 { tiles[x][18].solid = true; }
+        for x in 20..40 {
+            tiles[x][12].solid = true;
+        }
 
-        for x in 25..35 { tiles[x][24].solid = true; }
-        
-        for x in 0..8 { tiles[x][28].solid = true; }
-        for x in width - 8..width { tiles[x][28].solid = true; }
+        for x in 5..20 {
+            tiles[x][18].solid = true;
+        }
+        for x in width - 20..width - 5 {
+            tiles[x][18].solid = true;
+        }
+
+        for x in 25..35 {
+            tiles[x][24].solid = true;
+        }
+
+        for x in 0..8 {
+            tiles[x][28].solid = true;
+        }
+        for x in width - 8..width {
+            tiles[x][28].solid = true;
+        }
 
         Self {
             width,
             height,
             tiles,
             spawn_points: vec![
-                SpawnPoint { x: 160.0, y: 100.0, team: 0 },
-                SpawnPoint { x: 1120.0, y: 100.0, team: 0 },
-                SpawnPoint { x: 640.0, y: 160.0, team: 0 },
-                SpawnPoint { x: 320.0, y: 420.0, team: 0 },
-                SpawnPoint { x: 960.0, y: 420.0, team: 0 },
+                SpawnPoint {
+                    x: 160.0,
+                    y: 100.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 1120.0,
+                    y: 100.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 640.0,
+                    y: 160.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 320.0,
+                    y: 420.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 960.0,
+                    y: 420.0,
+                    team: 0,
+                },
             ],
             items: vec![
-                Item { x: 640.0, y: 170.0, item_type: ItemType::RocketLauncher, respawn_time: 0, active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0 },
-                Item { x: 640.0, y: 420.0, item_type: ItemType::Armor100, respawn_time: 0, active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0 },
-                Item { x: 80.0, y: 100.0, item_type: ItemType::Railgun, respawn_time: 0, active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0 },
-                Item { x: 1200.0, y: 100.0, item_type: ItemType::Railgun, respawn_time: 0, active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0 },
+                Item {
+                    x: 640.0,
+                    y: 170.0,
+                    item_type: ItemType::RocketLauncher,
+                    respawn_time: 0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
+                },
+                Item {
+                    x: 640.0,
+                    y: 420.0,
+                    item_type: ItemType::Armor100,
+                    respawn_time: 0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
+                },
+                Item {
+                    x: 80.0,
+                    y: 100.0,
+                    item_type: ItemType::Railgun,
+                    respawn_time: 0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
+                },
+                Item {
+                    x: 1200.0,
+                    y: 100.0,
+                    item_type: ItemType::Railgun,
+                    respawn_time: 0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
+                },
             ],
             jumppads: vec![],
             teleporters: vec![],
@@ -326,15 +434,21 @@ impl Map {
     pub fn q3dm6() -> Self {
         let width = 120;
         let height = 50;
-        let mut tiles = vec![vec![Tile { 
-            solid: false, 
-            texture_id: 0,
-            shader_name: None,
-            detail_texture: None,
-            glow_texture: None,
-            blend_alpha: 1.0,
-        }; height]; width];
-        
+        let mut tiles = vec![
+            vec![
+                Tile {
+                    solid: false,
+                    texture_id: 0,
+                    shader_name: None,
+                    detail_texture: None,
+                    glow_texture: None,
+                    blend_alpha: 1.0,
+                };
+                height
+            ];
+            width
+        ];
+
         const FLOOR: usize = 47;
         const LEVEL_1: usize = 44;
         const LEVEL_2: usize = 40;
@@ -432,20 +546,51 @@ impl Map {
             }
         }
 
-
         Self {
             width,
             height,
             tiles,
             spawn_points: vec![
-                SpawnPoint { x: 512.0, y: 728.0, team: 0 },
-                SpawnPoint { x: 3328.0, y: 728.0, team: 0 },
-                SpawnPoint { x: 512.0, y: 424.0, team: 0 },
-                SpawnPoint { x: 3328.0, y: 424.0, team: 0 },
-                SpawnPoint { x: 1216.0, y: 632.0, team: 0 },
-                SpawnPoint { x: 2624.0, y: 632.0, team: 0 },
-                SpawnPoint { x: 1920.0, y: 536.0, team: 0 },
-                SpawnPoint { x: 1920.0, y: 312.0, team: 0 },
+                SpawnPoint {
+                    x: 512.0,
+                    y: 728.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 3328.0,
+                    y: 728.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 512.0,
+                    y: 424.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 3328.0,
+                    y: 424.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 1216.0,
+                    y: 632.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 2624.0,
+                    y: 632.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 1920.0,
+                    y: 536.0,
+                    team: 0,
+                },
+                SpawnPoint {
+                    x: 1920.0,
+                    y: 312.0,
+                    team: 0,
+                },
             ],
             items: vec![
                 Item {
@@ -453,147 +598,336 @@ impl Map {
                     y: 520.0,
                     item_type: ItemType::Quad,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1920.0,
                     y: 296.0,
                     item_type: ItemType::Railgun,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 512.0,
                     y: 680.0,
                     item_type: ItemType::RocketLauncher,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 3328.0,
                     y: 680.0,
                     item_type: ItemType::RocketLauncher,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1200.0,
                     y: 616.0,
                     item_type: ItemType::Plasmagun,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 2640.0,
                     y: 616.0,
                     item_type: ItemType::Plasmagun,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 288.0,
                     y: 680.0,
                     item_type: ItemType::Armor100,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 3552.0,
                     y: 680.0,
                     item_type: ItemType::Armor100,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1920.0,
                     y: 616.0,
                     item_type: ItemType::Health100,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 416.0,
                     y: 408.0,
                     item_type: ItemType::Health50,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 3424.0,
                     y: 408.0,
                     item_type: ItemType::Health50,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1792.0,
                     y: 520.0,
                     item_type: ItemType::Armor50,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 2048.0,
                     y: 520.0,
                     item_type: ItemType::Armor50,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1120.0,
                     y: 616.0,
                     item_type: ItemType::Shotgun,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 2720.0,
                     y: 616.0,
                     item_type: ItemType::Shotgun,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1280.0,
                     y: 616.0,
                     item_type: ItemType::GrenadeLauncher,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 2560.0,
                     y: 616.0,
                     item_type: ItemType::GrenadeLauncher,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 448.0,
                     y: 680.0,
                     item_type: ItemType::Health25,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 3392.0,
                     y: 680.0,
                     item_type: ItemType::Health25,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 1360.0,
                     y: 616.0,
                     item_type: ItemType::Health25,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
                 Item {
                     x: 2480.0,
                     y: 616.0,
                     item_type: ItemType::Health25,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 },
             ],
             jumppads: vec![
@@ -684,35 +1018,35 @@ impl Map {
     pub fn map_height(&self) -> usize {
         self.height
     }
-    
+
     pub fn has_line_of_sight(&self, x1: f32, y1: f32, x2: f32, y2: f32) -> bool {
         let dx = x2 - x1;
         let dy = y2 - y1;
         let dist = (dx * dx + dy * dy).sqrt();
-        
+
         if dist < 1.0 {
             return true;
         }
-        
+
         let steps = (dist / 8.0).ceil() as i32;
         let step_x = dx / steps as f32;
         let step_y = dy / steps as f32;
-        
+
         for i in 0..=steps {
             let check_x = x1 + step_x * i as f32;
             let check_y = y1 + step_y * i as f32;
-            
+
             let tile_x = (check_x / 32.0) as i32;
             let tile_y = (check_y / 16.0) as i32;
-            
+
             if self.is_solid(tile_x, tile_y) {
                 return false;
             }
         }
-        
+
         true
     }
-    
+
     pub fn get_floor_below(&self, x: f32, start_y: f32) -> f32 {
         let tile_x = (x / 32.0) as i32;
         if tile_x < 0 || tile_x >= self.width as i32 {
@@ -729,7 +1063,7 @@ impl Map {
         }
         752.0
     }
-    
+
     pub fn find_safe_spawn_position(&self) -> (f32, f32) {
         if !self.spawn_points.is_empty() {
             let sp = &self.spawn_points[0];
@@ -761,29 +1095,41 @@ impl Map {
                 let tile = &self.tiles[x as usize][y as usize];
                 let screen_x = (x as f32 * 32.0) - camera_x;
                 let screen_y = (y as f32 * 16.0) - camera_y;
-                
+
                 if tile.solid {
                     let left_tex = if x > 0 && self.tiles[(x - 1) as usize][y as usize].solid {
                         Some(self.tiles[(x - 1) as usize][y as usize].texture_id)
-                    } else { None };
-                    let right_tex = if x < (self.width as i32 - 1) && self.tiles[(x + 1) as usize][y as usize].solid {
+                    } else {
+                        None
+                    };
+                    let right_tex = if x < (self.width as i32 - 1)
+                        && self.tiles[(x + 1) as usize][y as usize].solid
+                    {
                         Some(self.tiles[(x + 1) as usize][y as usize].texture_id)
-                    } else { None };
+                    } else {
+                        None
+                    };
                     let top_tex = if y > 0 && self.tiles[x as usize][(y - 1) as usize].solid {
                         Some(self.tiles[x as usize][(y - 1) as usize].texture_id)
-                    } else { None };
-                    let bottom_tex = if y < (self.height as i32 - 1) && self.tiles[x as usize][(y + 1) as usize].solid {
+                    } else {
+                        None
+                    };
+                    let bottom_tex = if y < (self.height as i32 - 1)
+                        && self.tiles[x as usize][(y + 1) as usize].solid
+                    {
                         Some(self.tiles[x as usize][(y + 1) as usize].texture_id)
-                    } else { None };
-                    
+                    } else {
+                        None
+                    };
+
                     let left_same = left_tex.map_or(false, |t| t == tile.texture_id);
                     let right_same = right_tex.map_or(false, |t| t == tile.texture_id);
                     let top_same = top_tex.map_or(false, |t| t == tile.texture_id);
                     let bottom_same = bottom_tex.map_or(false, |t| t == tile.texture_id);
-                    
+
                     let world_tile_x = x as f32 * 32.0;
                     let world_tile_y = y as f32 * 16.0;
-                    
+
                     super::procedural_tiles::render_procedural_tile_simple(
                         screen_x,
                         screen_y,
@@ -810,12 +1156,36 @@ impl Map {
 
             // Side emitters (yellow/orange frames)
             let side_w = 8.0;
-            draw_rectangle(left - 6.0, screen_y, side_w, teleporter.height, Color::from_rgba(210, 170, 60, 220));
-            draw_rectangle(right - side_w + 6.0, screen_y, side_w, teleporter.height, Color::from_rgba(210, 170, 60, 220));
+            draw_rectangle(
+                left - 6.0,
+                screen_y,
+                side_w,
+                teleporter.height,
+                Color::from_rgba(210, 170, 60, 220),
+            );
+            draw_rectangle(
+                right - side_w + 6.0,
+                screen_y,
+                side_w,
+                teleporter.height,
+                Color::from_rgba(210, 170, 60, 220),
+            );
             for i in 0..5 {
                 let a = 200 - i * 28;
-                draw_rectangle(left - 6.0 + i as f32, screen_y, 1.0, teleporter.height, Color::from_rgba(255, 220, 100, a as u8));
-                draw_rectangle(right + 6.0 - i as f32, screen_y, 1.0, teleporter.height, Color::from_rgba(255, 220, 100, a as u8));
+                draw_rectangle(
+                    left - 6.0 + i as f32,
+                    screen_y,
+                    1.0,
+                    teleporter.height,
+                    Color::from_rgba(255, 220, 100, a as u8),
+                );
+                draw_rectangle(
+                    right + 6.0 - i as f32,
+                    screen_y,
+                    1.0,
+                    teleporter.height,
+                    Color::from_rgba(255, 220, 100, a as u8),
+                );
             }
 
             // Inner portal body
@@ -835,8 +1205,20 @@ impl Map {
             let bar_width = inner_right - inner_left;
             let mut y = screen_y + teleporter.height - offset;
             while y >= screen_y {
-                draw_rectangle(inner_left, y - 2.0, bar_width, 4.0, Color::from_rgba(220, 230, 240, 210));
-                draw_rectangle(inner_left, y - 1.0, bar_width, 2.0, Color::from_rgba(255, 255, 255, 230));
+                draw_rectangle(
+                    inner_left,
+                    y - 2.0,
+                    bar_width,
+                    4.0,
+                    Color::from_rgba(220, 230, 240, 210),
+                );
+                draw_rectangle(
+                    inner_left,
+                    y - 1.0,
+                    bar_width,
+                    2.0,
+                    Color::from_rgba(255, 255, 255, 230),
+                );
                 y -= bar_gap;
             }
 
@@ -854,38 +1236,50 @@ impl Map {
         for pad in &self.jumppads {
             let screen_x = pad.x - camera_x;
             let screen_y = pad.y - camera_y;
-            
+
             let pulse = (time * 5.0).sin() * 0.25 + 0.75;
             let alpha = (pulse * 200.0) as u8;
-            
+
             draw_rectangle(
                 screen_x,
                 screen_y,
                 pad.width,
                 12.0,
-                Color::from_rgba(255, 180, 60, alpha)
+                Color::from_rgba(255, 180, 60, alpha),
             );
-            
+
             draw_rectangle(
                 screen_x + 4.0,
                 screen_y + 2.0,
                 pad.width - 8.0,
                 8.0,
-                Color::from_rgba(255, 200, 100, 220)
+                Color::from_rgba(255, 200, 100, 220),
             );
-            
+
             for i in 0..3 {
                 let arrow_offset = ((time * 3.0 - i as f32 * 0.4).fract()) * 8.0;
                 let arrow_alpha = ((1.0 - arrow_offset / 8.0) * 255.0) as u8;
-                
+
                 let cx = screen_x + pad.width * 0.5;
                 let cy = screen_y + 6.0 - arrow_offset;
-                
-                draw_line(cx - 4.0, cy, cx, cy - 4.0, 2.0, Color::from_rgba(255, 255, 100, arrow_alpha));
-                draw_line(cx + 4.0, cy, cx, cy - 4.0, 2.0, Color::from_rgba(255, 255, 100, arrow_alpha));
+
+                draw_line(
+                    cx - 4.0,
+                    cy,
+                    cx,
+                    cy - 4.0,
+                    2.0,
+                    Color::from_rgba(255, 255, 100, arrow_alpha),
+                );
+                draw_line(
+                    cx + 4.0,
+                    cy,
+                    cx,
+                    cy - 4.0,
+                    2.0,
+                    Color::from_rgba(255, 255, 100, arrow_alpha),
+                );
             }
         }
     }
 }
-
-

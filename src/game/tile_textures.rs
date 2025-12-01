@@ -11,7 +11,7 @@ impl TileTextureCache {
             textures: HashMap::new(),
         }
     }
-    
+
     pub async fn load_default_textures(&mut self) {
         let texture_paths = vec![
             (1, "q3-resources/textures/base_wall/basewall01.png"),
@@ -20,11 +20,14 @@ impl TileTextureCache {
             (4, "q3-resources/textures/base_wall/atechengine_a.png"),
             (5, "q3-resources/textures/base_wall/atech1_a.png"),
             (6, "q3-resources/textures/base_wall/atech1_b.png"),
-            (7, "q3-resources/textures/gothic_floor/metalfloor_wall_10a.png"),
+            (
+                7,
+                "q3-resources/textures/gothic_floor/metalfloor_wall_10a.png",
+            ),
             (8, "q3-resources/textures/base_wall/atech2_c.png"),
             (9, "q3-resources/textures/gothic_block/blocks15c.png"),
         ];
-        
+
         for (id, path) in texture_paths {
             if let Some(texture) = load_texture_file(path).await {
                 println!("[Tiles] ✓ Loaded texture {}: {}", id, path);
@@ -44,10 +47,18 @@ async fn load_texture_file(path: &str) -> Option<Texture2D> {
         let base = &path[..dot];
         let ext = &path_lower[dot + 1..];
         candidates.push(path.to_string());
-        if ext != "png" { candidates.push(format!("{}.png", base)); }
-        if ext != "tga" { candidates.push(format!("{}.tga", base)); }
-        if ext != "jpg" { candidates.push(format!("{}.jpg", base)); }
-        if ext != "jpeg" { candidates.push(format!("{}.jpeg", base)); }
+        if ext != "png" {
+            candidates.push(format!("{}.png", base));
+        }
+        if ext != "tga" {
+            candidates.push(format!("{}.tga", base));
+        }
+        if ext != "jpg" {
+            candidates.push(format!("{}.jpg", base));
+        }
+        if ext != "jpeg" {
+            candidates.push(format!("{}.jpeg", base));
+        }
     } else {
         candidates.push(format!("{}.png", path));
         candidates.push(format!("{}.tga", path));
@@ -61,7 +72,6 @@ async fn load_texture_file(path: &str) -> Option<Texture2D> {
             return Some(texture);
         }
     }
-    
+
     None
 }
-

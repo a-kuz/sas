@@ -59,12 +59,17 @@ pub struct Player {
     pub idle_time: f32,
     pub idle_yaw: f32,
     pub somersault_time: f32,
+    pub somersault_axis_y: bool,
     pub hp_decay_timer: f32,
     pub manual_flip_x: Option<bool>,
     pub excellent_count: u32,
     pub impressive_count: u32,
     pub barrel_spin_angle: f32,
     pub barrel_spin_speed: f32,
+    pub landing_time: f32,
+    pub moving_backward: bool,
+    pub weapon_raising: bool,
+    pub weapon_raise_time: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -171,7 +176,7 @@ impl Player {
                 self.idle_yaw = ((self.idle_time - 1.0) * 1.2).sin() * 0.15;
             }
         }
-        
+
         if self.somersault_time > 0.0 {
             self.somersault_time -= dt;
             if self.somersault_time < 0.0 {
@@ -201,11 +206,22 @@ impl Player {
         self.pmove_internal(cmd, dt, map, true)
     }
 
-    pub fn pmove_no_teleport(&mut self, cmd: &super::usercmd::UserCmd, dt: f32, map: &Map) -> Vec<AudioEvent> {
+    pub fn pmove_no_teleport(
+        &mut self,
+        cmd: &super::usercmd::UserCmd,
+        dt: f32,
+        map: &Map,
+    ) -> Vec<AudioEvent> {
         self.pmove_internal(cmd, dt, map, false)
     }
 
-    fn pmove_internal(&mut self, cmd: &super::usercmd::UserCmd, dt: f32, map: &Map, allow_teleport: bool) -> Vec<AudioEvent> {
+    fn pmove_internal(
+        &mut self,
+        cmd: &super::usercmd::UserCmd,
+        dt: f32,
+        map: &Map,
+        allow_teleport: bool,
+    ) -> Vec<AudioEvent> {
         let mut events = Vec::new();
 
         if self.dead {
@@ -271,8 +287,10 @@ impl Player {
 
         if teleported {
             let moving = self.vel_x.abs() > 0.5;
-            let shooting = self.refire > 0.0 && self.refire > (self.weapon.refire_time_seconds() - (3.0 / 60.0));
-            self.animation.update(!self.was_in_air, moving, shooting, self.vel_x.abs());
+            let shooting = self.refire > 0.0
+                && self.refire > (self.weapon.refire_time_seconds() - (3.0 / 60.0));
+            self.animation
+                .update(!self.was_in_air, moving, shooting, self.vel_x.abs());
             return events;
         }
 
@@ -282,12 +300,18 @@ impl Player {
 
         if result.hit_jumppad {
             use crate::network;
-            println!("[{}] [PLAYER] p{} HIT JUMPPAD at ({:.1},{:.1})", 
-                network::get_absolute_time(), self.id, result.new_x, result.new_y);
+            println!(
+                "[{}] [PLAYER] p{} HIT JUMPPAD at ({:.1},{:.1})",
+                network::get_absolute_time(),
+                self.id,
+                result.new_x,
+                result.new_y
+            );
             events.push(AudioEvent::JumpPad { x: result.new_x });
-            
+
             if macroquad::prelude::rand::gen_range(0, 10) == 0 {
                 self.somersault_time = 1.0;
+                self.somersault_axis_y = macroquad::prelude::rand::gen_range(0, 2) == 0;
             }
         }
 
@@ -298,8 +322,10 @@ impl Player {
         self.was_in_air = result.new_was_in_air;
 
         let moving = self.vel_x.abs() > 0.5;
-        let shooting = self.refire > 0.0 && self.refire > (self.weapon.refire_time_seconds() - (3.0 / 60.0));
-        self.animation.update(!self.was_in_air, moving, shooting, self.vel_x.abs());
+        let shooting =
+            self.refire > 0.0 && self.refire > (self.weapon.refire_time_seconds() - (3.0 / 60.0));
+        self.animation
+            .update(!self.was_in_air, moving, shooting, self.vel_x.abs());
 
         events
     }
@@ -364,12 +390,17 @@ impl Player {
             idle_time: 0.0,
             idle_yaw: 0.0,
             somersault_time: 0.0,
+            somersault_axis_y: false,
             hp_decay_timer: 0.0,
             manual_flip_x: None,
             excellent_count: 0,
             impressive_count: 0,
             barrel_spin_angle: 0.0,
             barrel_spin_speed: 0.0,
+            landing_time: 0.0,
+            moving_backward: false,
+            weapon_raising: false,
+            weapon_raise_time: 0.0,
         }
     }
 
@@ -602,7 +633,8 @@ impl Player {
         );
 
         if self.health > 0 {
-            let health_width = (self.health.max(0) as f32 / super::constants::STARTING_HEALTH as f32) * 32.0;
+            let health_width =
+                (self.health.max(0) as f32 / super::constants::STARTING_HEALTH as f32) * 32.0;
             let health_color = if self.health > 75 {
                 Color::from_rgba(0, 255, 0, 255)
             } else if self.health > 25 {
@@ -661,7 +693,7 @@ impl Player {
 
         self.has_weapon = [true, true, false, false, false, false, false, false, false];
         self.ammo = [0, 100, 0, 0, 0, 0, 0, 0, 0];
-        
+
         self.powerups.quad = 0;
         self.powerups.regen = 0;
         self.powerups.battle = 0;
@@ -729,7 +761,7 @@ impl Player {
     }
 
     fn apply_death_physics(&mut self, dt: f32, map: &Map) {
-        use super::bg_pmove::{pmove, PmoveState, PmoveCmd};
+        use super::bg_pmove::{pmove, PmoveCmd, PmoveState};
 
         let state = PmoveState {
             x: self.x,

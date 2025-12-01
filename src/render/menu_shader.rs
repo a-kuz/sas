@@ -1,6 +1,6 @@
 use macroquad::prelude::*;
-use std::sync::OnceLock;
 use std::cell::RefCell;
+use std::sync::OnceLock;
 
 static MENU_FIRE_MATERIAL: OnceLock<Material> = OnceLock::new();
 
@@ -23,7 +23,7 @@ pub fn init_menu_shader() {
             gl_Position = Projection * Model * vec4(position, 1.0);
             uv = texcoord;
         }"#;
-        
+
         let fragment_shader = r#"#version 100
         precision highp float;
         
@@ -108,9 +108,12 @@ pub fn init_menu_shader() {
             
             gl_FragColor = O;
         }"#;
-        
+
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 uniforms: vec![
                     UniformDesc::new("iResolution", UniformType::Float2),
@@ -119,23 +122,24 @@ pub fn init_menu_shader() {
                 ],
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     });
 }
 
 pub fn draw_menu_background(time: f32) {
     init_menu_shader();
-    
+
     let w = screen_width();
     let h = screen_height();
     let mouse_pos = mouse_position();
-    
+
     let material = MENU_FIRE_MATERIAL.get().unwrap();
-    
+
     material.set_uniform("iResolution", (w, h));
     material.set_uniform("iTime", time);
     material.set_uniform("iMouse", (mouse_pos.0, mouse_pos.1));
-    
+
     gl_use_material(material);
     draw_rectangle(0.0, 0.0, w, h, WHITE);
     gl_use_default_material();
@@ -144,7 +148,7 @@ pub fn draw_menu_background(time: f32) {
 pub fn draw_menu_items(selected: usize, items: &[&str], logo_texture: Option<&Texture2D>) {
     let w = screen_width();
     let h = screen_height();
-    
+
     // Draw Logo
     if let Some(texture) = logo_texture {
         let scale = 0.5; // Adjust scale as needed
@@ -152,7 +156,7 @@ pub fn draw_menu_items(selected: usize, items: &[&str], logo_texture: Option<&Te
         let logo_h = texture.height() * scale;
         let logo_x = w * 0.5 - logo_w * 0.5;
         let logo_y = h * 0.1; // Position near top
-        
+
         draw_texture_ex(
             texture,
             logo_x,
@@ -164,27 +168,26 @@ pub fn draw_menu_items(selected: usize, items: &[&str], logo_texture: Option<&Te
             },
         );
     } else {
-         crate::render::draw_q3_banner_string("SAS III", w * 0.5 - 100.0, 80.0, 48.0, WHITE);
+        crate::render::draw_q3_banner_string("SAS III", w * 0.5 - 100.0, 80.0, 48.0, WHITE);
     }
 
     let item_h = 54.0;
     let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5;
     let right_margin = 100.0;
-    
+
     for (i, label) in items.iter().enumerate() {
         let y = start_y + (i as f32) * (item_h + 12.0);
-        
-        let text_color = if i == selected { 
-            Color::from_rgba(255, 64, 64, 255) 
-        } else { 
-            Color::from_rgba(210, 220, 230, 255) 
+
+        let text_color = if i == selected {
+            Color::from_rgba(255, 64, 64, 255)
+        } else {
+            Color::from_rgba(210, 220, 230, 255)
         };
         let size = if i == selected { 36.0 } else { 30.0 };
-        
+
         let text_width = crate::render::measure_q3_banner_string(&label.to_uppercase(), size);
         let x = w - text_width - right_margin;
-        
+
         crate::render::draw_q3_banner_string(&label.to_uppercase(), x, y + 10.0, size, text_color);
     }
 }
-

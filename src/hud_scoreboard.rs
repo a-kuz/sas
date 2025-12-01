@@ -1,19 +1,24 @@
-use macroquad::prelude::*;
 use crate::game::GameState;
-use crate::render;
 use crate::input::Input;
+use crate::render;
 use crate::render::Camera;
+use macroquad::prelude::*;
 
 pub struct HudScoreboard;
 
 impl HudScoreboard {
     pub fn render_hud(game_state: &GameState) {
-        let leader_frags = game_state.players.iter().map(|p| p.frags).max().unwrap_or(0);
-        
+        let leader_frags = game_state
+            .players
+            .iter()
+            .map(|p| p.frags)
+            .max()
+            .unwrap_or(0);
+
         if let Some(ref story) = game_state.story_mode {
             story.render_hud();
         }
-        
+
         if game_state.is_local_multiplayer {
             Self::render_local_multiplayer_hud(game_state, leader_frags);
         } else {
@@ -56,12 +61,14 @@ impl HudScoreboard {
 
     fn render_single_player_hud(game_state: &GameState) {
         if let Some(player) = game_state.players.get(0) {
-            let competitor_frags = game_state.players.iter()
+            let competitor_frags = game_state
+                .players
+                .iter()
                 .filter(|p| p.id != player.id && !p.dead)
                 .map(|p| p.frags)
                 .max()
                 .unwrap_or(0);
-            
+
             render::draw_hud(
                 player.health,
                 player.armor,
@@ -83,12 +90,16 @@ impl HudScoreboard {
         if crosshair_size <= 0.0 {
             return;
         }
-        
+
         if !game_state.is_local_multiplayer {
             let player_index = if game_state.is_multiplayer {
                 if let Some(ref network_client) = game_state.network_client {
                     if let Some(player_id) = network_client.player_id() {
-                        game_state.players.iter().position(|p| p.id == player_id).unwrap_or(0)
+                        game_state
+                            .players
+                            .iter()
+                            .position(|p| p.id == player_id)
+                            .unwrap_or(0)
                     } else {
                         0
                     }
@@ -103,13 +114,13 @@ impl HudScoreboard {
                 if player.dead {
                     return;
                 }
-                
+
                 let angle = if game_state.is_multiplayer {
                     player.angle
                 } else {
                     input.aim_angle
                 };
-                
+
                 let flip = angle.abs() > std::f32::consts::PI / 2.0;
                 let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
                 let mut rel_angle = angle - base_dir;
@@ -122,64 +133,8 @@ impl HudScoreboard {
                 let pitch = rel_angle;
 
                 let weapon_model = game_state.weapon_model_cache.get(player.weapon);
-                let (barrel_x, barrel_y) = if let Some(player_model) = game_state.model_cache.get(&player.model) {
-                    player_model.get_barrel_position(
-                        player.x,
-                        player.y,
-                        flip,
-                        pitch,
-                        angle,
-                        player.lower_frame,
-                        player.upper_frame,
-                        weapon_model,
-                    )
-                } else {
-                    let weapon_offset = 20.0;
-                    (
-                        player.x + angle.cos() * weapon_offset,
-                        player.y - 24.0 + angle.sin() * weapon_offset,
-                    )
-                };
-
-                render::draw_crosshair(
-                    barrel_x,
-                    barrel_y,
-                    camera.x,
-                    camera.y,
-                    angle,
-                );
-            }
-        }
-    }
-    
-    pub fn render_crosshair_local_mp(game_state: &GameState, camera: &Camera, local_mp_input: &crate::input::LocalMultiplayerInput) {
-        let crosshair_size = crate::cvar::get_cvar_float("cg_crosshairSize");
-        if crosshair_size <= 0.0 {
-            return;
-        }
-        
-        if game_state.is_local_multiplayer {
-            for (player_idx, player_input) in [&local_mp_input.player1, &local_mp_input.player2].iter().enumerate() {
-                if let Some(player) = game_state.players.get(player_idx) {
-                    if player.dead {
-                        continue;
-                    }
-                    
-                    let angle = player_input.aim_angle;
-                    
-                    let flip = angle.abs() > std::f32::consts::PI / 2.0;
-                    let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
-                    let mut rel_angle = angle - base_dir;
-                    while rel_angle > std::f32::consts::PI {
-                        rel_angle -= 2.0 * std::f32::consts::PI;
-                    }
-                    while rel_angle < -std::f32::consts::PI {
-                        rel_angle += 2.0 * std::f32::consts::PI;
-                    }
-                    let pitch = rel_angle;
-
-                    let weapon_model = game_state.weapon_model_cache.get(player.weapon);
-                    let (barrel_x, barrel_y) = if let Some(player_model) = game_state.model_cache.get(&player.model) {
+                let (barrel_x, barrel_y) =
+                    if let Some(player_model) = game_state.model_cache.get(&player.model) {
                         player_model.get_barrel_position(
                             player.x,
                             player.y,
@@ -198,13 +153,66 @@ impl HudScoreboard {
                         )
                     };
 
-                    render::draw_crosshair(
-                        barrel_x,
-                        barrel_y,
-                        camera.x,
-                        camera.y,
-                        angle,
-                    );
+                render::draw_crosshair(barrel_x, barrel_y, camera.x, camera.y, angle);
+            }
+        }
+    }
+
+    pub fn render_crosshair_local_mp(
+        game_state: &GameState,
+        camera: &Camera,
+        local_mp_input: &crate::input::LocalMultiplayerInput,
+    ) {
+        let crosshair_size = crate::cvar::get_cvar_float("cg_crosshairSize");
+        if crosshair_size <= 0.0 {
+            return;
+        }
+
+        if game_state.is_local_multiplayer {
+            for (player_idx, player_input) in [&local_mp_input.player1, &local_mp_input.player2]
+                .iter()
+                .enumerate()
+            {
+                if let Some(player) = game_state.players.get(player_idx) {
+                    if player.dead {
+                        continue;
+                    }
+
+                    let angle = player_input.aim_angle;
+
+                    let flip = angle.abs() > std::f32::consts::PI / 2.0;
+                    let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                    let mut rel_angle = angle - base_dir;
+                    while rel_angle > std::f32::consts::PI {
+                        rel_angle -= 2.0 * std::f32::consts::PI;
+                    }
+                    while rel_angle < -std::f32::consts::PI {
+                        rel_angle += 2.0 * std::f32::consts::PI;
+                    }
+                    let pitch = rel_angle;
+
+                    let weapon_model = game_state.weapon_model_cache.get(player.weapon);
+                    let (barrel_x, barrel_y) =
+                        if let Some(player_model) = game_state.model_cache.get(&player.model) {
+                            player_model.get_barrel_position(
+                                player.x,
+                                player.y,
+                                flip,
+                                pitch,
+                                angle,
+                                player.lower_frame,
+                                player.upper_frame,
+                                weapon_model,
+                            )
+                        } else {
+                            let weapon_offset = 20.0;
+                            (
+                                player.x + angle.cos() * weapon_offset,
+                                player.y - 24.0 + angle.sin() * weapon_offset,
+                            )
+                        };
+
+                    render::draw_crosshair(barrel_x, barrel_y, camera.x, camera.y, angle);
                 }
             }
         }
@@ -253,11 +261,11 @@ impl HudScoreboard {
                     18.0,
                     WHITE,
                 );
-                
+
                 let mut award_x = board_x + 330.0;
                 let icon_size = 20.0;
                 let icon_y = y - 16.0;
-                
+
                 if player.excellent_count > 0 {
                     if let Some(excellent_tex) = game_state.award_icon_cache.excellent.as_ref() {
                         draw_texture_ex(
@@ -281,7 +289,7 @@ impl HudScoreboard {
                         award_x += 25.0;
                     }
                 }
-                
+
                 if player.impressive_count > 0 {
                     if let Some(impressive_tex) = game_state.award_icon_cache.impressive.as_ref() {
                         draw_texture_ex(
@@ -308,7 +316,13 @@ impl HudScoreboard {
         }
     }
 
-    pub fn render_debug_info(game_state: &GameState, fps_display: i32, perf_mode: bool, dt: f32, frame_time: f32) {
+    pub fn render_debug_info(
+        game_state: &GameState,
+        fps_display: i32,
+        perf_mode: bool,
+        dt: f32,
+        frame_time: f32,
+    ) {
         if fps_display > 0 {
             render::draw_text_outlined(
                 &format!("FPS: {}", fps_display),

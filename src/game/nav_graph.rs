@@ -251,23 +251,23 @@ impl NavGraph {
             );
         }
     }
-    
+
     pub fn find_connected_components(&self) -> Vec<Vec<usize>> {
         let mut visited = vec![false; self.nodes.len()];
         let mut components = Vec::new();
-        
+
         for start_node in 0..self.nodes.len() {
             if visited[start_node] {
                 continue;
             }
-            
+
             let mut component = Vec::new();
             let mut queue = vec![start_node];
             visited[start_node] = true;
-            
+
             while let Some(current) = queue.pop() {
                 component.push(current);
-                
+
                 for edge in &self.edges {
                     if edge.from == current && !visited[edge.to] {
                         visited[edge.to] = true;
@@ -279,11 +279,10 @@ impl NavGraph {
                     }
                 }
             }
-            
+
             components.push(component);
         }
-        
+
         components
     }
 }
-

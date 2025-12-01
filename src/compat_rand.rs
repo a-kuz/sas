@@ -21,4 +21,3 @@ pub fn gen_range_i32(min: i32, max: i32) -> i32 {
 pub fn gen_range_usize(min: usize, max: usize) -> usize {
     macroquad::rand::gen_range(min, max)
 }
-

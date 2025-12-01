@@ -2,8 +2,8 @@ pub mod animation;
 pub mod award;
 pub mod award_shader;
 pub mod batched_effects;
-pub mod bg_pmove;
 pub mod bg_combat;
+pub mod bg_pmove;
 pub mod bot_ai;
 pub mod collision;
 pub mod constants;
@@ -17,11 +17,13 @@ pub mod item_model;
 pub mod light;
 pub mod light_grid;
 pub mod lightmap;
+pub mod lightning;
 pub mod liquid_blood;
 pub mod map;
 pub mod map_loader;
 pub mod md3;
 pub mod md3_anim;
+pub mod md3_pose;
 pub mod md3_render;
 pub mod message;
 pub mod model_cache;
@@ -55,7 +57,7 @@ pub mod weapon_hit_effect;
 pub mod weapon_model_cache;
 
 use crate::audio::events::AudioEventQueue;
-use crate::network::{NetworkClient, NetworkConfig, NetHud};
+use crate::network::{NetHud, NetworkClient, NetworkConfig};
 use macroquad::prelude::*;
 
 pub struct Corpse {
@@ -96,10 +98,14 @@ pub struct GameState {
     pub audio_events: AudioEventQueue,
     pub debug_md3: bool,
     pub debug_hitboxes: bool,
+    pub debug_test_yaw: f32,
+    pub debug_test_pitch: f32,
+    pub debug_test_roll: f32,
     pub deferred_renderer: Option<deferred_renderer::DeferredRenderer>,
     pub ambient_light: f32,
     pub is_local_multiplayer: bool,
     pub railgun_effects: railgun::RailgunEffects,
+    pub lightning_effects: lightning::LightningEffects,
     pub linear_lights: Vec<map::LinearLight>,
     pub weapon_hit_effects: Vec<weapon_hit_effect::WeaponHitEffect>,
     pub weapon_hit_texture_cache: weapon_hit_effect::WeaponHitTextureCache,
@@ -130,7 +136,10 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn create_projectile_with_id(&mut self, mut projectile: projectile::Projectile) -> projectile::Projectile {
+    pub fn create_projectile_with_id(
+        &mut self,
+        mut projectile: projectile::Projectile,
+    ) -> projectile::Projectile {
         projectile.id = self.next_projectile_id;
         self.next_projectile_id += 1;
         projectile
@@ -145,31 +154,57 @@ impl GameState {
             });
         }
     }
-    
+
     pub fn end_match(&mut self) {
         if !self.game_results.show {
             self.game_results.trigger(&self.players, self.match_time);
         }
     }
 
-    pub fn add_damage_number(&mut self, player_id: u32, target_id: u16, x: f32, y: f32, damage: i32, target_health: i32, target_armor: i32) {
+    pub fn add_damage_number(
+        &mut self,
+        player_id: u32,
+        target_id: u16,
+        x: f32,
+        y: f32,
+        damage: i32,
+        target_health: i32,
+        target_armor: i32,
+    ) {
         let combine_time = 1.0f32;
 
-        if let Some(existing) = self.damage_numbers.iter_mut().find(|d| {
-            d.target_id == target_id
-                && d.lifetime < combine_time
-        }) {
+        if let Some(existing) = self
+            .damage_numbers
+            .iter_mut()
+            .find(|d| d.target_id == target_id && d.lifetime < combine_time)
+        {
             existing.add_damage(damage, target_health, target_armor, x, y);
             return;
         }
 
-        self.damage_numbers
-            .push(damage_number::DamageNumber::new(player_id, target_id, x, y, damage, target_health, target_armor));
+        self.damage_numbers.push(damage_number::DamageNumber::new(
+            player_id,
+            target_id,
+            x,
+            y,
+            damage,
+            target_health,
+            target_armor,
+        ));
     }
 
-    fn check_and_award(&mut self, killer_id: u16, _victim_id: u16, _was_airborne: bool, weapon: weapon::Weapon) {
-        let tracker = self.award_trackers.entry(killer_id).or_insert_with(award::AwardTracker::new);
-        
+    fn check_and_award(
+        &mut self,
+        killer_id: u16,
+        _victim_id: u16,
+        _was_airborne: bool,
+        weapon: weapon::Weapon,
+    ) {
+        let tracker = self
+            .award_trackers
+            .entry(killer_id)
+            .or_insert_with(award::AwardTracker::new);
+
         let award_type = if matches!(weapon, weapon::Weapon::Railgun) {
             Some(award::AwardType::Impressive)
         } else if tracker.check_excellent(self.match_time) {
@@ -179,9 +214,13 @@ impl GameState {
         };
 
         if let Some(award_type) = award_type {
-            self.awards.push(award::Award::new(award_type.clone(), killer_id));
-            self.audio_events.push(crate::audio::events::AudioEvent::Award { award_type: award_type.clone() });
-            
+            self.awards
+                .push(award::Award::new(award_type.clone(), killer_id));
+            self.audio_events
+                .push(crate::audio::events::AudioEvent::Award {
+                    award_type: award_type.clone(),
+                });
+
             if let Some(player) = self.players.iter_mut().find(|p| p.id == killer_id) {
                 match award_type {
                     award::AwardType::Excellent => player.excellent_count += 1,
@@ -216,10 +255,7 @@ impl GameState {
     pub fn send_chat(&mut self, message: String) -> Result<(), String> {
         if let Some(ref mut client) = self.network_client {
             if let Some(player_id) = client.get_player_id() {
-                let chat_msg = crate::network::NetMessage::Chat {
-                    player_id,
-                    message,
-                };
+                let chat_msg = crate::network::NetMessage::Chat { player_id, message };
                 client.send_message(chat_msg)
             } else {
                 Err("Not connected to server".to_string())
@@ -230,7 +266,8 @@ impl GameState {
     }
 
     pub fn is_connected_to_server(&self) -> bool {
-        self.network_client.as_ref()
+        self.network_client
+            .as_ref()
             .map(|client| client.get_player_id().is_some())
             .unwrap_or(false)
     }
@@ -246,20 +283,36 @@ impl GameState {
 
     fn handle_network_message(&mut self, msg: crate::network::NetMessage) {
         use crate::network::NetMessage;
-        
-        if !matches!(msg, NetMessage::GameStateSnapshot { .. } | NetMessage::GameStateDelta { .. } | NetMessage::Heartbeat | NetMessage::Acknowledgement { .. }) {
-            println!("[{:.3}] [CLIENT] Received: {:?}", macroquad::prelude::get_time(), 
+
+        if !matches!(
+            msg,
+            NetMessage::GameStateSnapshot { .. }
+                | NetMessage::GameStateDelta { .. }
+                | NetMessage::Heartbeat
+                | NetMessage::Acknowledgement { .. }
+        ) {
+            println!(
+                "[{:.3}] [CLIENT] Received: {:?}",
+                macroquad::prelude::get_time(),
                 match &msg {
-                    NetMessage::PlayerDied { player_id, killer_id, gibbed, .. } => 
-                        format!("PlayerDied(player={}, killer={}, gibbed={})", player_id, killer_id, gibbed),
-                    NetMessage::PlayerGibbed { player_id, .. } => 
+                    NetMessage::PlayerDied {
+                        player_id,
+                        killer_id,
+                        gibbed,
+                        ..
+                    } => format!(
+                        "PlayerDied(player={}, killer={}, gibbed={})",
+                        player_id, killer_id, gibbed
+                    ),
+                    NetMessage::PlayerGibbed { player_id, .. } =>
                         format!("PlayerGibbed(player={})", player_id),
-                    NetMessage::PlayerRespawn { player_id, .. } => 
+                    NetMessage::PlayerRespawn { player_id, .. } =>
                         format!("PlayerRespawn(player={})", player_id),
                     _ => format!("{:?}", msg),
-                });
+                }
+            );
         }
- 
+
         match msg {
             NetMessage::ConnectResponse {
                 accepted, reason, ..
@@ -273,11 +326,10 @@ impl GameState {
             }
             NetMessage::MapChange { map_name } => {
                 println!("Server changing map to: {}", map_name);
-                self.map = map::Map::load_from_file(&map_name)
-                    .unwrap_or_else(|e| {
-                        eprintln!("Failed to load map '{}': {}", map_name, e);
-                        map::Map::new(&map_name)
-                    });
+                self.map = map::Map::load_from_file(&map_name).unwrap_or_else(|e| {
+                    eprintln!("Failed to load map '{}': {}", map_name, e);
+                    map::Map::new(&map_name)
+                });
                 self.players.clear();
                 self.projectiles.clear();
                 self.particles.clear();
@@ -286,11 +338,17 @@ impl GameState {
                 self.lights.clear();
                 println!("Map loaded: {} spawn points", self.map.spawn_points.len());
             }
-            NetMessage::PlayerRespawn { player_id: _player_id, position } => {
+            NetMessage::PlayerRespawn {
+                player_id: _player_id,
+                position,
+            } => {
                 if let Some(ref client) = self.network_client {
                     if Some(_player_id) == client.player_id() {
-                        if self.players.is_empty() || !self.players.iter().any(|p| p.id == _player_id) {
-                            let mut player = player::Player::new(_player_id, "LocalPlayer".to_string(), false);
+                        if self.players.is_empty()
+                            || !self.players.iter().any(|p| p.id == _player_id)
+                        {
+                            let mut player =
+                                player::Player::new(_player_id, "LocalPlayer".to_string(), false);
                             player.x = position.0;
                             player.y = position.1;
                             player.model = "sarge".to_string();
@@ -308,15 +366,25 @@ impl GameState {
                             player.gibbed = false;
                             player.health = 100;
                             player.should_interpolate = false;
-                            println!("Remote player {} respawned at ({}, {})", _player_id, position.0, position.1);
+                            println!(
+                                "Remote player {} respawned at ({}, {})",
+                                _player_id, position.0, position.1
+                            );
                         } else {
-                            let mut player = player::Player::new(_player_id, format!("Player{}", _player_id), false);
+                            let mut player = player::Player::new(
+                                _player_id,
+                                format!("Player{}", _player_id),
+                                false,
+                            );
                             player.x = position.0;
                             player.y = position.1;
                             player.model = "visor".to_string();
                             player.should_interpolate = false;
                             self.players.push(player);
-                            println!("Remote player {} spawned at ({}, {})", _player_id, position.0, position.1);
+                            println!(
+                                "Remote player {} spawned at ({}, {})",
+                                _player_id, position.0, position.1
+                            );
                         }
                     }
                 }
@@ -329,68 +397,95 @@ impl GameState {
                     }
                 }
             }
-            NetMessage::PlayerShoot { player_id, weapon, origin, direction } => {
+            NetMessage::PlayerShoot {
+                player_id,
+                weapon,
+                origin,
+                direction,
+            } => {
                 self.muzzle_flashes.push(muzzle::MuzzleFlash::new(
                     origin.0,
                     origin.1,
                     direction,
                     unsafe { std::mem::transmute(weapon) },
                 ));
-                
+
                 self.lights.push(light::LightPulse::from_weapon(
                     origin.0 + direction.cos() * 18.0,
                     origin.1 + direction.sin() * 18.0,
                     weapon,
                 ));
             }
-            NetMessage::PlayerDamaged { target_id, damage, knockback_x, knockback_y, health_remaining, attacker_id } => {
+            NetMessage::PlayerDamaged {
+                target_id,
+                damage,
+                knockback_x,
+                knockback_y,
+                health_remaining,
+                attacker_id,
+            } => {
                 let mut player_pos = None;
                 let mut target_armor = 0;
                 let mut target_model = String::new();
-                
+
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == target_id) {
-                    let is_local = self.network_client.as_ref().and_then(|c| c.player_id()) == Some(target_id);
-                    
+                    let is_local =
+                        self.network_client.as_ref().and_then(|c| c.player_id()) == Some(target_id);
+
                     if is_local {
                         let vel_before = (player.vel_x, player.vel_y);
                         player.vel_x = knockback_x;
                         player.vel_y = knockback_y;
-                        
-                        println!("[{:.3}] [CLIENT] Knockback applied: ({:.2},{:.2}) -> ({:.2},{:.2})", 
+
+                        println!(
+                            "[{:.3}] [CLIENT] Knockback applied: ({:.2},{:.2}) -> ({:.2},{:.2})",
                             macroquad::prelude::get_time(),
-                            vel_before.0, vel_before.1,
-                            player.vel_x, player.vel_y);
+                            vel_before.0,
+                            vel_before.1,
+                            player.vel_x,
+                            player.vel_y
+                        );
                     }
-                    
+
                     player_pos = Some((player.x, player.y));
                     target_armor = player.armor;
                     target_model = player.model.clone();
                 }
-                
+
                 if let Some((player_x, player_y)) = player_pos {
                     let local_player_id = self.network_client.as_ref().and_then(|c| c.player_id());
-                    
+
                     if local_player_id == Some(target_id) {
-                        self.audio_events.push(crate::audio::events::AudioEvent::PlayerPain {
-                            health: health_remaining,
-                            x: player_x,
-                            model: target_model.clone(),
-                        });
+                        self.audio_events
+                            .push(crate::audio::events::AudioEvent::PlayerPain {
+                                health: health_remaining,
+                                x: player_x,
+                                model: target_model.clone(),
+                            });
                     }
-                    
+
                     if local_player_id == Some(attacker_id) {
-                        self.audio_events.push(crate::audio::events::AudioEvent::PlayerHit { damage });
+                        self.audio_events
+                            .push(crate::audio::events::AudioEvent::PlayerHit { damage });
                     }
-                    
+
                     if local_player_id == Some(attacker_id) || local_player_id == Some(target_id) {
-                        self.add_damage_number(attacker_id as u32, target_id, player_x, player_y, damage, health_remaining, target_armor);
+                        self.add_damage_number(
+                            attacker_id as u32,
+                            target_id,
+                            player_x,
+                            player_y,
+                            damage,
+                            health_remaining,
+                            target_armor,
+                        );
                     }
-                    
-                    self.weapon_hit_effects.push(weapon_hit_effect::WeaponHitEffect::new_blood(
-                        player_x,
-                        player_y,
-                    ));
-                    
+
+                    self.weapon_hit_effects
+                        .push(weapon_hit_effect::WeaponHitEffect::new_blood(
+                            player_x, player_y,
+                        ));
+
                     for _ in 0..3 {
                         self.particles.push(particle::Particle::new(
                             player_x,
@@ -412,13 +507,18 @@ impl GameState {
                 position,
                 velocity,
             } => {
-                println!("[{:.3}] Player {} was killed by {} (gibbed: {})", 
-                    macroquad::prelude::get_time(), player_id, killer_id, gibbed);
-                
+                println!(
+                    "[{:.3}] Player {} was killed by {} (gibbed: {})",
+                    macroquad::prelude::get_time(),
+                    player_id,
+                    killer_id,
+                    gibbed
+                );
+
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == player_id) {
                     println!("[{:.3}] [CLIENT] Setting player {} dead=true, gibbed={}, pos=({:.1},{:.1}), vel=({:.2},{:.2})", 
                         macroquad::prelude::get_time(), player_id, gibbed, position.0, position.1, velocity.0, velocity.1);
-                    
+
                     if !gibbed {
                         let corpse_player = player.clone();
                         self.corpses.push(Corpse {
@@ -426,7 +526,7 @@ impl GameState {
                             lifetime: 10.0,
                         });
                     }
-                    
+
                     player.dead = true;
                     player.gibbed = gibbed;
                     player.x = position.0;
@@ -434,18 +534,18 @@ impl GameState {
                     player.vel_x = velocity.0;
                     player.vel_y = velocity.1;
                     player.animation_time = 0.0;
-                    
+
                     if gibbed {
-                        self.audio_events.push(crate::audio::events::AudioEvent::PlayerGib {
-                            x: position.0,
-                        });
+                        self.audio_events
+                            .push(crate::audio::events::AudioEvent::PlayerGib { x: position.0 });
                     } else {
-                        self.audio_events.push(crate::audio::events::AudioEvent::PlayerDeath {
-                            x: position.0,
-                            model: player.model.clone(),
-                        });
+                        self.audio_events
+                            .push(crate::audio::events::AudioEvent::PlayerDeath {
+                                x: position.0,
+                                model: player.model.clone(),
+                            });
                     }
-                    
+
                     let particle_count = if gibbed { 20 } else { 10 };
                     for _ in 0..particle_count {
                         self.particles.push(particle::Particle::new(
@@ -456,7 +556,7 @@ impl GameState {
                             true,
                         ));
                     }
-                    
+
                     if gibbed {
                         self.gibs.extend(gib::spawn_gibs(position.0, position.1));
                     }
@@ -466,16 +566,20 @@ impl GameState {
                 player_id,
                 position,
             } => {
-                println!("[{:.3}] Player {} was gibbed at ({:.1}, {:.1})", 
-                    macroquad::prelude::get_time(), player_id, position.0, position.1);
-                
+                println!(
+                    "[{:.3}] Player {} was gibbed at ({:.1}, {:.1})",
+                    macroquad::prelude::get_time(),
+                    player_id,
+                    position.0,
+                    position.1
+                );
+
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == player_id) {
                     player.gibbed = true;
-                    
-                    self.audio_events.push(crate::audio::events::AudioEvent::PlayerGib {
-                        x: position.0,
-                    });
-                    
+
+                    self.audio_events
+                        .push(crate::audio::events::AudioEvent::PlayerGib { x: position.0 });
+
                     for _ in 0..15 {
                         self.particles.push(particle::Particle::new(
                             position.0,
@@ -485,18 +589,26 @@ impl GameState {
                             true,
                         ));
                     }
-                    
+
                     self.gibs.extend(gib::spawn_gibs(position.0, position.1));
                 }
             }
             NetMessage::Disconnect { player_id, reason } => {
-                println!("[{:.3}] Player {} disconnected: {}", 
-                    macroquad::prelude::get_time(), player_id, reason);
-                
+                println!(
+                    "[{:.3}] Player {} disconnected: {}",
+                    macroquad::prelude::get_time(),
+                    player_id,
+                    reason
+                );
+
                 self.players.retain(|p| p.id != player_id);
-                
-                println!("[{:.3}] Removed player {}, {} players remain", 
-                    macroquad::prelude::get_time(), player_id, self.players.len());
+
+                println!(
+                    "[{:.3}] Removed player {}, {} players remain",
+                    macroquad::prelude::get_time(),
+                    player_id,
+                    self.players.len()
+                );
             }
             _ => {}
         }
@@ -504,17 +616,21 @@ impl GameState {
 
     fn sync_players_from_network(&mut self, network_players: Vec<crate::network::PlayerState>) {
         let local_player_id = self.network_client.as_ref().and_then(|c| c.player_id());
-        
+
         if let Some(ref mut net_client) = self.network_client {
             let interp_time = net_client.get_interpolation_time();
-            
+
             for net_player in network_players {
                 if Some(net_player.player_id) == local_player_id {
-                    if let Some(player) = self.players.iter_mut().find(|p| p.id == net_player.player_id) {
+                    if let Some(player) = self
+                        .players
+                        .iter_mut()
+                        .find(|p| p.id == net_player.player_id)
+                    {
                         let error_x = (player.x - net_player.position.0).abs();
                         let error_y = (player.y - net_player.position.1).abs();
                         let error = (error_x * error_x + error_y * error_y).sqrt();
-                        
+
                         if error > 50.0 {
                             println!("[CLIENT] Large error {:.1}px, snapping to server", error);
                             player.x = net_player.position.0;
@@ -522,7 +638,7 @@ impl GameState {
                             player.vel_x = net_player.velocity.0;
                             player.vel_y = net_player.velocity.1;
                         }
-                        
+
                         player.health = net_player.health;
                         player.armor = net_player.armor;
                         player.frags = net_player.frags;
@@ -531,12 +647,16 @@ impl GameState {
                     }
                     continue;
                 }
-                
-                if let Some(player) = self.players.iter_mut().find(|p| p.id == net_player.player_id) {
+
+                if let Some(player) = self
+                    .players
+                    .iter_mut()
+                    .find(|p| p.id == net_player.player_id)
+                {
                     if player.dead || net_player.is_dead {
                         continue;
                     }
-                    
+
                     player.health = net_player.health;
                     player.armor = net_player.armor;
                     player.weapon = unsafe { std::mem::transmute(net_player.weapon) };
@@ -548,10 +668,11 @@ impl GameState {
                     player.should_interpolate = true;
                 } else {
                     let player_id = net_player.player_id;
-                    // println!("[{:.3}] *** [CLIENT] CREATING NEW PLAYER {} at ({:.1},{:.1}) ***", 
-                        // macroquad::prelude::get_time(), player_id, net_player.position.0, net_player.position.1);
-                    
-                    let mut player = player::Player::new(player_id, format!("Player{}", player_id), false);
+                    // println!("[{:.3}] *** [CLIENT] CREATING NEW PLAYER {} at ({:.1},{:.1}) ***",
+                    // macroquad::prelude::get_time(), player_id, net_player.position.0, net_player.position.1);
+
+                    let mut player =
+                        player::Player::new(player_id, format!("Player{}", player_id), false);
                     player.x = net_player.position.0;
                     player.y = net_player.position.1;
                     player.prev_x = net_player.position.0;
@@ -570,25 +691,35 @@ impl GameState {
             }
         }
     }
-    
-    fn sync_projectiles_from_network(&mut self, network_projectiles: Vec<crate::network::ProjectileState>) {
+
+    fn sync_projectiles_from_network(
+        &mut self,
+        network_projectiles: Vec<crate::network::ProjectileState>,
+    ) {
         static mut LAST_SYNC_CALL: f64 = 0.0;
         unsafe {
             if macroquad::prelude::get_time() - LAST_SYNC_CALL > 2.0 {
-                println!("[SYNC] sync_projectiles called with {} network projectiles, have {} local", 
-                    network_projectiles.len(), self.projectiles.len());
+                println!(
+                    "[SYNC] sync_projectiles called with {} network projectiles, have {} local",
+                    network_projectiles.len(),
+                    self.projectiles.len()
+                );
                 LAST_SYNC_CALL = macroquad::prelude::get_time();
             }
         }
-        
+
         let current_time = (macroquad::prelude::get_time() * 1000.0) as u32;
-        let local_player_id = self.network_client.as_ref().and_then(|c| c.player_id()).unwrap_or(0);
-        
+        let local_player_id = self
+            .network_client
+            .as_ref()
+            .and_then(|c| c.player_id())
+            .unwrap_or(0);
+
         for net_proj in &network_projectiles {
             if let Some(projectile) = self.projectiles.iter_mut().find(|p| p.id == net_proj.id) {
                 let pos = net_proj.trajectory.evaluate(current_time);
                 let vel = net_proj.trajectory.evaluate_velocity(current_time);
-                
+
                 projectile.x = pos.0;
                 projectile.y = pos.1;
                 projectile.vel_x = vel.0 / 1000.0;
@@ -597,7 +728,7 @@ impl GameState {
             } else {
                 let pos = net_proj.trajectory.evaluate(current_time);
                 let vel = net_proj.trajectory.evaluate_velocity(current_time);
-                
+
                 let weapon: weapon::Weapon = unsafe { std::mem::transmute(net_proj.weapon_type) };
                 let mut proj = projectile::Projectile::new(
                     pos.0,
@@ -611,7 +742,7 @@ impl GameState {
                 proj.id = net_proj.id;
                 proj.vel_x = vel.0 / 1000.0;
                 proj.vel_y = vel.1 / 1000.0;
-                
+
                 static mut LAST_CREATE_PRINT: f64 = 0.0;
                 unsafe {
                     if macroquad::prelude::get_time() - LAST_CREATE_PRINT > 1.0 {
@@ -620,11 +751,11 @@ impl GameState {
                         LAST_CREATE_PRINT = macroquad::prelude::get_time();
                     }
                 }
-                
+
                 self.projectiles.push(proj);
             }
         }
-        
+
         let before_count = self.projectiles.len();
         self.projectiles.retain(|p| {
             if p.owner_id == local_player_id {
@@ -643,19 +774,23 @@ impl GameState {
             keep
         });
         let after_count = self.projectiles.len();
-        
+
         if before_count != after_count {
             static mut LAST_SYNC_PRINT: f64 = 0.0;
             unsafe {
                 if macroquad::prelude::get_time() - LAST_SYNC_PRINT > 1.0 {
-                    println!("[SYNC] Projectiles: {} -> {} (removed {})", 
-                        before_count, after_count, before_count - after_count);
+                    println!(
+                        "[SYNC] Projectiles: {} -> {} (removed {})",
+                        before_count,
+                        after_count,
+                        before_count - after_count
+                    );
                     LAST_SYNC_PRINT = macroquad::prelude::get_time();
                 }
             }
         }
     }
-    
+
     pub fn new(map_name: &str) -> Self {
         let teleports = Vec::new();
 
@@ -683,6 +818,9 @@ impl GameState {
             match_time: 0.0,
             debug_md3: false,
             debug_hitboxes: false,
+            debug_test_yaw: 0.0,
+            debug_test_pitch: 0.0,
+            debug_test_roll: 0.0,
             time_limit: 600.0,
             model_cache: model_cache::ModelCache::new(),
             item_model_cache: item_model::ItemModelCache::new(),
@@ -696,6 +834,7 @@ impl GameState {
             ambient_light: 0.15,
             is_local_multiplayer: false,
             railgun_effects: railgun::RailgunEffects::new(),
+            lightning_effects: lightning::LightningEffects::new(),
             linear_lights: Vec::new(),
             weapon_hit_effects: Vec::new(),
             weapon_hit_texture_cache: weapon_hit_effect::WeaponHitTextureCache::new(),
@@ -759,6 +898,9 @@ impl GameState {
             match_time: 0.0,
             debug_md3: false,
             debug_hitboxes: false,
+            debug_test_yaw: 0.0,
+            debug_test_pitch: 0.0,
+            debug_test_roll: 0.0,
             time_limit: 600.0,
             model_cache: model_cache::ModelCache::new(),
             item_model_cache: item_model::ItemModelCache::new(),
@@ -772,6 +914,7 @@ impl GameState {
             ambient_light: 0.06,
             is_local_multiplayer: false,
             railgun_effects: railgun::RailgunEffects::new(),
+            lightning_effects: lightning::LightningEffects::new(),
             linear_lights: Vec::new(),
             weapon_hit_effects: Vec::new(),
             weapon_hit_texture_cache: weapon_hit_effect::WeaponHitTextureCache::new(),
@@ -867,28 +1010,35 @@ impl GameState {
 
         if self.is_multiplayer {
             let local_player_id = self.network_client.as_ref().and_then(|c| c.player_id());
-            
+
             if let Some(ref mut client) = self.network_client {
                 let interp_time = client.get_interpolation_time();
                 let debug_interp = crate::cvar::get_cvar_bool("net_showinterp");
-                
+
                 for player in &mut self.players {
                     if Some(player.id) != local_player_id {
-                        let will_interpolate = client.interpolate_player(player.id, interp_time).is_some();
-                        
+                        let will_interpolate =
+                            client.interpolate_player(player.id, interp_time).is_some();
+
                         if self.frame % 60 == 0 && player.dead {
-                            println!("[{:.3}] [DEATH DEBUG] p{} dead={} gibbed={} can_interp={}", 
-                                macroquad::prelude::get_time(), player.id, player.dead, player.gibbed, will_interpolate);
+                            println!(
+                                "[{:.3}] [DEATH DEBUG] p{} dead={} gibbed={} can_interp={}",
+                                macroquad::prelude::get_time(),
+                                player.id,
+                                player.dead,
+                                player.gibbed,
+                                will_interpolate
+                            );
                         }
-                        
+
                         if player.dead && !player.gibbed {
-                            use crate::game::bg_pmove::{pmove, PmoveState, PmoveCmd};
-                            
+                            use crate::game::bg_pmove::{pmove, PmoveCmd, PmoveState};
+
                             if self.frame % 60 == 0 {
                                 println!("[{:.3}] [CORPSE PHYSICS] p{} dead, applying gravity at ({:.1},{:.1}) vel=({:.2},{:.2})", 
                                     macroquad::prelude::get_time(), player.id, player.x, player.y, player.vel_x, player.vel_y);
                             }
-                            
+
                             let state = PmoveState {
                                 x: player.x,
                                 y: player.y,
@@ -896,14 +1046,14 @@ impl GameState {
                                 vel_y: player.vel_y,
                                 was_in_air: true,
                             };
-                            
+
                             let cmd = PmoveCmd {
                                 move_right: 0.0,
                                 jump: false,
                                 crouch: false,
                                 haste_active: false,
                             };
-                            
+
                             let result = pmove(&state, &cmd, dt, &self.map);
                             player.x = result.new_x;
                             player.y = result.new_y;
@@ -911,17 +1061,24 @@ impl GameState {
                             player.vel_y = result.new_vel_y;
                             player.cx = player.x;
                             player.cy = player.y;
-                        } else if let Some(interpolated) = client.interpolate_player(player.id, interp_time) {
+                        } else if let Some(interpolated) =
+                            client.interpolate_player(player.id, interp_time)
+                        {
                             if debug_interp && self.frame % 60 == 0 {
-                                println!("[{:.3}] [INTERP] p{} pos=({:.1},{:.1}) vel=({:.2},{:.2})", 
-                                    macroquad::prelude::get_time(), player.id,
-                                    interpolated.position.0, interpolated.position.1,
-                                    interpolated.velocity.0, interpolated.velocity.1);
+                                println!(
+                                    "[{:.3}] [INTERP] p{} pos=({:.1},{:.1}) vel=({:.2},{:.2})",
+                                    macroquad::prelude::get_time(),
+                                    player.id,
+                                    interpolated.position.0,
+                                    interpolated.position.1,
+                                    interpolated.velocity.0,
+                                    interpolated.velocity.1
+                                );
                             }
-                            
+
                             player.cx = interpolated.position.0;
                             player.cy = interpolated.position.1;
-                            
+
                             player.x = interpolated.position.0;
                             player.y = interpolated.position.1;
                             player.vel_x = interpolated.velocity.0;
@@ -930,8 +1087,11 @@ impl GameState {
                             player.was_in_air = !interpolated.on_ground;
                         } else {
                             if debug_interp && self.frame % 60 == 0 {
-                                println!("[{:.3}] [INTERP] p{} - NO DATA", 
-                                    macroquad::prelude::get_time(), player.id);
+                                println!(
+                                    "[{:.3}] [INTERP] p{} - NO DATA",
+                                    macroquad::prelude::get_time(),
+                                    player.id
+                                );
                             }
                             player.cx = player.x;
                             player.cy = player.y;
@@ -969,20 +1129,43 @@ impl GameState {
 
         for player in &mut self.players {
             player.update_timers(dt);
-            
+
             if self.is_multiplayer && Some(player.id) != local_player_id {
                 for jumppad in &self.map.jumppads {
                     if jumppad.check_collision(player.x, player.y) && player.vel_y >= -1.0 {
-                        if player.somersault_time <= 0.0 && macroquad::prelude::rand::gen_range(0, 10) == 0 {
+                        if player.somersault_time <= 0.0
+                            && macroquad::prelude::rand::gen_range(0, 10) == 0
+                        {
                             player.somersault_time = 1.0;
+                            player.somersault_axis_y = macroquad::prelude::rand::gen_range(0, 2) == 0;
                         }
                     }
                 }
             }
 
             if let Some(model) = self.model_cache.get_or_load(&player.model) {
+                let prev_on_ground = !player.was_in_air;
                 let on_ground = !player.was_in_air;
-                
+
+                if !prev_on_ground && on_ground {
+                    player.landing_time = 0.4;
+                    player.animation_time = 0.0;
+                }
+
+                if player.landing_time > 0.0 {
+                    player.landing_time -= dt;
+                    if player.landing_time < 0.0 {
+                        player.landing_time = 0.0;
+                    }
+                }
+
+                if player.weapon_raise_time > 0.0 {
+                    player.weapon_raise_time -= dt;
+                    if player.weapon_raise_time <= 0.0 {
+                        player.weapon_raising = false;
+                    }
+                }
+
                 let is_walking = if self.is_multiplayer && Some(player.id) != local_player_id {
                     if !on_ground {
                         false
@@ -994,6 +1177,10 @@ impl GameState {
                     on_ground && player.vel_x.abs() > 0.5
                 };
                 let is_attacking = player.refire > 0.0;
+                
+                player.moving_backward = player.vel_x.abs() > 0.5 && 
+                    ((player.vel_x < 0.0 && player.direction == 0) || 
+                     (player.vel_x > 0.0 && player.direction == 1));
 
                 if let Some(config) = &model.anim_config {
                     let (lf, uf, new_time) = player_model::PlayerModel::compute_frames(
@@ -1005,6 +1192,10 @@ impl GameState {
                         player.dead,
                         player.crouch,
                         player.animation_time,
+                        player.landing_time,
+                        player.moving_backward,
+                        player.weapon_raising,
+                        player.weapon_raise_time,
                     );
                     player.lower_frame = lf;
                     player.upper_frame = uf;
@@ -1025,7 +1216,7 @@ impl GameState {
 
         for corpse in &mut self.corpses {
             corpse.lifetime -= dt;
-            
+
             if let Some(model) = self.model_cache.get_or_load(&corpse.player.model) {
                 if let Some(config) = &model.anim_config {
                     let (lf, uf, new_time) = player_model::PlayerModel::compute_frames(
@@ -1037,16 +1228,20 @@ impl GameState {
                         true,
                         false,
                         corpse.player.animation_time,
+                        0.0,
+                        false,
+                        false,
+                        0.0,
                     );
                     corpse.player.lower_frame = lf;
                     corpse.player.upper_frame = uf;
                     corpse.player.animation_time = new_time;
                 }
             }
-            
+
             if !corpse.player.gibbed {
-                use crate::game::bg_pmove::{pmove, PmoveState, PmoveCmd};
-                
+                use crate::game::bg_pmove::{pmove, PmoveCmd, PmoveState};
+
                 let state = PmoveState {
                     x: corpse.player.x,
                     y: corpse.player.y,
@@ -1054,14 +1249,14 @@ impl GameState {
                     vel_y: corpse.player.vel_y,
                     was_in_air: true,
                 };
-                
+
                 let cmd = PmoveCmd {
                     move_right: 0.0,
                     jump: false,
                     crouch: false,
                     haste_active: false,
                 };
-                
+
                 let result = pmove(&state, &cmd, dt, &self.map);
                 corpse.player.x = result.new_x;
                 corpse.player.y = result.new_y;
@@ -1069,7 +1264,7 @@ impl GameState {
                 corpse.player.vel_y = result.new_vel_y;
             }
         }
-        
+
         self.corpses.retain(|c| c.lifetime > 0.0);
 
         for jumppad in &mut self.map.jumppads {
@@ -1085,32 +1280,32 @@ impl GameState {
         for item in &mut self.map.items {
             if item.active && item.dropped {
                 let is_moving = item.vel_x.abs() > 0.01 || item.vel_y.abs() > 0.01;
-                
+
                 if is_moving {
                     item.vel_y += 0.5 * dt_norm;
                     if item.vel_y > 15.0 {
                         item.vel_y = 15.0;
                     }
-                    
+
                     item.pitch += item.spin_pitch * dt_norm;
                     item.yaw += item.spin_yaw * dt_norm;
                     item.roll += item.spin_roll * dt_norm;
-                    
+
                     item.x += item.vel_x * dt_norm;
                     item.y += item.vel_y * dt_norm;
-                    
+
                     let tile_x = (item.x / 32.0) as i32;
                     let tile_y = ((item.y + 8.0) / 16.0) as i32;
-                    
+
                     let is_solid = unsafe { (*map_ptr).is_solid(tile_x, tile_y) };
-                    
+
                     if is_solid {
                         item.vel_y = -item.vel_y * 0.4;
                         item.vel_x *= 0.7;
                         item.spin_pitch *= 0.8;
                         item.spin_yaw *= 0.8;
                         item.spin_roll *= 0.8;
-                        
+
                         let max_corrections = 16;
                         let mut correction_count = 0;
                         while correction_count < max_corrections {
@@ -1122,7 +1317,7 @@ impl GameState {
                                 break;
                             }
                         }
-                        
+
                         if item.vel_y.abs() < 0.5 && item.vel_x.abs() < 0.5 {
                             item.vel_y = 0.0;
                             item.vel_x *= 0.95;
@@ -1131,30 +1326,31 @@ impl GameState {
                             }
                         }
                     }
-                    
+
                     let wall_tile_left = ((item.x - 8.0) / 32.0) as i32;
                     let wall_tile_right = ((item.x + 8.0) / 32.0) as i32;
                     let wall_y = (item.y / 16.0) as i32;
-                    
-                    let hit_wall = unsafe { 
-                        (*map_ptr).is_solid(wall_tile_left, wall_y) || (*map_ptr).is_solid(wall_tile_right, wall_y)
+
+                    let hit_wall = unsafe {
+                        (*map_ptr).is_solid(wall_tile_left, wall_y)
+                            || (*map_ptr).is_solid(wall_tile_right, wall_y)
                     };
-                    
+
                     if hit_wall {
                         item.vel_x = -item.vel_x * 0.4;
                     }
                 } else {
                     let target_spin = 0.02;
                     let lerp_factor = 0.05 * dt_norm;
-                    
+
                     item.spin_pitch = item.spin_pitch * (1.0 - lerp_factor);
                     item.spin_yaw = item.spin_yaw * (1.0 - lerp_factor) + target_spin * lerp_factor;
                     item.spin_roll = item.spin_roll * (1.0 - lerp_factor);
-                    
+
                     item.pitch += item.spin_pitch * dt_norm;
                     item.yaw += item.spin_yaw * dt_norm;
                     item.roll += item.spin_roll * dt_norm;
-                    
+
                     let target_pitch = 0.0;
                     let target_roll = 0.0;
                     item.pitch = item.pitch * (1.0 - lerp_factor) + target_pitch * lerp_factor;
@@ -1167,7 +1363,7 @@ impl GameState {
             if player.dead {
                 continue;
             }
-            
+
             for item in &mut self.map.items {
                 if !item.active {
                     if item.respawn_time > 0 {
@@ -1245,6 +1441,18 @@ impl GameState {
                             self.audio_events
                                 .push(crate::audio::events::AudioEvent::WeaponPickup { x: item.x });
                         }
+                        LightningGun => {
+                            if item.dropped {
+                                println!("[ITEM PICKUP] Player {} picked up DROPPED LightningGun at ({:.1},{:.1})", 
+                                    player.id, item.x, item.y);
+                            }
+                            player.has_weapon[5] = true;
+                            player.ammo[5] = (player.ammo[5].saturating_add(100)).min(200);
+                            item.active = false;
+                            item.respawn_time = self::constants::ITEM_RESPAWN_WEAPON;
+                            self.audio_events
+                                .push(crate::audio::events::AudioEvent::WeaponPickup { x: item.x });
+                        }
                         Railgun => {
                             if item.dropped {
                                 println!("[ITEM PICKUP] Player {} picked up DROPPED Railgun at ({:.1},{:.1})", 
@@ -1276,9 +1484,8 @@ impl GameState {
                             self.audio_events.push(
                                 crate::audio::events::AudioEvent::PowerupPickup { x: item.x },
                             );
-                            self.audio_events.push(
-                                crate::audio::events::AudioEvent::QuadDamage,
-                            );
+                            self.audio_events
+                                .push(crate::audio::events::AudioEvent::QuadDamage);
                         }
                         Regen => {
                             player.powerups.regen = self::constants::POWERUP_DURATION_REGEN;
@@ -1363,8 +1570,10 @@ impl GameState {
 
         self.map.items.retain(|item| {
             if item.dropped && !item.active {
-                println!("[ITEM CLEANUP] Removing dropped {:?} at ({:.1},{:.1})", 
-                    item.item_type, item.x, item.y);
+                println!(
+                    "[ITEM CLEANUP] Removing dropped {:?} at ({:.1},{:.1})",
+                    item.item_type, item.x, item.y
+                );
                 false
             } else {
                 true
@@ -1382,9 +1591,9 @@ impl GameState {
         self.messages.retain_mut(|msg| msg.update());
         self.item_model_cache.update_all(dt);
         self.railgun_effects.update(dt);
+        self.lightning_effects.update(dt);
         self.weapon_hit_effects.retain_mut(|e| e.update());
         self.damage_numbers.retain_mut(|d| d.update());
-
 
         if self.frame % 3 == 0 {
             for proj in &self.projectiles {
@@ -1436,19 +1645,23 @@ impl GameState {
             }
         }
 
-        let mut exploded_projectiles: Vec<(f32, f32, weapon::Weapon, u16, i32, f32, Option<u16>)> = Vec::new();
+        let mut exploded_projectiles: Vec<(f32, f32, weapon::Weapon, u16, i32, f32, Option<u16>)> =
+            Vec::new();
         let mut kills = Vec::new();
         let mut pending_damage_numbers: Vec<(u32, u16, f32, f32, i32, i32, i32)> = Vec::new();
-        
+
         let local_player_id = if self.is_multiplayer {
-            self.network_client.as_ref().and_then(|c| c.player_id()).unwrap_or(0)
+            self.network_client
+                .as_ref()
+                .and_then(|c| c.player_id())
+                .unwrap_or(0)
         } else {
             0
         };
 
         self.projectiles.retain_mut(|proj| {
             let should_update_locally = !self.is_multiplayer || proj.owner_id == local_player_id;
-            
+
             let alive = if should_update_locally {
                 proj.update(dt, &self.map)
             } else {
@@ -1473,7 +1686,7 @@ impl GameState {
                         | weapon::Weapon::Plasmagun
                         | weapon::Weapon::BFG
                 );
-                
+
                 if has_explosion {
                     exploded_projectiles.push((
                         proj.x,
@@ -1492,7 +1705,7 @@ impl GameState {
         if !self.is_multiplayer {
             let projectiles_to_check = self.projectiles.clone();
             let mut projectiles_to_remove = Vec::new();
-            
+
             for proj in &projectiles_to_check {
                 if proj.active {
                     let mut corpse_to_create = None;
@@ -1517,11 +1730,12 @@ impl GameState {
                                 hitbox_height,
                             ) {
                                 let was_alive = !player.dead;
-                                
+
                                 let weapon_drop_pos = if was_alive {
                                     if let Some(model) = self.model_cache.get(&player.model) {
                                         let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
-                                        let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                                        let base_dir =
+                                            if flip { std::f32::consts::PI } else { 0.0 };
                                         let mut rel_angle = player.angle - base_dir;
                                         while rel_angle > std::f32::consts::PI {
                                             rel_angle -= 2.0 * std::f32::consts::PI;
@@ -1530,7 +1744,8 @@ impl GameState {
                                             rel_angle += 2.0 * std::f32::consts::PI;
                                         }
                                         let pitch = rel_angle;
-                                        let weapon_model = self.weapon_model_cache.get(player.weapon);
+                                        let weapon_model =
+                                            self.weapon_model_cache.get(player.weapon);
                                         model.get_barrel_position(
                                             player.x,
                                             player.y,
@@ -1547,20 +1762,21 @@ impl GameState {
                                 } else {
                                     (player.x, player.y)
                                 };
-                                
+
                                 let (died, gibbed) = player.take_damage(proj.damage);
-                                
+
                                 self.weapon_hit_effects.push(
                                     weapon_hit_effect::WeaponHitEffect::new_blood(proj.x, proj.y),
                                 );
-                                
+
                                 if was_alive {
                                     for _ in 0..3 {
-                                        let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                            0 => gib::GibType::Intestine,
-                                            1 => gib::GibType::Brain,
-                                            _ => gib::GibType::Fist,
-                                        };
+                                        let gib_type =
+                                            match crate::compat_rand::gen_range_usize(0, 3) {
+                                                0 => gib::GibType::Intestine,
+                                                1 => gib::GibType::Brain,
+                                                _ => gib::GibType::Fist,
+                                            };
                                         self.gibs.push(gib::Gib::new(
                                             player.x,
                                             player.y,
@@ -1570,7 +1786,7 @@ impl GameState {
                                         ));
                                     }
                                 }
-                                
+
                                 if proj.owner_id == 1 && was_alive {
                                     self.audio_events.push(
                                         crate::audio::events::AudioEvent::PlayerHit {
@@ -1587,43 +1803,60 @@ impl GameState {
                                         player.armor,
                                     ));
                                 }
-                                
+
                                 if died && was_alive {
-                                    weapon_to_drop = Some((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
+                                    weapon_to_drop =
+                                        Some((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
                                     if !gibbed {
                                         corpse_to_create = Some(player.clone());
                                     } else {
                                         self.gibs.extend(gib::spawn_gibs(player.x, player.y));
                                         self.audio_events.push(
-                                            crate::audio::events::AudioEvent::PlayerGib { x: player.x },
+                                            crate::audio::events::AudioEvent::PlayerGib {
+                                                x: player.x,
+                                            },
                                         );
                                     }
-                                    kills.push((proj.owner_id, player.id, player.was_in_air, proj.weapon_type));
+                                    kills.push((
+                                        proj.owner_id,
+                                        player.id,
+                                        player.was_in_air,
+                                        proj.weapon_type,
+                                    ));
                                 }
-                                
+
                                 hit_player_id = Some(player.id);
                                 projectiles_to_remove.push(proj.id);
                                 break;
                             }
                         }
                     }
-                    
+
                     if let Some(corpse_player) = corpse_to_create {
                         self.corpses.push(Corpse {
                             player: corpse_player,
                             lifetime: 10.0,
                         });
                     }
-                    
+
                     if let Some((weapon, x, y)) = weapon_to_drop {
                         if let Some(item_type) = weapon.to_item_type() {
-                            let player = self.players.iter().find(|p| (p.x - x).abs() < 1.0 && (p.y - y).abs() < 1.0);
+                            let player = self
+                                .players
+                                .iter()
+                                .find(|p| (p.x - x).abs() < 1.0 && (p.y - y).abs() < 1.0);
                             let (vel_x, vel_y) = if let Some(p) = player {
                                 let base_x = (crate::compat_rand::gen_f32() - 0.5) * 6.0;
                                 let base_y = -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0;
-                                (p.vel_x.clamp(-10.0, 10.0) * 0.3 + base_x, p.vel_y.clamp(-10.0, 10.0) * 0.2 + base_y)
+                                (
+                                    p.vel_x.clamp(-10.0, 10.0) * 0.3 + base_x,
+                                    p.vel_y.clamp(-10.0, 10.0) * 0.2 + base_y,
+                                )
                             } else {
-                                ((crate::compat_rand::gen_f32() - 0.5) * 6.0, -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0)
+                                (
+                                    (crate::compat_rand::gen_f32() - 0.5) * 6.0,
+                                    -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0,
+                                )
                             };
                             let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
                             let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
@@ -1649,7 +1882,7 @@ impl GameState {
                             });
                         }
                     }
-                    
+
                     if let Some(player_id) = hit_player_id {
                         let has_explosion = matches!(
                             proj.weapon_type,
@@ -1658,7 +1891,7 @@ impl GameState {
                                 | weapon::Weapon::Plasmagun
                                 | weapon::Weapon::BFG
                         );
-                        
+
                         if has_explosion {
                             exploded_projectiles.push((
                                 proj.x,
@@ -1673,8 +1906,9 @@ impl GameState {
                     }
                 }
             }
-            
-            self.projectiles.retain(|p| !projectiles_to_remove.contains(&p.id));
+
+            self.projectiles
+                .retain(|p| !projectiles_to_remove.contains(&p.id));
         }
 
         if !self.is_multiplayer {
@@ -1691,7 +1925,7 @@ impl GameState {
                 {
                     let mut corpse_to_create = None;
                     let mut weapon_to_drop = None;
-                    
+
                     for player in &mut self.players {
                         if player.id != proj.owner_id && !player.gibbed {
                             let hitbox_height = if player.dead {
@@ -1716,13 +1950,15 @@ impl GameState {
 
                                     println!("[{:.3}] [COLLISION] Non-explosive projectile [{}] {:?} direct hit player {} for {} damage", 
                                         macroquad::prelude::get_time(), p.id, proj.weapon_type, player.id, proj.damage);
-                                    
+
                                     let was_alive = !player.dead;
-                                    
+
                                     let weapon_drop_pos = if was_alive {
                                         if let Some(model) = self.model_cache.get(&player.model) {
-                                            let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
-                                            let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
+                                            let flip =
+                                                player.angle.abs() > std::f32::consts::PI / 2.0;
+                                            let base_dir =
+                                                if flip { std::f32::consts::PI } else { 0.0 };
                                             let mut rel_angle = player.angle - base_dir;
                                             while rel_angle > std::f32::consts::PI {
                                                 rel_angle -= 2.0 * std::f32::consts::PI;
@@ -1731,7 +1967,8 @@ impl GameState {
                                                 rel_angle += 2.0 * std::f32::consts::PI;
                                             }
                                             let pitch = rel_angle;
-                                            let weapon_model = self.weapon_model_cache.get(player.weapon);
+                                            let weapon_model =
+                                                self.weapon_model_cache.get(player.weapon);
                                             model.get_barrel_position(
                                                 player.x,
                                                 player.y,
@@ -1748,20 +1985,23 @@ impl GameState {
                                     } else {
                                         (player.x, player.y)
                                     };
-                                    
+
                                     let (died, gibbed) = player.take_damage(proj.damage);
 
                                     self.weapon_hit_effects.push(
-                                        weapon_hit_effect::WeaponHitEffect::new_blood(proj.x, proj.y),
+                                        weapon_hit_effect::WeaponHitEffect::new_blood(
+                                            proj.x, proj.y,
+                                        ),
                                     );
-                                    
+
                                     if was_alive {
                                         for _ in 0..3 {
-                                            let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
-                                                0 => gib::GibType::Intestine,
-                                                1 => gib::GibType::Brain,
-                                                _ => gib::GibType::Fist,
-                                            };
+                                            let gib_type =
+                                                match crate::compat_rand::gen_range_usize(0, 3) {
+                                                    0 => gib::GibType::Intestine,
+                                                    1 => gib::GibType::Brain,
+                                                    _ => gib::GibType::Fist,
+                                                };
                                             self.gibs.push(gib::Gib::new(
                                                 player.x,
                                                 player.y,
@@ -1789,17 +2029,31 @@ impl GameState {
                                         ));
                                     }
                                     if died && was_alive {
-                                        weapon_to_drop = Some((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
+                                        weapon_to_drop = Some((
+                                            player.weapon,
+                                            weapon_drop_pos.0,
+                                            weapon_drop_pos.1,
+                                        ));
                                         if !gibbed {
                                             corpse_to_create = Some(player.clone());
                                         } else {
                                             self.gibs.extend(gib::spawn_gibs(player.x, player.y));
                                             self.audio_events.push(
-                                                crate::audio::events::AudioEvent::PlayerGib { x: player.x },
+                                                crate::audio::events::AudioEvent::PlayerGib {
+                                                    x: player.x,
+                                                },
                                             );
                                         }
-                                        println!("[PROJECTILE KILL] owner={} victim={} weapon={:?}", proj.owner_id, player.id, proj.weapon_type);
-                                        kills.push((proj.owner_id, player.id, false, proj.weapon_type));
+                                        println!(
+                                            "[PROJECTILE KILL] owner={} victim={} weapon={:?}",
+                                            proj.owner_id, player.id, proj.weapon_type
+                                        );
+                                        kills.push((
+                                            proj.owner_id,
+                                            player.id,
+                                            false,
+                                            proj.weapon_type,
+                                        ));
                                     }
                                 }
                                 if !matches!(proj.weapon_type, weapon::Weapon::Railgun) {
@@ -1808,14 +2062,14 @@ impl GameState {
                             }
                         }
                     }
-                    
+
                     if let Some(corpse_player) = corpse_to_create {
                         self.corpses.push(Corpse {
                             player: corpse_player,
                             lifetime: 10.0,
                         });
                     }
-                    
+
                     if let Some((weapon, x, y)) = weapon_to_drop {
                         if let Some(item_type) = weapon.to_item_type() {
                             let player = self.players.iter().find(|p| p.x == x && p.y == y);
@@ -1850,7 +2104,7 @@ impl GameState {
                     }
                 }
             }
-            
+
             for proj in &projectiles_to_check {
                 if proj.active
                     && !matches!(
@@ -1862,12 +2116,12 @@ impl GameState {
                     )
                 {
                     let mut corpse_hit_idx = None;
-                    
+
                     for (idx, corpse) in self.corpses.iter().enumerate() {
                         let hitbox_height = constants::PLAYER_HITBOX_HEIGHT_CROUCH;
                         let hitbox_width = constants::PLAYER_HITBOX_WIDTH;
                         let hitbox_center_y = corpse.player.y - hitbox_height / 2.0 + 16.0;
-                        
+
                         if proj.check_collision(
                             corpse.player.x,
                             hitbox_center_y,
@@ -1875,28 +2129,29 @@ impl GameState {
                             hitbox_height,
                         ) {
                             corpse_hit_idx = Some(idx);
-                            
+
                             if let Some(p) = self.projectiles.iter_mut().find(|p| {
                                 p.x == proj.x && p.y == proj.y && p.owner_id == proj.owner_id
                             }) {
                                 p.active = false;
                             }
-                            
+
                             break;
                         }
                     }
-                    
+
                     if let Some(idx) = corpse_hit_idx {
                         let corpse = &self.corpses[idx];
                         let gib_x = corpse.player.x;
                         let gib_y = corpse.player.y;
-                        
+
                         self.weapon_hit_effects.push(
                             weapon_hit_effect::WeaponHitEffect::new_blood(proj.x, proj.y),
                         );
-                        
-                        self.audio_events.push(crate::audio::events::AudioEvent::PlayerGib { x: gib_x });
-                        
+
+                        self.audio_events
+                            .push(crate::audio::events::AudioEvent::PlayerGib { x: gib_x });
+
                         for _ in 0..15 {
                             self.particles.push(particle::Particle::new(
                                 gib_x,
@@ -1906,14 +2161,14 @@ impl GameState {
                                 true,
                             ));
                         }
-                        
+
                         self.gibs.extend(gib::spawn_gibs(gib_x, gib_y));
-                        
+
                         self.corpses.remove(idx);
                     }
                 }
             }
-            
+
             for proj in &projectiles_to_check {
                 if proj.active
                     && matches!(
@@ -1925,12 +2180,12 @@ impl GameState {
                     )
                 {
                     let mut corpse_hit_idx = None;
-                    
+
                     for (idx, corpse) in self.corpses.iter().enumerate() {
                         let hitbox_height = constants::PLAYER_HITBOX_HEIGHT_CROUCH;
                         let hitbox_width = constants::PLAYER_HITBOX_WIDTH;
                         let hitbox_center_y = corpse.player.y - hitbox_height / 2.0 + 16.0;
-                        
+
                         if proj.check_collision(
                             corpse.player.x,
                             hitbox_center_y,
@@ -1938,19 +2193,19 @@ impl GameState {
                             hitbox_height,
                         ) {
                             corpse_hit_idx = Some(idx);
-                            
+
                             if let Some(p) = self.projectiles.iter_mut().find(|p| {
                                 p.x == proj.x && p.y == proj.y && p.owner_id == proj.owner_id
                             }) {
                                 p.active = false;
-                                
+
                                 let explosion_radius = p.explosion_radius();
                                 let damage = p.damage;
                                 let weapon_type = p.weapon_type;
                                 let owner_id = p.owner_id;
                                 let x = p.x;
                                 let y = p.y;
-                                
+
                                 println!("[{:.3}] [CORPSE HIT] Explosive projectile hit corpse, adding explosion", 
                                     macroquad::prelude::get_time());
                                 exploded_projectiles.push((
@@ -1963,7 +2218,7 @@ impl GameState {
                                     None,
                                 ));
                             }
-                            
+
                             break;
                         }
                     }
@@ -1978,7 +2233,7 @@ impl GameState {
             let player_weapon = self.players[idx].weapon;
             let was_alive = !self.players[idx].dead;
             let (died, gibbed) = self.players[idx].take_damage(damage);
-            
+
             if was_alive {
                 for _ in 0..3 {
                     let gib_type = match crate::compat_rand::gen_range_usize(0, 3) {
@@ -2002,7 +2257,15 @@ impl GameState {
                 let target_id = self.players[idx].id;
                 let target_health = self.players[idx].health;
                 let target_armor = self.players[idx].armor;
-                pending_damage_numbers.push((owner_id as u32, target_id, player_x, player_y, damage, target_health, target_armor));
+                pending_damage_numbers.push((
+                    owner_id as u32,
+                    target_id,
+                    player_x,
+                    player_y,
+                    damage,
+                    target_health,
+                    target_armor,
+                ));
             }
 
             if died && was_alive {
@@ -2070,7 +2333,12 @@ impl GameState {
                     }
 
                     let victim_was_airborne = self.players[idx].was_in_air;
-                    self.check_and_award(owner_id, self.players[idx].id, victim_was_airborne, weapon::Weapon::MachineGun);
+                    self.check_and_award(
+                        owner_id,
+                        self.players[idx].id,
+                        victim_was_airborne,
+                        weapon::Weapon::MachineGun,
+                    );
 
                     let killer_name = self
                         .players
@@ -2125,7 +2393,12 @@ impl GameState {
                 }
 
                 let victim_was_airborne = self.players[idx].was_in_air;
-                self.check_and_award(owner_id, self.players[idx].id, victim_was_airborne, weapon::Weapon::MachineGun);
+                self.check_and_award(
+                    owner_id,
+                    self.players[idx].id,
+                    victim_was_airborne,
+                    weapon::Weapon::MachineGun,
+                );
 
                 let killer_name = self
                     .players
@@ -2203,34 +2476,36 @@ impl GameState {
 
             let mut new_corpses = Vec::new();
             let mut weapons_to_drop = Vec::new();
-            
+
             for player in &mut self.players {
                 if Some(player.id) == direct_hit_player_id {
                     continue;
                 }
-                
+
                 let dx = player.x - x;
                 let dy = player.y - y;
                 let dist = (dx * dx + dy * dy).sqrt();
 
                 if dist < radius {
                     let damage_points = (damage as f32 - 0.5 * dist).max(0.0);
-                    
+
                     let mass = 200.0;
                     let g_knockback = 1200.0;
                     let knockback = damage_points.min(200.0);
                     let knockback_scale = g_knockback * knockback / mass;
-                    
+
                     if dist > 0.1 {
                         let dir_x = dx / dist;
                         let dir_y = dy / dist;
-                        
+
                         player.vel_x += dir_x * knockback_scale;
                         player.vel_y += dir_y * knockback_scale;
 
                         // 20% chance to flip if knocked up significantly
-                        if player.vel_y < -4.0 && crate::compat_rand::gen_range_f32(0.0, 1.0) < 0.2 {
+                        if player.vel_y < -4.0 && crate::compat_rand::gen_range_f32(0.0, 1.0) < 0.2
+                        {
                             player.somersault_time = 1.0;
+                            player.somersault_axis_y = macroquad::prelude::rand::gen_range(0, 2) == 0;
                         }
                     }
 
@@ -2238,7 +2513,7 @@ impl GameState {
                         if player.id != owner_id {
                             let actual_damage = damage_points as i32;
                             let was_alive = !player.dead;
-                            
+
                             let weapon_drop_pos = if was_alive {
                                 if let Some(model) = self.model_cache.get(&player.model) {
                                     let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
@@ -2268,9 +2543,9 @@ impl GameState {
                             } else {
                                 (player.x, player.y)
                             };
-                            
+
                             let (died, gibbed) = player.take_damage(actual_damage);
-                            
+
                             if was_alive && actual_damage > 5 {
                                 let gib_count = (actual_damage / 10).min(5);
                                 for _ in 0..gib_count {
@@ -2290,10 +2565,11 @@ impl GameState {
                             }
 
                             if owner_id == 1 && was_alive {
-                                self.audio_events
-                                    .push(crate::audio::events::AudioEvent::PlayerHit {
+                                self.audio_events.push(
+                                    crate::audio::events::AudioEvent::PlayerHit {
                                         damage: actual_damage,
-                                    });
+                                    },
+                                );
                                 pending_damage_numbers.push((
                                     owner_id as u32,
                                     player.id,
@@ -2306,20 +2582,25 @@ impl GameState {
                             }
 
                             if died && was_alive {
-                                weapons_to_drop.push((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
+                                weapons_to_drop.push((
+                                    player.weapon,
+                                    weapon_drop_pos.0,
+                                    weapon_drop_pos.1,
+                                ));
                                 if !gibbed {
                                     new_corpses.push(player.clone());
                                 } else {
                                     self.gibs.extend(gib::spawn_gibs(player.x, player.y));
-                                    self.audio_events
-                                        .push(crate::audio::events::AudioEvent::PlayerGib { x: player.x });
+                                    self.audio_events.push(
+                                        crate::audio::events::AudioEvent::PlayerGib { x: player.x },
+                                    );
                                 }
                                 kills.push((owner_id, player.id, false, weapon));
                             }
                         } else if owner_id as u16 == player.id {
                             let self_damage = (damage_points * 0.5) as i32;
                             let was_alive = !player.dead;
-                            
+
                             let weapon_drop_pos = if was_alive {
                                 if let Some(model) = self.model_cache.get(&player.model) {
                                     let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
@@ -2349,9 +2630,9 @@ impl GameState {
                             } else {
                                 (player.x, player.y)
                             };
-                            
+
                             let (died, gibbed) = player.take_damage(self_damage);
-                            
+
                             if was_alive && self_damage > 5 {
                                 let gib_count = (self_damage / 10).min(5);
                                 for _ in 0..gib_count {
@@ -2369,7 +2650,7 @@ impl GameState {
                                     ));
                                 }
                             }
-                            
+
                             if owner_id == 1 && was_alive {
                                 pending_damage_numbers.push((
                                     owner_id as u32,
@@ -2381,15 +2662,20 @@ impl GameState {
                                     player.armor,
                                 ));
                             }
-                            
+
                             if died && was_alive {
-                                weapons_to_drop.push((player.weapon, weapon_drop_pos.0, weapon_drop_pos.1));
+                                weapons_to_drop.push((
+                                    player.weapon,
+                                    weapon_drop_pos.0,
+                                    weapon_drop_pos.1,
+                                ));
                                 if !gibbed {
                                     new_corpses.push(player.clone());
                                 } else {
                                     self.gibs.extend(gib::spawn_gibs(player.x, player.y));
-                                    self.audio_events
-                                        .push(crate::audio::events::AudioEvent::PlayerGib { x: player.x });
+                                    self.audio_events.push(
+                                        crate::audio::events::AudioEvent::PlayerGib { x: player.x },
+                                    );
                                 }
                                 kills.push((owner_id, player.id, false, weapon));
                             }
@@ -2397,16 +2683,25 @@ impl GameState {
                     }
                 }
             }
-            
+
             for (weapon, px, py) in weapons_to_drop {
                 if let Some(item_type) = weapon.to_item_type() {
-                    let player = self.players.iter().find(|p| (p.x - px).abs() < 1.0 && (p.y - py).abs() < 1.0);
+                    let player = self
+                        .players
+                        .iter()
+                        .find(|p| (p.x - px).abs() < 1.0 && (p.y - py).abs() < 1.0);
                     let (vel_x, vel_y) = if let Some(p) = player {
                         let base_x = (crate::compat_rand::gen_f32() - 0.5) * 6.0;
                         let base_y = -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0;
-                        (p.vel_x.clamp(-10.0, 10.0) * 0.3 + base_x, p.vel_y.clamp(-10.0, 10.0) * 0.2 + base_y)
+                        (
+                            p.vel_x.clamp(-10.0, 10.0) * 0.3 + base_x,
+                            p.vel_y.clamp(-10.0, 10.0) * 0.2 + base_y,
+                        )
                     } else {
-                        ((crate::compat_rand::gen_f32() - 0.5) * 6.0, -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0)
+                        (
+                            (crate::compat_rand::gen_f32() - 0.5) * 6.0,
+                            -8.0 + (crate::compat_rand::gen_f32() - 0.5) * 4.0,
+                        )
                     };
                     let pitch = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
                     let yaw = crate::compat_rand::gen_f32() * std::f32::consts::PI * 2.0;
@@ -2432,38 +2727,39 @@ impl GameState {
                     });
                 }
             }
-            
+
             let mut corpses_to_gib = Vec::new();
             for (idx, corpse) in self.corpses.iter_mut().enumerate() {
                 let dx = corpse.player.x - x;
                 let dy = corpse.player.y - y;
                 let dist = (dx * dx + dy * dy).sqrt();
-                
+
                 if dist < radius {
                     let damage_points = (damage as f32 - 0.5 * dist).max(0.0);
-                    
+
                     if damage_points > 20.0 {
                         corpses_to_gib.push((idx, corpse.player.x, corpse.player.y));
                     }
-                    
+
                     let mass = 200.0;
                     let g_knockback = 1200.0;
                     let knockback = damage_points.min(200.0);
                     let knockback_scale = g_knockback * knockback / mass;
-                    
+
                     if dist > 0.1 {
                         let dir_x = dx / dist;
                         let dir_y = dy / dist;
-                        
+
                         corpse.player.vel_x += dir_x * knockback_scale;
                         corpse.player.vel_y += dir_y * knockback_scale;
                     }
                 }
             }
-            
+
             for (idx, gib_x, gib_y) in corpses_to_gib.iter().rev() {
-                self.audio_events.push(crate::audio::events::AudioEvent::PlayerGib { x: *gib_x });
-                
+                self.audio_events
+                    .push(crate::audio::events::AudioEvent::PlayerGib { x: *gib_x });
+
                 for _ in 0..15 {
                     self.particles.push(particle::Particle::new(
                         *gib_x,
@@ -2473,11 +2769,11 @@ impl GameState {
                         true,
                     ));
                 }
-                
+
                 self.gibs.extend(gib::spawn_gibs(*gib_x, *gib_y));
                 self.corpses.remove(*idx);
             }
-            
+
             for corpse_player in new_corpses {
                 self.corpses.push(Corpse {
                     player: corpse_player,
@@ -2486,7 +2782,9 @@ impl GameState {
             }
         }
 
-        for (pid, target_id, x, y, dmg, target_health, target_armor) in pending_damage_numbers.drain(..) {
+        for (pid, target_id, x, y, dmg, target_health, target_armor) in
+            pending_damage_numbers.drain(..)
+        {
             self.add_damage_number(pid, target_id, x, y, dmg, target_health, target_armor);
         }
 
@@ -2500,12 +2798,17 @@ impl GameState {
 
         for &(killer_id, victim_id, was_airborne, weapon) in &kills {
             let old_leader = self.lead_announcements.current_leader;
-            
+
             let scores_before: Vec<_> = self.players.iter().map(|p| (p.id, p.frags)).collect();
             let top_score_before = scores_before.iter().map(|(_, f)| *f).max().unwrap_or(0);
-            let local_score_before = scores_before.iter().find(|(id, _)| Some(*id) == local_player_id).map(|(_, f)| *f).unwrap_or(0);
-            let was_local_in_lead_group = old_leader == local_player_id || (old_leader.is_none() && local_score_before == top_score_before);
-            
+            let local_score_before = scores_before
+                .iter()
+                .find(|(id, _)| Some(*id) == local_player_id)
+                .map(|(_, f)| *f)
+                .unwrap_or(0);
+            let was_local_in_lead_group = old_leader == local_player_id
+                || (old_leader.is_none() && local_score_before == top_score_before);
+
             if killer_id == victim_id {
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == killer_id) {
                     player.frags -= 1;
@@ -2515,22 +2818,32 @@ impl GameState {
                     killer.frags += 1;
                 }
             }
-            
+
             let scores_after: Vec<_> = self.players.iter().map(|p| (p.id, p.frags)).collect();
-            
-            println!("Kill: killer={}, victim={}, old_leader={:?}", killer_id, victim_id, old_leader);
+
+            println!(
+                "Kill: killer={}, victim={}, old_leader={:?}",
+                killer_id, victim_id, old_leader
+            );
             println!("  Scores before: {:?}", scores_before);
             println!("  Scores after: {:?}", scores_after);
-            
+
             self.check_and_award(killer_id, victim_id, was_airborne, weapon);
 
             if let Some(local_id) = local_player_id {
                 if killer_id == local_id || was_local_in_lead_group {
-                    if let Some(announcement) = self.lead_announcements.update(&self.players, local_player_id, Some(killer_id), old_leader, was_local_in_lead_group) {
+                    if let Some(announcement) = self.lead_announcements.update(
+                        &self.players,
+                        local_player_id,
+                        Some(killer_id),
+                        old_leader,
+                        was_local_in_lead_group,
+                    ) {
                         println!("  -> Announcement: {}", announcement);
-                        self.audio_events.push(crate::audio::events::AudioEvent::LeadChange {
-                            announcement: announcement.to_string(),
-                        });
+                        self.audio_events
+                            .push(crate::audio::events::AudioEvent::LeadChange {
+                                announcement: announcement.to_string(),
+                            });
                     }
                 }
             }
@@ -2593,12 +2906,15 @@ impl GameState {
             !award.is_expired()
         });
 
-        if let Some(announcement) = self.time_announcements.update(self.match_time, self.time_limit) {
-            self.audio_events.push(crate::audio::events::AudioEvent::TimeAnnouncement {
-                announcement: announcement.to_string(),
-            });
+        if let Some(announcement) = self
+            .time_announcements
+            .update(self.match_time, self.time_limit)
+        {
+            self.audio_events
+                .push(crate::audio::events::AudioEvent::TimeAnnouncement {
+                    announcement: announcement.to_string(),
+                });
         }
-
 
         if self.match_time >= self.time_limit && !self.game_results.show {
             self.game_results.trigger(&self.players, self.match_time);
@@ -2621,9 +2937,7 @@ impl GameState {
         let _t_before_begin = get_time();
         let renderer = self.deferred_renderer.as_mut().unwrap();
 
-        if !self.disable_deferred {
-            renderer.begin_scene_with_scale(self.render_scale, zoom);
-        }
+        renderer.begin_scene_with_scale(self.render_scale, zoom);
 
         #[cfg(target_arch = "wasm32")]
         {
@@ -2656,7 +2970,7 @@ impl GameState {
             // Initialize or resize shadow target
             let target_w = screen_w as u32;
             let target_h = screen_h as u32;
-            
+
             let needs_resize = if let Some(target) = &self.shadow_target {
                 target.texture.width() != screen_w || target.texture.height() != screen_h
             } else {
@@ -2678,22 +2992,29 @@ impl GameState {
                     offset: vec2(0.0, 0.0),
                     ..Default::default()
                 };
-                
+
                 // Flip Y for render target
                 camera.zoom.y = -camera.zoom.y;
-                
+
                 set_camera(&camera);
                 clear_background(Color::new(0.0, 0.0, 0.0, 0.0));
 
                 for player in &mut self.players {
-                    if player.gibbed { continue; }
-                    if self.disable_shadows { continue; }
+                    if player.gibbed {
+                        continue;
+                    }
+                    if self.disable_shadows {
+                        continue;
+                    }
 
                     let screen_x = player.x - camera_x;
                     let screen_y = player.y - camera_y;
 
-                    if screen_x < -shadow_margin || screen_x > screen_w + shadow_margin ||
-                       screen_y < -shadow_margin || screen_y > screen_h + shadow_margin {
+                    if screen_x < -shadow_margin
+                        || screen_x > screen_w + shadow_margin
+                        || screen_y < -shadow_margin
+                        || screen_y > screen_h + shadow_margin
+                    {
                         continue;
                     }
 
@@ -2701,9 +3022,13 @@ impl GameState {
                         let flip = player.angle.abs() > std::f32::consts::PI / 2.0;
                         let base_dir = if flip { std::f32::consts::PI } else { 0.0 };
                         let mut rel_angle = player.angle - base_dir;
-                        while rel_angle > std::f32::consts::PI { rel_angle -= 2.0 * std::f32::consts::PI; }
-                        while rel_angle < -std::f32::consts::PI { rel_angle += 2.0 * std::f32::consts::PI; }
-                        
+                        while rel_angle > std::f32::consts::PI {
+                            rel_angle -= 2.0 * std::f32::consts::PI;
+                        }
+                        while rel_angle < -std::f32::consts::PI {
+                            rel_angle += 2.0 * std::f32::consts::PI;
+                        }
+
                         let in_air = player.was_in_air;
                         let model_yaw_offset = if in_air {
                             (player.vel_x / self::constants::MAX_SPEED_AIR).clamp(-1.0, 1.0) * 0.8
@@ -2724,12 +3049,12 @@ impl GameState {
 
                         let aim_angle = player.angle;
                         let weapon_model = self.weapon_model_cache.get(player.weapon);
-                        
+
                         let mut acc_x = 0.0;
                         let mut acc_y = 0.0;
                         let mut acc_w = 0.0;
                         let mut acc_r = 0.0;
-                        
+
                         for lp in &self.lights {
                             let sx = lp.x - camera_x;
                             let sy = lp.y - camera_y;
@@ -2750,48 +3075,53 @@ impl GameState {
                             let target_sy = acc_y / acc_w;
                             let target_sr = acc_r / acc_w;
                             let lerp = 0.18;
-                            
-                            player.shadow_lx = player.shadow_lx + (target_sx - player.shadow_lx) * lerp;
-                            player.shadow_ly = player.shadow_ly + (target_sy - player.shadow_ly) * lerp;
-                            player.shadow_lr = player.shadow_lr + (target_sr - player.shadow_lr) * lerp;
-                            
-                            model.render_shadow_with_light(
-                                screen_x,
-                                screen_y,
-                                player.shadow_lx,
-                                player.shadow_ly,
-                                player.shadow_lr.max(1.0),
-                                1.5,
-                                flip,
-                                pitch,
-                                aim_angle,
-                                player.lower_frame,
-                                player.upper_frame,
-                                weapon_model,
-                                model_yaw_offset,
-                                BLACK,
-                                if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun) { player.barrel_spin_angle } else { 0.0 },
-                            );
+
+                            player.shadow_lx =
+                                player.shadow_lx + (target_sx - player.shadow_lx) * lerp;
+                            player.shadow_ly =
+                                player.shadow_ly + (target_sy - player.shadow_ly) * lerp;
+                            player.shadow_lr =
+                                player.shadow_lr + (target_sr - player.shadow_lr) * lerp;
+
+                        model.render_shadow_with_light(
+                            screen_x,
+                            screen_y,
+                            player.shadow_lx,
+                            player.shadow_ly,
+                            player.shadow_lr.max(1.0),
+                            1.125,
+                            flip,
+                            pitch,
+                            aim_angle,
+                            player.lower_frame,
+                            player.upper_frame,
+                            weapon_model,
+                            model_yaw_offset,
+                            BLACK,
+                            if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun)
+                            {
+                                player.barrel_spin_angle
+                            } else {
+                                0.0
+                            },
+                        );
                         }
                     }
                 }
 
-                // Restore previous camera
-                if !self.disable_deferred {
-                    if let Some(target) = &renderer.scene_target {
-                        let camera = Camera2D {
-                            render_target: Some(target.clone()),
-                            zoom: vec2((2.0 * zoom) / screen_w, (2.0 * zoom) / screen_h),
-                            target: vec2(screen_w / 2.0, screen_h / 2.0),
-                            offset: vec2(0.0, 0.0),
-                            ..Default::default()
-                        };
-                        set_camera(&camera);
-                    }
+                if let Some(scene_target) = &renderer.scene_target {
+                    let camera = Camera2D {
+                        render_target: Some(scene_target.clone()),
+                        zoom: vec2((2.0 * zoom) / screen_w, (2.0 * zoom) / screen_h),
+                        target: vec2(screen_w / 2.0, screen_h / 2.0),
+                        offset: vec2(0.0, 0.0),
+                        ..Default::default()
+                    };
+                    set_camera(&camera);
                 } else {
                     set_default_camera();
                 }
-                
+
                 // Draw the shadow target to screen with transparency
                 // If deferred rendering is enabled, this draws to the scene_target
                 draw_texture_ex(
@@ -2874,7 +3204,10 @@ impl GameState {
                                     );
                                 }
                                 if item.dropped {
-                                    model.render_with_full_rotation(screen_x, screen_y, 1.33, item_color, item.pitch, item.yaw, item.roll);
+                                    model.render_with_full_rotation(
+                                        screen_x, screen_y, 1.33, item_color, item.pitch, item.yaw,
+                                        item.roll,
+                                    );
                                 } else {
                                     model.render(screen_x, screen_y, 1.0, item_color);
                                 }
@@ -2900,13 +3233,13 @@ impl GameState {
             for trail in &self.trails {
                 let screen_x = trail.x - camera_x;
                 let screen_y = trail.y - camera_y;
-                
+
                 let alpha = (1.0 - (trail.life as f32 / trail.max_life as f32)) * 0.8;
                 let size = trail.size * (1.0 - (trail.life as f32 / trail.max_life as f32) * 0.5);
-                
+
                 let mut color = trail.color;
                 color.a = alpha;
-                
+
                 batch.add_trail(screen_x, screen_y, size, color);
             }
 
@@ -2974,6 +3307,12 @@ impl GameState {
             let railgun_linear_lights = self.railgun_effects.get_linear_lights();
             self.linear_lights.clear();
             self.linear_lights.extend(railgun_linear_lights);
+
+            let lightning_impact_lights = self.lightning_effects.get_impact_lights();
+            all_lights_for_models.extend(lightning_impact_lights);
+
+            let lightning_linear_lights = self.lightning_effects.get_linear_lights();
+            self.linear_lights.extend(lightning_linear_lights);
 
             for light_pulse in &self.lights {
                 let fade = 1.0 - (light_pulse.life as f32 / light_pulse.max_life as f32);
@@ -3062,7 +3401,7 @@ impl GameState {
                 if corpse.player.gibbed {
                     continue;
                 }
-                
+
                 let player = &corpse.player;
                 let screen_x = player.x - camera_x;
                 let screen_y = player.y - camera_y;
@@ -3093,7 +3432,7 @@ impl GameState {
                         screen_x,
                         screen_y,
                         color,
-                        2.0,
+                        1.5,
                         flip,
                         rel_angle,
                         player.angle,
@@ -3105,6 +3444,7 @@ impl GameState {
                         0.0,
                         0.0,
                         0.0,
+                        false,
                         false,
                         0.0,
                     );
@@ -3157,7 +3497,7 @@ impl GameState {
                         (player.vel_x / self::constants::MAX_SPEED_AIR).clamp(-1.0, 1.0) * 0.8
                     } else {
                         0.0
-                    };
+                    } + self.debug_test_yaw;
 
                     let sway = if !in_air && player.vel_x.abs() > 0.5 {
                         (self.time as f32 * 12.0).sin() * 0.06
@@ -3165,7 +3505,7 @@ impl GameState {
                         0.0
                     };
 
-                    let mut pitch = rel_angle + sway;
+                    let mut pitch = rel_angle + sway + self.debug_test_pitch;
 
                     if !in_air && player.vel_x.abs() <= 0.1 {
                         pitch += player.idle_yaw;
@@ -3179,16 +3519,15 @@ impl GameState {
                         intensity * 0.8
                     } else {
                         0.0
-                    };
+                    } + self.debug_test_roll;
 
                     let mut somersault_angle = 0.0;
                     if player.somersault_time > 0.0 {
                         let t = player.somersault_time;
-                        // Cubic easing for sharper, earlier rotation
                         let eased = t * t * t;
                         somersault_angle = eased * std::f32::consts::PI * 2.0;
                     }
-                    
+
                     model_roll += somersault_angle;
 
                     let aim_angle = player.angle;
@@ -3200,7 +3539,7 @@ impl GameState {
                         screen_x,
                         screen_y,
                         color,
-                        2.0,
+                        1.5,
                         flip,
                         pitch,
                         aim_angle,
@@ -3212,8 +3551,13 @@ impl GameState {
                         model_yaw_offset,
                         model_roll,
                         somersault_angle,
+                        player.somersault_axis_y,
                         has_quad_damage,
-                        if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun) { player.barrel_spin_angle } else { 0.0 },
+                        if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun) {
+                            player.barrel_spin_angle
+                        } else {
+                            0.0
+                        },
                     );
 
                     if !player.dead {
@@ -3270,7 +3614,6 @@ impl GameState {
                                 }
                             }
                         }
-
                     }
                 } else {
                     if !player.dead {
@@ -3292,6 +3635,7 @@ impl GameState {
 
             if self.disable_particles {
                 self.railgun_effects.render(camera_x, camera_y);
+                self.lightning_effects.render(camera_x, camera_y);
             } else {
                 let screen_w = screen_width();
                 let screen_h = screen_height();
@@ -3325,12 +3669,12 @@ impl GameState {
                     let mut gib_batch = md3_render::MD3Batch::new();
                     let mut rendered_count = 0;
                     const MAX_GIBS_PER_FRAME: usize = 150;
-                    
+
                     for gib in &self.gibs {
                         if rendered_count >= MAX_GIBS_PER_FRAME {
                             break;
                         }
-                        
+
                         let sx = gib.x - camera_x;
                         let sy = gib.y - camera_y;
                         if sx > -effect_margin
@@ -3338,7 +3682,12 @@ impl GameState {
                             && sy > -effect_margin
                             && sy < screen_h + effect_margin
                         {
-                            gib.render_batched(camera_x, camera_y, &self.gib_model_cache, &mut gib_batch);
+                            gib.render_batched(
+                                camera_x,
+                                camera_y,
+                                &self.gib_model_cache,
+                                &mut gib_batch,
+                            );
                             rendered_count += 1;
                         }
                     }
@@ -3358,6 +3707,7 @@ impl GameState {
                 }
 
                 self.railgun_effects.render(camera_x, camera_y);
+                self.lightning_effects.render(camera_x, camera_y);
             }
         }
 
@@ -3371,12 +3721,26 @@ impl GameState {
         let _t_before_end = get_time();
         {
             let _scope = crate::profiler::scope("render_end_scene");
-            if !self.disable_deferred {
-                renderer.end_scene();
-            }
+            renderer.end_scene();
         }
 
-        if !self.disable_deferred {
+        if self.disable_deferred {
+            if let Some(target) = &renderer.scene_target {
+                let screen_w = screen_width();
+                let screen_h = screen_height();
+                draw_texture_ex(
+                    &target.texture,
+                    0.0,
+                    0.0,
+                    WHITE,
+                    DrawTextureParams {
+                        dest_size: Some(vec2(screen_w, screen_h)),
+                        flip_y: false,
+                        ..Default::default()
+                    },
+                );
+            }
+        } else {
             {
                 let _scope = crate::profiler::scope("render_lighting_final");
 
@@ -3393,6 +3757,9 @@ impl GameState {
 
                     let railgun_explosion_lights = self.railgun_effects.get_explosion_lights();
                     lights.extend(railgun_explosion_lights);
+
+                    let lightning_impact_lights = self.lightning_effects.get_impact_lights();
+                    lights.extend(lightning_impact_lights);
 
                     for light_pulse in &self.lights {
                         let fade = 1.0 - (light_pulse.life as f32 / light_pulse.max_life as f32);
@@ -3492,19 +3859,19 @@ impl GameState {
 
         {
             let _scope = crate::profiler::scope("render_awards");
-            
+
             let local_player_id = if self.is_multiplayer {
                 self.network_client.as_ref().and_then(|c| c.player_id())
             } else {
                 self.players.get(0).map(|p| p.id)
             };
-            
+
             let award_material = award_shader::get_award_shader_material();
             gl_use_material(award_material);
-            
+
             for award in &self.awards {
                 let is_local_award = Some(award.player_id) == local_player_id;
-                
+
                 if is_local_award {
                     if let Some(texture) = self.award_icon_cache.get(&award.award_type) {
                         let size = 96.0 * award.scale;
@@ -3512,10 +3879,10 @@ impl GameState {
                         let x = screen_w / 2.0 - size / 2.0;
                         let y = 100.0;
                         let bounce = (award.lifetime * 6.0).sin() * 8.0 * award.scale;
-                        
+
                         award_material.set_uniform("time", award.lifetime);
                         award_material.set_uniform("scale", award.scale);
-                        
+
                         draw_texture_ex(
                             texture,
                             x,
@@ -3529,25 +3896,25 @@ impl GameState {
                     }
                     continue;
                 }
-                
+
                 if let Some(player) = self.players.iter().find(|p| p.id == award.player_id) {
                     if player.gibbed || player.dead {
                         continue;
                     }
-                    
+
                     let world_x = player.x;
                     let world_y = player.y - 120.0;
-                    
+
                     let screen_x = world_x - camera_x;
                     let screen_y = world_y - camera_y;
-                    
+
                     if let Some(texture) = self.award_icon_cache.get(&award.award_type) {
                         let size = 48.0 * award.scale;
                         let bounce = (award.lifetime * 6.0).sin() * 4.0 * award.scale;
-                        
+
                         award_material.set_uniform("time", award.lifetime);
                         award_material.set_uniform("scale", award.scale);
-                        
+
                         draw_texture_ex(
                             texture,
                             screen_x - size / 2.0,
@@ -3561,15 +3928,22 @@ impl GameState {
                     }
                 }
             }
-            
+
             gl_use_default_material();
         }
 
         if let Some(defrag) = &self.defrag_mode {
             defrag.render(camera_x, camera_y);
         }
-        
-        self.game_results.draw(self.match_time, &mut self.model_cache, &self.award_icon_cache, &self.weapon_model_cache, camera_x, camera_y);
+
+        self.game_results.draw(
+            self.match_time,
+            &mut self.model_cache,
+            &self.award_icon_cache,
+            &self.weapon_model_cache,
+            camera_x,
+            camera_y,
+        );
     }
 
     pub fn render_messages(&self) {

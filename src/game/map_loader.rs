@@ -1,8 +1,10 @@
+use super::file_loader;
+use super::map::{
+    BackgroundElement, Item, ItemType, JumpPad, LightSource, Map, SpawnPoint, Teleporter, Tile,
+};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use super::map::{Map, Tile, SpawnPoint, Item, ItemType, JumpPad, Teleporter, LightSource, BackgroundElement};
-use super::file_loader;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MapFile {
@@ -82,7 +84,9 @@ pub struct LightData {
     pub flicker: bool,
 }
 
-fn default_intensity() -> f32 { 1.0 }
+fn default_intensity() -> f32 {
+    1.0
+}
 
 impl MapFile {
     #[allow(dead_code)]
@@ -99,23 +103,31 @@ impl MapFile {
         let map_file: MapFile = serde_json::from_reader(reader)?;
         Ok(map_file)
     }
-    
+
     pub async fn load_from_file_async(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
-        let content = file_loader::load_file_string(path).await
-            .map_err(|e| Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, e)) as Box<dyn std::error::Error>)?;
+        let content = file_loader::load_file_string(path).await.map_err(|e| {
+            Box::new(std::io::Error::new(std::io::ErrorKind::NotFound, e))
+                as Box<dyn std::error::Error>
+        })?;
         let map_file: MapFile = serde_json::from_str(&content)?;
         Ok(map_file)
     }
 
     pub fn to_map(&self) -> Map {
-        let mut tiles = vec![vec![Tile { 
-            solid: false, 
-            texture_id: 0,
-            shader_name: None,
-            detail_texture: None,
-            glow_texture: None,
-            blend_alpha: 1.0,
-        }; self.height]; self.width];
+        let mut tiles = vec![
+            vec![
+                Tile {
+                    solid: false,
+                    texture_id: 0,
+                    shader_name: None,
+                    detail_texture: None,
+                    glow_texture: None,
+                    blend_alpha: 1.0,
+                };
+                self.height
+            ];
+            self.width
+        ];
 
         for row in &self.tile_data {
             let y = row.y;
@@ -136,7 +148,8 @@ impl MapFile {
             }
         }
 
-        let spawn_points = self.spawn_points
+        let spawn_points = self
+            .spawn_points
             .iter()
             .map(|sp| SpawnPoint {
                 x: sp.tile_x * self.tile_width,
@@ -145,7 +158,8 @@ impl MapFile {
             })
             .collect();
 
-        let items = self.items
+        let items = self
+            .items
             .iter()
             .filter_map(|item| {
                 let item_type = match item.item_type.as_str() {
@@ -157,6 +171,7 @@ impl MapFile {
                     "Shotgun" => ItemType::Shotgun,
                     "GrenadeLauncher" => ItemType::GrenadeLauncher,
                     "RocketLauncher" => ItemType::RocketLauncher,
+                    "LightningGun" => ItemType::LightningGun,
                     "Railgun" => ItemType::Railgun,
                     "Plasmagun" => ItemType::Plasmagun,
                     "BFG" => ItemType::BFG,
@@ -173,12 +188,22 @@ impl MapFile {
                     y: item.tile_y * self.tile_height,
                     item_type,
                     respawn_time: 0,
-                    active: true, vel_x: 0.0, vel_y: 0.0, dropped: false, yaw: 0.0, spin_yaw: 0.0, pitch: 0.0, roll: 0.0, spin_pitch: 0.0, spin_roll: 0.0,
+                    active: true,
+                    vel_x: 0.0,
+                    vel_y: 0.0,
+                    dropped: false,
+                    yaw: 0.0,
+                    spin_yaw: 0.0,
+                    pitch: 0.0,
+                    roll: 0.0,
+                    spin_pitch: 0.0,
+                    spin_roll: 0.0,
                 })
             })
             .collect();
 
-        let jumppads = self.jumppads
+        let jumppads = self
+            .jumppads
             .iter()
             .map(|jp| JumpPad {
                 x: jp.tile_x * self.tile_width,
@@ -190,7 +215,8 @@ impl MapFile {
             })
             .collect();
 
-        let teleporters = self.teleporters
+        let teleporters = self
+            .teleporters
             .iter()
             .map(|tp| Teleporter {
                 x: tp.tile_x * self.tile_width,
@@ -202,16 +228,20 @@ impl MapFile {
             })
             .collect();
 
-        let lights = self.lights.iter().map(|l| LightSource { 
-            x: l.x, 
-            y: l.y, 
-            radius: l.radius, 
-            r: l.r, 
-            g: l.g, 
-            b: l.b, 
-            intensity: l.intensity,
-            flicker: l.flicker,
-        }).collect();
+        let lights = self
+            .lights
+            .iter()
+            .map(|l| LightSource {
+                x: l.x,
+                y: l.y,
+                radius: l.radius,
+                r: l.r,
+                g: l.g,
+                b: l.b,
+                intensity: l.intensity,
+                flicker: l.flicker,
+            })
+            .collect();
 
         Map {
             width: self.width,
@@ -241,9 +271,10 @@ impl MapFile {
                     let texture_id = tile.texture_id;
                     let solid = tile.solid;
 
-                    while x < map.width 
-                        && map.tiles[x][y].solid == solid 
-                        && map.tiles[x][y].texture_id == texture_id {
+                    while x < map.width
+                        && map.tiles[x][y].solid == solid
+                        && map.tiles[x][y].texture_id == texture_id
+                    {
                         x += 1;
                     }
 
@@ -259,11 +290,15 @@ impl MapFile {
             }
 
             if !row_tiles.is_empty() {
-                tile_data.push(TileRow { y, tiles: row_tiles });
+                tile_data.push(TileRow {
+                    y,
+                    tiles: row_tiles,
+                });
             }
         }
 
-        let spawn_points = map.spawn_points
+        let spawn_points = map
+            .spawn_points
             .iter()
             .map(|sp| SpawnPointData {
                 tile_x: sp.x / tile_width,
@@ -272,7 +307,8 @@ impl MapFile {
             })
             .collect();
 
-        let items = map.items
+        let items = map
+            .items
             .iter()
             .map(|item| {
                 let item_type = match item.item_type {
@@ -284,6 +320,7 @@ impl MapFile {
                     ItemType::Shotgun => "Shotgun",
                     ItemType::GrenadeLauncher => "GrenadeLauncher",
                     ItemType::RocketLauncher => "RocketLauncher",
+                    ItemType::LightningGun => "LightningGun",
                     ItemType::Railgun => "Railgun",
                     ItemType::Plasmagun => "Plasmagun",
                     ItemType::BFG => "BFG",
@@ -302,7 +339,8 @@ impl MapFile {
             })
             .collect();
 
-        let jumppads = map.jumppads
+        let jumppads = map
+            .jumppads
             .iter()
             .map(|jp| JumpPadData {
                 tile_x: jp.x / tile_width,
@@ -313,7 +351,8 @@ impl MapFile {
             })
             .collect();
 
-        let teleporters = map.teleporters
+        let teleporters = map
+            .teleporters
             .iter()
             .map(|tp| TeleporterData {
                 tile_x: tp.x / tile_width,
@@ -325,16 +364,20 @@ impl MapFile {
             })
             .collect();
 
-        let lights = map.lights.iter().map(|l| LightData { 
-            x: l.x, 
-            y: l.y, 
-            radius: l.radius, 
-            r: l.r, 
-            g: l.g, 
-            b: l.b,
-            intensity: l.intensity,
-            flicker: l.flicker,
-        }).collect();
+        let lights = map
+            .lights
+            .iter()
+            .map(|l| LightData {
+                x: l.x,
+                y: l.y,
+                radius: l.radius,
+                r: l.r,
+                g: l.g,
+                b: l.b,
+                intensity: l.intensity,
+                flicker: l.flicker,
+            })
+            .collect();
 
         MapFile {
             name: name.to_string(),
@@ -352,4 +395,3 @@ impl MapFile {
         }
     }
 }
-

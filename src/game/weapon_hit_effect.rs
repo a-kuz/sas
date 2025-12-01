@@ -1,9 +1,9 @@
-use macroquad::prelude::*;
-use macroquad::miniquad;
+use crate::count_shader;
 use crate::game::weapon::Weapon;
+use macroquad::miniquad;
+use macroquad::prelude::*;
 use std::collections::HashMap;
 use std::sync::OnceLock;
-use crate::count_shader;
 
 static WEAPON_HIT_MATERIAL_ADDITIVE: OnceLock<Material> = OnceLock::new();
 static WEAPON_HIT_MATERIAL_ALPHA: OnceLock<Material> = OnceLock::new();
@@ -57,7 +57,8 @@ fn get_weapon_hit_material_additive() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -109,7 +110,8 @@ fn get_weapon_hit_material_alpha() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -186,7 +188,7 @@ impl WeaponHitEffect {
     pub fn update(&mut self) -> bool {
         self.life += 1;
         self.frame_time += 1.0;
-        
+
         if self.frame_time >= self.frame_duration as f32 {
             self.frame += 1;
             self.frame_time = 0.0;
@@ -199,8 +201,11 @@ impl WeaponHitEffect {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
 
-        if screen_x < -100.0 || screen_x > screen_width() + 100.0 
-            || screen_y < -100.0 || screen_y > screen_height() + 100.0 {
+        if screen_x < -100.0
+            || screen_x > screen_width() + 100.0
+            || screen_y < -100.0
+            || screen_y > screen_height() + 100.0
+        {
             return;
         }
 
@@ -213,7 +218,7 @@ impl WeaponHitEffect {
 
         let blend_factor = self.frame_time / self.frame_duration as f32;
         let next_frame = (self.frame + 1).min(self.max_frames - 1);
-        
+
         let current_texture = cache.get_texture(&self.effect_type, self.frame);
         let next_texture = if self.frame < self.max_frames - 1 {
             cache.get_texture(&self.effect_type, next_frame)
@@ -229,7 +234,7 @@ impl WeaponHitEffect {
 
         if self.effect_type == HitEffectType::Blood {
             gl_use_material(get_weapon_hit_material_alpha());
-            
+
             if let Some(texture) = current_texture {
                 let alpha = base_alpha * (1.0 - blend_factor);
                 let color = Color::from_rgba(255, 255, 255, (alpha * 255.0) as u8);
@@ -241,7 +246,7 @@ impl WeaponHitEffect {
                     make_params(),
                 );
             }
-            
+
             if let Some(texture) = next_texture {
                 let alpha = base_alpha * blend_factor;
                 let color = Color::from_rgba(255, 255, 255, (alpha * 255.0) as u8);
@@ -253,19 +258,19 @@ impl WeaponHitEffect {
                     make_params(),
                 );
             }
-            
+
             count_shader!("weapon_hit_alpha");
             gl_use_default_material();
         } else {
             gl_use_material(get_weapon_hit_material_additive());
-            
+
             if let Some(texture) = current_texture {
                 let alpha = base_alpha * (1.0 - blend_factor);
                 let color = Color::from_rgba(
                     (255.0 * alpha) as u8,
                     (255.0 * alpha) as u8,
                     (255.0 * alpha) as u8,
-                    255
+                    255,
                 );
                 draw_texture_ex(
                     &texture,
@@ -275,14 +280,14 @@ impl WeaponHitEffect {
                     make_params(),
                 );
             }
-            
+
             if let Some(texture) = next_texture {
                 let alpha = base_alpha * blend_factor;
                 let color = Color::from_rgba(
                     (255.0 * alpha) as u8,
                     (255.0 * alpha) as u8,
                     (255.0 * alpha) as u8,
-                    255
+                    255,
                 );
                 draw_texture_ex(
                     &texture,
@@ -292,7 +297,7 @@ impl WeaponHitEffect {
                     make_params(),
                 );
             }
-            
+
             count_shader!("weapon_hit_additive");
             gl_use_default_material();
         }
@@ -326,7 +331,8 @@ impl WeaponHitTextureCache {
             let path = format!("q3-resources/models/weaphits/bullet{}.png", i);
             if let Ok(texture) = load_texture(&path).await {
                 texture.set_filter(FilterMode::Linear);
-                self.textures.insert((HitEffectType::Bullet, i - 1), texture);
+                self.textures
+                    .insert((HitEffectType::Bullet, i - 1), texture);
             }
         }
     }
@@ -354,7 +360,8 @@ impl WeaponHitTextureCache {
             let path = format!("q3-resources/models/weaphits/rlboom/rlboom_{}.png", i);
             if let Ok(texture) = load_texture(&path).await {
                 texture.set_filter(FilterMode::Linear);
-                self.textures.insert((HitEffectType::Rocket, i - 1), texture);
+                self.textures
+                    .insert((HitEffectType::Rocket, i - 1), texture);
             }
         }
     }
@@ -364,7 +371,8 @@ impl WeaponHitTextureCache {
             let path = format!("q3-resources/models/weaphits/glboom/glboom_{}.png", i);
             if let Ok(texture) = load_texture(&path).await {
                 texture.set_filter(FilterMode::Linear);
-                self.textures.insert((HitEffectType::Grenade, i - 1), texture);
+                self.textures
+                    .insert((HitEffectType::Grenade, i - 1), texture);
             }
         }
     }
@@ -384,7 +392,8 @@ impl WeaponHitTextureCache {
             let path = format!("q3-resources/models/weaphits/ring02_{}.png", i);
             if let Ok(texture) = load_texture(&path).await {
                 texture.set_filter(FilterMode::Linear);
-                self.textures.insert((HitEffectType::Lightning, i - 1), texture);
+                self.textures
+                    .insert((HitEffectType::Lightning, i - 1), texture);
             }
         }
     }
@@ -403,4 +412,3 @@ impl WeaponHitTextureCache {
         self.textures.get(&(effect_type.clone(), frame))
     }
 }
-

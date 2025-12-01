@@ -50,7 +50,7 @@ impl BatchedEffectsRenderer {
             let angle = (i as f32 / SEGMENTS as f32) * std::f32::consts::PI * 2.0;
             let px = x + angle.cos() * radius;
             let py = y + angle.sin() * radius;
-            
+
             self.vertices.push(Vertex {
                 position: Vec3::new(px, py, 0.0),
                 uv: Vec2::new(0.5 + angle.cos() * 0.5, 0.5 + angle.sin() * 0.5),

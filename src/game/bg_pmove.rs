@@ -1,6 +1,6 @@
-use super::map::Map;
-use super::constants::*;
 use super::collision;
+use super::constants::*;
+use super::map::Map;
 
 #[derive(Clone, Debug)]
 pub struct PmoveState {
@@ -35,7 +35,7 @@ pub struct PmoveResult {
 
 pub fn pmove(state: &PmoveState, cmd: &PmoveCmd, dt: f32, map: &Map) -> PmoveResult {
     const MAX_DT: f32 = 0.05;
-    
+
     let x = state.x;
     let y = state.y;
     let mut vel_x = state.vel_x;
@@ -128,15 +128,7 @@ pub fn pmove(state: &PmoveState, cmd: &PmoveCmd, dt: f32, map: &Map) -> PmoveRes
         vel_x = vel_x.signum() * MAX_SPEED_AIR;
     }
 
-    let mut coll = collision::move_with_collision(
-        x,
-        y,
-        vel_x,
-        vel_y,
-        cmd.crouch,
-        dt_norm,
-        map,
-    );
+    let mut coll = collision::move_with_collision(x, y, vel_x, vel_y, cmd.crouch, dt_norm, map);
 
     let mut had_impulse = false;
     let mut impulse_type = String::new();
@@ -148,7 +140,10 @@ pub fn pmove(state: &PmoveState, cmd: &PmoveCmd, dt: f32, map: &Map) -> PmoveRes
             coll.new_vel_y = jumppad.force_y;
             had_impulse = true;
             hit_jumppad = true;
-            impulse_type = format!("jumppad(fx={:.1},fy={:.1})", jumppad.force_x, jumppad.force_y);
+            impulse_type = format!(
+                "jumppad(fx={:.1},fy={:.1})",
+                jumppad.force_x, jumppad.force_y
+            );
         }
     }
 
@@ -167,4 +162,3 @@ pub fn pmove(state: &PmoveState, cmd: &PmoveCmd, dt: f32, map: &Map) -> PmoveRes
         hit_jumppad,
     }
 }
-

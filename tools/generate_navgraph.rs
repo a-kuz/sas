@@ -1,5 +1,5 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 #[path = "../src/game/light.rs"]
 mod light;
@@ -64,13 +64,13 @@ fn main() {
     println!("Total edges: {}", nav_graph.edges.len());
     println!();
 
-    let node_types = nav_graph.nodes.iter().fold(
-        HashMap::new(),
-        |mut acc, node| {
+    let node_types = nav_graph
+        .nodes
+        .iter()
+        .fold(HashMap::new(), |mut acc, node| {
             *acc.entry(format!("{:?}", node.node_type)).or_insert(0) += 1;
             acc
-        }
-    );
+        });
 
     println!("Node types:");
     for (node_type, count) in node_types {
@@ -78,13 +78,13 @@ fn main() {
     }
     println!();
 
-    let edge_types = nav_graph.edges.iter().fold(
-        HashMap::new(),
-        |mut acc, edge| {
+    let edge_types = nav_graph
+        .edges
+        .iter()
+        .fold(HashMap::new(), |mut acc, edge| {
             *acc.entry(format!("{:?}", edge.edge_type)).or_insert(0) += 1;
             acc
-        }
-    );
+        });
 
     println!("Edge types:");
     for (edge_type, count) in edge_types {
@@ -95,7 +95,10 @@ fn main() {
     let components = nav_graph.find_connected_components();
     println!("Connected components: {}", components.len());
     if components.len() > 1 {
-        println!("WARNING: Graph has {} disconnected components!", components.len());
+        println!(
+            "WARNING: Graph has {} disconnected components!",
+            components.len()
+        );
         for (i, component) in components.iter().enumerate() {
             println!("  Component {}: {} nodes", i, component.len());
         }
@@ -106,8 +109,7 @@ fn main() {
 
     let output_path = format!("maps/{}_navgraph.json", map_name);
     let json = serde_json::to_string_pretty(&nav_graph).unwrap();
-    
+
     fs::write(&output_path, json).expect("Failed to write navigation graph");
     println!("Saved navigation graph to: {}", output_path);
 }
-

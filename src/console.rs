@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
 use crate::cvar;
-use crate::game::tile_shader::{TileShaderRenderer, TileShader};
+use crate::game::tile_shader::{TileShader, TileShaderRenderer};
+use macroquad::prelude::*;
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
@@ -82,11 +82,11 @@ impl Console {
         self.load_history();
         self.initialized = true;
     }
-    
+
     fn get_history_path() -> PathBuf {
         PathBuf::from(HISTORY_FILE)
     }
-    
+
     fn load_history(&mut self) {
         let path = Self::get_history_path();
         if let Ok(file) = fs::File::open(&path) {
@@ -102,7 +102,7 @@ impl Console {
             self.history_line = self.history.len() as i32;
         }
     }
-    
+
     fn save_history(&self) {
         let path = Self::get_history_path();
         if let Ok(mut file) = fs::File::create(&path) {
@@ -114,12 +114,12 @@ impl Console {
 
     pub async fn load_texture(&mut self) {
         let mut renderer = TileShaderRenderer::new();
-        
+
         renderer.load_texture("gfx/misc/console01.tga").await;
         renderer.load_texture("gfx/misc/console02.tga").await;
-        
-        use crate::game::tile_shader::{ShaderStage, BlendMode};
-        
+
+        use crate::game::tile_shader::{BlendMode, ShaderStage};
+
         let console_shader = TileShader {
             name: "console".to_string(),
             base_texture: String::new(),
@@ -147,7 +147,7 @@ impl Console {
             ],
             ..Default::default()
         };
-        
+
         renderer.add_shader(console_shader);
         self.shader_renderer = Some(renderer);
     }
@@ -156,7 +156,7 @@ impl Console {
         let width = screen_width() as i32;
         let char_width = 8;
         let new_linewidth = (width / char_width - 2).max(20);
-        
+
         if new_linewidth == self.linewidth {
             return;
         }
@@ -210,7 +210,7 @@ impl Console {
             self.display += 1;
         }
         self.current += 1;
-        
+
         let y = (self.current % self.totallines) as usize;
         for i in 0..self.linewidth as usize {
             let idx = y * self.linewidth as usize + i;
@@ -242,7 +242,7 @@ impl Console {
             self.cursor_pos += 1;
         }
     }
-    
+
     pub fn copy_to_clipboard(&self) {
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -251,7 +251,7 @@ impl Console {
             }
         }
     }
-    
+
     pub fn paste_from_clipboard(&mut self) {
         #[cfg(not(target_arch = "wasm32"))]
         {
@@ -329,28 +329,40 @@ impl Console {
 
     fn autocomplete(&mut self) {
         let input = self.input_line.trim_start();
-        
+
         let commands = vec![
-            "clear", "cls", "cvarlist", "toggle", "echo", "reset", 
-            "writeconfig", "bot_add", "addbot", "bot_remove", "removebot",
-            "bot_afk", "help", "set", "endmatch"
+            "clear",
+            "cls",
+            "cvarlist",
+            "toggle",
+            "echo",
+            "reset",
+            "writeconfig",
+            "bot_add",
+            "addbot",
+            "bot_remove",
+            "removebot",
+            "bot_afk",
+            "help",
+            "set",
+            "endmatch",
         ];
-        
+
         let mut all_matches = Vec::new();
-        
+
         for cmd in &commands {
             if cmd.starts_with(input) {
                 all_matches.push(cmd.to_string());
             }
         }
-        
+
         let cvar_matches = cvar::find_cvar_matches(input);
         all_matches.extend(cvar_matches.clone());
-        
+
         if all_matches.is_empty() {
             return;
         }
-        
+
         if all_matches.len() == 1 {
             self.input_line = all_matches[0].clone() + " ";
             self.cursor_pos = self.input_line.len();
@@ -360,7 +372,7 @@ impl Console {
                 self.input_line = common_prefix;
                 self.cursor_pos = self.input_line.len();
             }
-            
+
             self.print(&format!("]{}  \n", self.input_line));
             for m in &all_matches {
                 if let Some(cvar) = cvar::get_cvar(m) {
@@ -374,7 +386,7 @@ impl Console {
 
     fn execute_command(&mut self) {
         self.print(&format!("]{}  \n", self.input_line));
-        
+
         self.history.push(self.input_line.clone());
         if self.history.len() > COMMAND_HISTORY {
             self.history.remove(0);
@@ -390,7 +402,7 @@ impl Console {
         }
 
         let cmd = parts[0];
-        
+
         if cmd == "clear" || cmd == "cls" {
             self.clear();
         } else if cmd == "cvarlist" {
@@ -417,7 +429,10 @@ impl Console {
             let var_name = parts[1];
             if let Some(cv) = cvar::get_cvar(var_name) {
                 cvar::set_cvar(var_name, &cv.default_value);
-                self.print(&format!("{} reset to default: {}\n", var_name, cv.default_value));
+                self.print(&format!(
+                    "{} reset to default: {}\n",
+                    var_name, cv.default_value
+                ));
             } else {
                 self.print(&format!("Unknown cvar: {}\n", var_name));
             }
@@ -429,9 +444,9 @@ impl Console {
                 self.server_bot_add_request = true;
                 self.print("Requesting bot from server...\n");
             } else {
-                let model = if parts.len() >= 2 { 
+                let model = if parts.len() >= 2 {
                     parts[1].to_string()
-                } else { 
+                } else {
                     "sarge".to_string()
                 };
                 self.bot_add_request = Some(model.clone());
@@ -495,8 +510,10 @@ impl Console {
             self.print(&format!("{} set to {}\n", var_name, value));
         } else if parts.len() == 1 {
             if let Some(cvar) = cvar::get_cvar(cmd) {
-                self.print(&format!("\"{}\" is \"{}\" default: \"{}\"\n", 
-                    cvar.name, cvar.value, cvar.default_value));
+                self.print(&format!(
+                    "\"{}\" is \"{}\" default: \"{}\"\n",
+                    cvar.name, cvar.value, cvar.default_value
+                ));
             } else {
                 self.print(&format!("Unknown command: {}\n", cmd));
             }
@@ -549,7 +566,7 @@ impl Console {
         let screen_w = screen_width();
         let screen_h = screen_height();
         let y = (self.display_frac * screen_h).round();
-        
+
         if y < 1.0 {
             return;
         }
@@ -566,10 +583,10 @@ impl Console {
         let char_height = 12.0;
         let char_width = 8.0;
         let rows = ((y - char_height * 2.5) / char_height) as i32;
-        
+
         let mut text_y = y - char_height * 2.5;
         let mut row = self.display;
-        
+
         if self.x == 0 {
             row -= 1;
         }
@@ -586,13 +603,13 @@ impl Console {
 
             let text_row = (row % self.totallines) as usize;
             let start_idx = text_row * self.linewidth as usize;
-            
+
             for x in 0..self.linewidth {
                 let idx = start_idx + x as usize;
                 if idx >= self.text.len() {
                     break;
                 }
-                
+
                 let con_char = self.text[idx];
                 if con_char.ch != b' ' {
                     crate::render::draw_q3_small_char(
@@ -611,7 +628,7 @@ impl Console {
 
         let input_y = y - char_height * 1.5;
         crate::render::draw_q3_small_char(char_width, input_y, char_height, b']', WHITE);
-        
+
         for (i, ch) in self.input_line.chars().enumerate() {
             crate::render::draw_q3_small_char(
                 (i as f32 + 2.0) * char_width,
@@ -621,7 +638,7 @@ impl Console {
                 WHITE,
             );
         }
-        
+
         let cursor_time = (get_time() * 2.0) as i32;
         if cursor_time % 2 == 0 {
             crate::render::draw_q3_small_char(
@@ -639,10 +656,10 @@ fn find_common_prefix(strings: &[String]) -> String {
     if strings.is_empty() {
         return String::new();
     }
-    
+
     let first = &strings[0];
     let mut prefix = String::new();
-    
+
     for (i, ch) in first.chars().enumerate() {
         if strings.iter().all(|s| {
             s.chars().nth(i).map(|c| c.to_ascii_lowercase()) == Some(ch.to_ascii_lowercase())
@@ -652,7 +669,6 @@ fn find_common_prefix(strings: &[String]) -> String {
             break;
         }
     }
-    
+
     prefix
 }
-

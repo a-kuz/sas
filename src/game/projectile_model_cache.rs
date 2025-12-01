@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use crate::game::md3::MD3Model;
+use std::collections::HashMap;
 
 pub enum ProjectileModelType {
     Rocket,
@@ -32,7 +32,7 @@ impl ProjectileModelCache {
                 return None;
             }
         }
-        
+
         self.models.get(model_path)
     }
 
@@ -48,12 +48,13 @@ impl ProjectileModelCache {
         if !self.textures.contains_key(path) {
             if std::path::Path::new(path).exists() {
                 if let Ok(bytes) = std::fs::read(path) {
-                    let texture = macroquad::prelude::Texture2D::from_file_with_format(&bytes, None);
+                    let texture =
+                        macroquad::prelude::Texture2D::from_file_with_format(&bytes, None);
                     self.textures.insert(path.to_string(), texture);
                 }
             }
         }
-        
+
         self.textures.get(path)
     }
 
@@ -61,4 +62,3 @@ impl ProjectileModelCache {
         self.textures.get(path)
     }
 }
-

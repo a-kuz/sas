@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
-use crate::game::weapon::Weapon;
 use crate::game::md3::MD3Model;
+use crate::game::weapon::Weapon;
+use macroquad::prelude::*;
 use std::collections::HashMap;
 
 pub struct MuzzleFlashCache {
@@ -19,31 +19,92 @@ impl MuzzleFlashCache {
     }
 
     pub async fn load_all(&mut self) {
-        self.load_flash_model(Weapon::MachineGun, "q3-resources/models/weapons2/machinegun/machinegun_flash.md3").await;
-        self.load_flash_texture(Weapon::MachineGun, "q3-resources/models/weapons2/machinegun/f_machinegun.png").await;
-        
-        self.load_flash_model(Weapon::Shotgun, "q3-resources/models/weapons2/shotgun/shotgun_flash.md3").await;
-        self.load_flash_texture(Weapon::Shotgun, "q3-resources/models/weapons2/shotgun/f_shotgun.png").await;
-        
-        self.load_flash_model(Weapon::GrenadeLauncher, "q3-resources/models/weapons2/grenadel/grenadel_flash.md3").await;
-        self.load_flash_texture(Weapon::GrenadeLauncher, "q3-resources/models/weapons2/grenadel/f_grenadel.png").await;
-        
-        self.load_flash_model(Weapon::RocketLauncher, "q3-resources/models/weapons2/rocketl/rocketl_flash.md3").await;
-        self.load_flash_texture(Weapon::RocketLauncher, "q3-resources/models/weapons2/rocketl/f_rocketl.png").await;
-        
-        self.load_flash_model(Weapon::Lightning, "q3-resources/models/weapons2/lightning/lightning_flash.md3").await;
-        self.load_flash_texture(Weapon::Lightning, "q3-resources/models/weapons2/lightning/f_lightning.png").await;
-        
-        self.load_flash_model(Weapon::Railgun, "q3-resources/models/weapons2/railgun/railgun_flash.md3").await;
-        self.load_flash_texture(Weapon::Railgun, "q3-resources/models/weapons2/railgun/f_railgun.png").await;
-        
-        self.load_flash_model(Weapon::Plasmagun, "q3-resources/models/weapons2/plasma/plasma_flash.md3").await;
-        self.load_flash_texture(Weapon::Plasmagun, "q3-resources/models/weapons2/plasma/f_plasma.png").await;
-        
-        self.load_flash_model(Weapon::BFG, "q3-resources/models/weapons2/bfg/bfg_flash.md3").await;
-        self.load_flash_texture(Weapon::BFG, "q3-resources/models/weapons2/bfg/f_bfg.png").await;
+        self.load_flash_model(
+            Weapon::MachineGun,
+            "q3-resources/models/weapons2/machinegun/machinegun_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::MachineGun,
+            "q3-resources/models/weapons2/machinegun/f_machinegun.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::Shotgun,
+            "q3-resources/models/weapons2/shotgun/shotgun_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::Shotgun,
+            "q3-resources/models/weapons2/shotgun/f_shotgun.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::GrenadeLauncher,
+            "q3-resources/models/weapons2/grenadel/grenadel_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::GrenadeLauncher,
+            "q3-resources/models/weapons2/grenadel/f_grenadel.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::RocketLauncher,
+            "q3-resources/models/weapons2/rocketl/rocketl_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::RocketLauncher,
+            "q3-resources/models/weapons2/rocketl/f_rocketl.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::Lightning,
+            "q3-resources/models/weapons2/lightning/lightning_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::Lightning,
+            "q3-resources/models/weapons2/lightning/f_lightning.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::Railgun,
+            "q3-resources/models/weapons2/railgun/railgun_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::Railgun,
+            "q3-resources/models/weapons2/railgun/f_railgun.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::Plasmagun,
+            "q3-resources/models/weapons2/plasma/plasma_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(
+            Weapon::Plasmagun,
+            "q3-resources/models/weapons2/plasma/f_plasma.png",
+        )
+        .await;
+
+        self.load_flash_model(
+            Weapon::BFG,
+            "q3-resources/models/weapons2/bfg/bfg_flash.md3",
+        )
+        .await;
+        self.load_flash_texture(Weapon::BFG, "q3-resources/models/weapons2/bfg/f_bfg.png")
+            .await;
     }
-    
+
     async fn load_flash_texture(&mut self, weapon: Weapon, path: &str) {
         self.texture_paths.insert(weapon, path.to_string());
         if let Ok(tex) = load_texture(path).await {
@@ -65,11 +126,11 @@ impl MuzzleFlashCache {
     pub fn get_model(&self, weapon: Weapon) -> Option<&MD3Model> {
         self.models.get(&weapon).and_then(|opt| opt.as_ref())
     }
-    
+
     pub fn get_texture(&self, weapon: Weapon) -> Option<&Texture2D> {
         self.textures.get(&weapon).and_then(|opt| opt.as_ref())
     }
-    
+
     pub fn get_texture_path(&self, weapon: Weapon) -> Option<&str> {
         self.texture_paths.get(&weapon).map(|s| s.as_str())
     }
@@ -111,9 +172,9 @@ impl MuzzleFlash {
 
         let offset_x = self.angle.cos() * 20.0;
         let offset_y = self.angle.sin() * 20.0;
-        
+
         let fade = 1.0 - (self.life as f32 / 5.0);
-        
+
         if let Some(model) = cache.get_model(self.weapon) {
             let texture = cache.get_texture(self.weapon);
             let texture_path = cache.get_texture_path(self.weapon);
@@ -134,4 +195,3 @@ impl MuzzleFlash {
         }
     }
 }
-

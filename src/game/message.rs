@@ -29,7 +29,7 @@ impl GameMessage {
             8 => "blasted by BFG of",
             _ => "killed by",
         };
-        
+
         let text = format!("{} was {} {}", victim, weapon_text, killer);
         Self::new(text, Color::from_rgba(255, 255, 100, 255))
     }
@@ -45,17 +45,10 @@ impl GameMessage {
         } else {
             1.0 - ((self.life - 50) as f32 / 200.0)
         };
-        
+
         let mut color = self.color;
         color.a = alpha;
-        
-        draw_text(
-            &self.text,
-            20.0,
-            100.0 + y_offset,
-            18.0,
-            color,
-        );
+
+        draw_text(&self.text, 20.0, 100.0 + y_offset, 18.0, color);
     }
 }
-

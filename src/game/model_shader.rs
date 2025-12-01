@@ -1,9 +1,9 @@
-use macroquad::prelude::*;
-use macroquad::miniquad;
-use std::sync::OnceLock;
-use crate::game::tile_shader::*;
 use crate::game::q3_shader_parser::Q3ShaderParser;
+use crate::game::tile_shader::*;
+use macroquad::miniquad;
+use macroquad::prelude::*;
 use std::collections::HashMap;
+use std::sync::OnceLock;
 
 static MODEL_DIFFUSE_SPECULAR_MATERIAL: OnceLock<Material> = OnceLock::new();
 static MODEL_ALPHA_TEST_MATERIAL: OnceLock<Material> = OnceLock::new();
@@ -57,7 +57,10 @@ fn get_model_diffuse_specular_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 pipeline_params: PipelineParams {
                     color_blend: Some(miniquad::BlendState::new(
@@ -69,7 +72,8 @@ fn get_model_diffuse_specular_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -118,7 +122,10 @@ fn get_model_alpha_test_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
                 pipeline_params: PipelineParams {
                     cull_face: miniquad::CullFace::Nothing,
@@ -126,7 +133,8 @@ fn get_model_alpha_test_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -183,15 +191,17 @@ fn get_model_envmap_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
-                uniforms: vec![
-                    UniformDesc::new("time", UniformType::Float1),
-                ],
+                uniforms: vec![UniformDesc::new("time", UniformType::Float1)],
                 textures: vec!["_env_map".to_string()],
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -243,15 +253,17 @@ fn get_model_fire_material() -> &'static Material {
         }"#;
 
         load_material(
-            ShaderSource::Glsl { vertex: vertex_shader, fragment: fragment_shader },
+            ShaderSource::Glsl {
+                vertex: vertex_shader,
+                fragment: fragment_shader,
+            },
             MaterialParams {
-                uniforms: vec![
-                    UniformDesc::new("time", UniformType::Float1),
-                ],
+                uniforms: vec![UniformDesc::new("time", UniformType::Float1)],
                 textures: vec!["_fire_tex".to_string()],
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -283,27 +295,28 @@ impl ModelShaderManager {
             loaded_textures: HashMap::new(),
         }
     }
-    
+
     pub fn set_shader_parser(&mut self, parser: Q3ShaderParser) {
         self.shader_parser = Some(parser);
     }
-    
+
     pub async fn load_texture(&mut self, path: &str) -> Option<Texture2D> {
         if let Some(tex) = self.loaded_textures.get(path) {
             return Some(tex.clone());
         }
-        
+
         let tex_path = path.replace(".tga", ".png");
         if let Ok(image) = load_image(&tex_path).await {
             let texture = Texture2D::from_image(&image);
             texture.set_filter(FilterMode::Linear);
-            self.loaded_textures.insert(path.to_string(), texture.clone());
+            self.loaded_textures
+                .insert(path.to_string(), texture.clone());
             Some(texture)
         } else {
             None
         }
     }
-    
+
     pub fn get_shader_for_texture(&self, texture_path: &str) -> Option<&TileShader> {
         if let Some(ref parser) = self.shader_parser {
             let shader_name = texture_path
@@ -315,7 +328,7 @@ impl ModelShaderManager {
             None
         }
     }
-    
+
     pub fn should_use_shader(&self, texture_path: &str) -> bool {
         self.get_shader_for_texture(texture_path).is_some()
     }
@@ -332,7 +345,7 @@ pub fn get_render_mode_for_shader(shader: &TileShader) -> ModelRenderMode {
     if shader.cull_disable {
         return ModelRenderMode::AlphaTest;
     }
-    
+
     if shader.stages.len() >= 2 {
         let first_stage = &shader.stages[0];
         if first_stage.use_white_image && first_stage.rgb_gen == RgbGen::LightingDiffuse {
@@ -343,15 +356,16 @@ pub fn get_render_mode_for_shader(shader: &TileShader) -> ModelRenderMode {
                 }
             }
         }
-        
-        let has_envmap = shader.stages.iter().any(|s| {
-            s.texture_path.contains("envmap") || s.rotate_speed.abs() > 100.0
-        });
+
+        let has_envmap = shader
+            .stages
+            .iter()
+            .any(|s| s.texture_path.contains("envmap") || s.rotate_speed.abs() > 100.0);
         if has_envmap {
             return ModelRenderMode::EnvMap;
         }
     }
-    
+
     ModelRenderMode::Standard
 }
 
@@ -384,8 +398,6 @@ pub fn apply_model_shader(
                 material.set_texture("EnvMap", env_tex.clone());
             }
         }
-        ModelRenderMode::Standard => {
-        }
+        ModelRenderMode::Standard => {}
     }
 }
-

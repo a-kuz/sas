@@ -1,13 +1,13 @@
-use macroquad::prelude::*;
-use crate::game::{GameState, player::Player, weapon::Weapon};
-use crate::input::{Input, LocalMultiplayerInput};
-use crate::render::Camera;
 use crate::audio;
-use crate::weapon_handler::WeaponHandler;
 use crate::bot_handler::BotHandler;
+use crate::game::{player::Player, weapon::Weapon, GameState};
 use crate::hud_scoreboard::HudScoreboard;
+use crate::input::{Input, LocalMultiplayerInput};
 use crate::profiler;
 use crate::profiler_display;
+use crate::render::Camera;
+use crate::weapon_handler::WeaponHandler;
+use macroquad::prelude::*;
 
 pub struct GameLoop {
     pub game_state: GameState,
@@ -26,7 +26,6 @@ pub struct GameLoop {
     pub last_fps_log: f64,
     pub fps_display_samples: Vec<f64>,
 }
-
 
 impl GameLoop {
     pub async fn new(
@@ -86,7 +85,8 @@ impl GameLoop {
         player1.model = if !model_cvar.is_empty() {
             model_cvar
         } else {
-            self.available_models.get(self.selected_model_idx)
+            self.available_models
+                .get(self.selected_model_idx)
                 .cloned()
                 .unwrap_or_else(|| "sarge".to_string())
         };
@@ -96,7 +96,8 @@ impl GameLoop {
         player2.model = if !model2_cvar.is_empty() {
             model2_cvar
         } else {
-            self.available_models.get(self.selected_model_idx.saturating_add(1))
+            self.available_models
+                .get(self.selected_model_idx.saturating_add(1))
                 .cloned()
                 .unwrap_or_else(|| "visor".to_string())
         };
@@ -152,14 +153,32 @@ impl GameLoop {
         }
 
         let all_bot_skins = [
-            "visor", "sarge", "grunt", "razor", "doom", "hunter", "keel", "bones",
-            "anarki", "biker", "bitterman", "bones", "crash", "orbb", "slash",
-            "uriel", "xaero", "major", "tankjr", "lucy", "sorlag"
+            "visor",
+            "sarge",
+            "grunt",
+            "razor",
+            "doom",
+            "hunter",
+            "keel",
+            "bones",
+            "anarki",
+            "biker",
+            "bitterman",
+            "bones",
+            "crash",
+            "orbb",
+            "slash",
+            "uriel",
+            "xaero",
+            "major",
+            "tankjr",
+            "lucy",
+            "sorlag",
         ];
-        
+
         let num_bots = (self.game_state.map.spawn_points.len() - 1).min(all_bot_skins.len());
         let mut used_skins = Vec::new();
-        
+
         for i in 0..num_bots {
             let mut skin;
             loop {
@@ -170,10 +189,11 @@ impl GameLoop {
                     break;
                 }
             }
-            
+
             let mut bot = Player::new((i + 2) as u16, skin.to_string(), true);
             bot.model = skin.to_string();
-            let spawn_point = &self.game_state.map.spawn_points[(i + 1) % self.game_state.map.spawn_points.len()];
+            let spawn_point =
+                &self.game_state.map.spawn_points[(i + 1) % self.game_state.map.spawn_points.len()];
             bot.spawn(spawn_point.x, spawn_point.y, &self.game_state.map);
             bot.has_weapon = [true, true, false, false, false, false, false, false, false];
             bot.ammo = [255, 50, 0, 0, 0, 0, 0, 0, 0];
@@ -187,27 +207,31 @@ impl GameLoop {
         for p in &self.game_state.players {
             unique_models.insert(p.model.clone());
         }
-        
+
         #[cfg(target_arch = "wasm32")]
         {
             for model_name in unique_models.iter() {
-                let _ = self.game_state.model_cache.get_or_load_async(model_name).await;
+                let _ = self
+                    .game_state
+                    .model_cache
+                    .get_or_load_async(model_name)
+                    .await;
             }
         }
-        
+
         #[cfg(not(target_arch = "wasm32"))]
         {
             for model_name in unique_models.iter() {
                 let _ = self.game_state.model_cache.get_or_load(model_name);
             }
         }
-        
+
         for model_name in unique_models.iter() {
             if let Some(model) = self.game_state.model_cache.get_mut(model_name) {
                 model.load_textures(model_name, env_skin).await;
             }
         }
-        
+
         for model_name in unique_models.iter() {
             self.audio.load_player_sounds(model_name).await;
         }
@@ -218,11 +242,11 @@ impl GameLoop {
         self.preload_projectile_models().await;
         self.preload_weapon_models().await;
         self.game_state.tile_textures.load_default_textures().await;
-        
+
         eprintln!("[PRELOAD] Loading tile shaders...");
         self.load_tile_shaders().await;
         eprintln!("[PRELOAD] ✓ Tile shaders loaded!");
-        
+
         eprintln!("[PRELOAD] Loading border textures...");
         self.game_state.border_renderer.load_border_textures().await;
         eprintln!("[PRELOAD] ✓ Border textures loaded!");
@@ -230,9 +254,9 @@ impl GameLoop {
 
     async fn preload_item_models(&mut self) {
         use crate::game::item_model::ItemModelType;
-        
+
         eprintln!("[PRELOAD] Starting item models preload...");
-        
+
         let item_types = [
             ItemModelType::HealthMedium,
             ItemModelType::HealthLarge,
@@ -242,6 +266,7 @@ impl GameLoop {
             ItemModelType::WeaponShotgun,
             ItemModelType::WeaponGrenadeLauncher,
             ItemModelType::WeaponRocketLauncher,
+            ItemModelType::WeaponLightning,
             ItemModelType::WeaponRailgun,
             ItemModelType::WeaponPlasmagun,
             ItemModelType::WeaponBFG,
@@ -259,12 +284,13 @@ impl GameLoop {
                 Err(e) => eprintln!("[PRELOAD] ✗ Failed to load {:?}: {}", item_type, e),
             }
         }
-        
+
         eprintln!("[PRELOAD] Item models preload complete!");
     }
 
     async fn preload_projectile_models(&mut self) {
-        self.game_state.projectile_model_cache
+        self.game_state
+            .projectile_model_cache
             .get_or_load_model(crate::game::projectile_model_cache::ProjectileModelType::Rocket);
     }
 
@@ -285,70 +311,94 @@ impl GameLoop {
             self.game_state.weapon_model_cache.preload(weapon).await;
         }
     }
-    
+
     async fn load_tile_shaders(&mut self) {
         if let Ok(content) = std::fs::read_to_string("tile_shaders.json") {
-            if let Ok(shaders) = serde_json::from_str::<Vec<crate::game::tile_shader::TileShader>>(&content) {
-                eprintln!("[Shaders] Loading {} custom shaders from JSON", shaders.len());
-                
+            if let Ok(shaders) =
+                serde_json::from_str::<Vec<crate::game::tile_shader::TileShader>>(&content)
+            {
+                eprintln!(
+                    "[Shaders] Loading {} custom shaders from JSON",
+                    shaders.len()
+                );
+
                 for shader in shaders {
                     if !shader.base_texture.is_empty() {
-                        self.game_state.shader_renderer.load_texture(&shader.base_texture).await;
+                        self.game_state
+                            .shader_renderer
+                            .load_texture(&shader.base_texture)
+                            .await;
                     }
-                    
+
                     for stage in &shader.stages {
                         if !stage.texture_path.is_empty() {
-                            self.game_state.shader_renderer.load_texture(&stage.texture_path).await;
+                            self.game_state
+                                .shader_renderer
+                                .load_texture(&stage.texture_path)
+                                .await;
                         }
                     }
-                    
+
                     self.game_state.shader_renderer.add_shader(shader);
                 }
-                
+
                 eprintln!("[Shaders] ✓ Custom shaders loaded!");
             }
         } else {
             eprintln!("[Shaders] No tile_shaders.json found, skipping");
         }
-        
+
         use crate::game::q3_shader_parser::Q3ShaderParser;
         let mut parser = Q3ShaderParser::new();
         parser.load_all_shader_files();
-        
-        eprintln!("[Shaders] Loaded {} Q3 shaders from .shader files", parser.get_all_shaders().len());
-        
+
+        eprintln!(
+            "[Shaders] Loaded {} Q3 shaders from .shader files",
+            parser.get_all_shaders().len()
+        );
+
         for (_name, shader) in parser.get_all_shaders() {
             if !shader.base_texture.is_empty() {
-                self.game_state.shader_renderer.load_texture(&shader.base_texture).await;
+                self.game_state
+                    .shader_renderer
+                    .load_texture(&shader.base_texture)
+                    .await;
             }
-            
+
             for stage in &shader.stages {
                 if !stage.texture_path.is_empty() {
-                    self.game_state.shader_renderer.load_texture(&stage.texture_path).await;
+                    self.game_state
+                        .shader_renderer
+                        .load_texture(&stage.texture_path)
+                        .await;
                 }
             }
-            
+
             self.game_state.shader_renderer.add_shader(shader.clone());
         }
     }
 
-    pub async fn run(&mut self, console: &mut crate::console::Console, ignore_mouse_delta: bool) -> bool {
+    pub async fn run(
+        &mut self,
+        console: &mut crate::console::Console,
+        ignore_mouse_delta: bool,
+    ) -> bool {
         console.is_connected_to_server = self.game_state.is_connected_to_server();
-        
+
         if let Some(bot_model) = console.bot_add_request.take() {
             self.add_bot(&bot_model).await;
         }
-        
+
         if console.bot_remove_request {
             console.bot_remove_request = false;
             self.decrease_bot_count();
         }
-        
+
         if console.bot_afk_request {
             console.bot_afk_request = false;
             self.toggle_bot_afk();
         }
-        
+
         if console.server_bot_add_request {
             console.server_bot_add_request = false;
             if let Err(e) = self.game_state.send_chat("addbot".to_string()) {
@@ -367,22 +417,22 @@ impl GameLoop {
             self.game_state.disconnect_from_server();
             console.print("Disconnected from server\n");
         }
-        
+
         if console.net_stats_toggle {
             console.net_stats_toggle = false;
             self.game_state.net_hud.toggle_stats();
         }
-        
+
         if console.net_graph_toggle {
             console.net_graph_toggle = false;
             self.game_state.net_hud.toggle_graph();
         }
-        
+
         if console.net_showmiss_toggle {
             console.net_showmiss_toggle = false;
             self.game_state.net_hud.toggle_prediction_errors();
         }
-        
+
         if console.end_match_request {
             console.end_match_request = false;
             self.game_state.end_match();
@@ -390,7 +440,7 @@ impl GameLoop {
         }
 
         self.game_state.update_network();
-        
+
         let current_time = get_time();
         let mut dt = (current_time - self.last_time) as f32;
         self.last_time = current_time;
@@ -399,13 +449,14 @@ impl GameLoop {
         }
 
         let t_frame_start = get_time();
-        
+
         //self.fps_samples.push(current_time);
         self.fps_display_samples.push(current_time);
-        
-        self.fps_display_samples.retain(|&t| current_time - t <= 1.0);
+
+        self.fps_display_samples
+            .retain(|&t| current_time - t <= 1.0);
         if self.fps_display_samples.len() > 1 {
-            let time_span = self.fps_display_samples[self.fps_display_samples.len() - 1] 
+            let time_span = self.fps_display_samples[self.fps_display_samples.len() - 1]
                 - self.fps_display_samples[0];
             if time_span > 0.0 {
                 self.fps_display = ((self.fps_display_samples.len() - 1) as f64 / time_span) as i32;
@@ -415,22 +466,22 @@ impl GameLoop {
         if !console.is_open() {
             self.handle_input(dt, ignore_mouse_delta);
         }
-        
+
         if is_key_pressed(KeyCode::Escape) && !console.is_open() {
             return false;
         }
-        
+
         if is_key_pressed(KeyCode::GraveAccent) {
             return true;
         }
-        
+
         if !console.is_open() {
             self.handle_defrag_keys();
             self.handle_debug_keys().await;
         }
-        
+
         self.handle_camera(dt);
-        
+
         let shoot_actions = if !self.game_state.game_results.show {
             if self.game_state.is_multiplayer {
                 let shoot_data = if let Some(ref client) = self.game_state.network_client {
@@ -461,9 +512,9 @@ impl GameLoop {
                 Vec::new()
             } else {
                 WeaponHandler::handle_shooting(
-                &mut self.game_state,
-                &self.input,
-                &self.local_mp_input,
+                    &mut self.game_state,
+                    &self.input,
+                    &self.local_mp_input,
                 )
             }
         } else {
@@ -483,10 +534,10 @@ impl GameLoop {
         } else {
             Vec::new()
         };
-        
+
         let mut all_actions = shoot_actions;
         all_actions.extend(bot_actions);
-        
+
         if !self.game_state.game_results.show {
             WeaponHandler::process_weapon_fire(&mut self.game_state, all_actions);
         }
@@ -494,19 +545,19 @@ impl GameLoop {
         if !console.is_open() {
             self.update_game_state(dt);
         }
-        
+
         if let Some(new_map) = self.check_story_level_transition().await {
             return self.load_next_story_level(&new_map).await;
         }
-        
+
         self.process_audio();
         self.render_frame(dt, t_frame_start);
 
         self.frame_count += 1;
-        
+
         if current_time - self.last_fps_log >= 0.1 {
             self.fps_samples.retain(|&t| current_time - t <= 0.1);
-            
+
             if self.fps_samples.len() > 1 {
                 let time_span = self.fps_samples[self.fps_samples.len() - 1] - self.fps_samples[0];
                 let avg_fps = if time_span > 0.0 {
@@ -514,12 +565,16 @@ impl GameLoop {
                 } else {
                     0.0
                 };
-                println!("[FPS] {:.1} fps (avg over {:.0}ms)", avg_fps, time_span * 1000.0);
+                println!(
+                    "[FPS] {:.1} fps (avg over {:.0}ms)",
+                    avg_fps,
+                    time_span * 1000.0
+                );
             }
-            
+
             self.last_fps_log = current_time;
         }
-        
+
         true
     }
 
@@ -528,7 +583,7 @@ impl GameLoop {
             if is_key_pressed(KeyCode::R) {
                 defrag.reset();
                 println!("[Defrag] Run reset!");
-                
+
                 if let Some(player) = self.game_state.players.get_mut(0) {
                     let (spawn_x, spawn_y) = defrag.start_pos;
                     player.x = spawn_x;
@@ -540,7 +595,7 @@ impl GameLoop {
                     player.health = 100;
                 }
             }
-            
+
             if is_key_pressed(KeyCode::Backspace) && !defrag.run_finished {
                 if let Some(player) = self.game_state.players.get_mut(0) {
                     let (spawn_x, spawn_y) = defrag.get_respawn_position();
@@ -553,43 +608,69 @@ impl GameLoop {
             }
         }
     }
-    
+
     fn handle_input(&mut self, dt: f32, ignore_mouse_delta: bool) {
         let _scope = profiler::scope("input");
-        
+
         if self.game_state.is_multiplayer {
             self.input.update(ignore_mouse_delta);
-            let cmd = crate::game::usercmd::UserCmd::from_input(&self.input, screen_width(), screen_height());
-            
+            let cmd = crate::game::usercmd::UserCmd::from_input(
+                &self.input,
+                screen_width(),
+                screen_height(),
+            );
+
             if let Some(ref mut network_client) = self.game_state.network_client {
                 if let Some(player_id) = network_client.player_id() {
-                    let move_forward = if self.input.jump { 1.0 } else if self.input.crouch { -1.0 } else { 0.0 };
+                    let move_forward = if self.input.jump {
+                        1.0
+                    } else if self.input.crouch {
+                        -1.0
+                    } else {
+                        0.0
+                    };
                     let move_right = cmd.right;
-                    
+
                     let mut buttons = 0u32;
-                    if self.input.shoot { buttons |= 1; }
-                    if self.input.jump { buttons |= 2; }
-                    if self.input.crouch { buttons |= 4; }
-                    
+                    if self.input.shoot {
+                        buttons |= 1;
+                    }
+                    if self.input.jump {
+                        buttons |= 2;
+                    }
+                    if self.input.crouch {
+                        buttons |= 4;
+                    }
+
                     let angle = self.input.aim_angle;
-                    
+
                     static mut LAST_INPUT_PRINT: f64 = 0.0;
                     static mut LAST_NONZERO_INPUT: f64 = 0.0;
                     unsafe {
                         if move_right.abs() > 0.1 || buttons != 0 {
                             LAST_NONZERO_INPUT = macroquad::prelude::get_time();
                         }
-                        if macroquad::prelude::get_time() - LAST_INPUT_PRINT > 2.0 && 
-                           macroquad::prelude::get_time() - LAST_NONZERO_INPUT < 0.5 {
+                        if macroquad::prelude::get_time() - LAST_INPUT_PRINT > 2.0
+                            && macroquad::prelude::get_time() - LAST_NONZERO_INPUT < 0.5
+                        {
                             println!("[INPUT] right={:.1} buttons={}", move_right, buttons);
                             LAST_INPUT_PRINT = macroquad::prelude::get_time();
                         }
                     }
-                    
-                    network_client.send_input(move_forward, move_right, angle, buttons).ok();
-                    
-                    if let Some(predicted) = network_client.predict_local_player(&self.game_state.map) {
-                        if let Some(player) = self.game_state.players.iter_mut().find(|p| p.id == player_id) {
+
+                    network_client
+                        .send_input(move_forward, move_right, angle, buttons)
+                        .ok();
+
+                    if let Some(predicted) =
+                        network_client.predict_local_player(&self.game_state.map)
+                    {
+                        if let Some(player) = self
+                            .game_state
+                            .players
+                            .iter_mut()
+                            .find(|p| p.id == player_id)
+                        {
                             player.x = predicted.x;
                             player.y = predicted.y;
                             player.vel_x = predicted.vel_x;
@@ -598,20 +679,32 @@ impl GameLoop {
                             player.was_in_air = predicted.was_in_air;
                             player.crouch = self.input.crouch;
 
-                            if let Some((corr_x, corr_y)) = network_client.get_prediction_mut().apply_error_correction(dt) {
+                            if let Some((corr_x, corr_y)) = network_client
+                                .get_prediction_mut()
+                                .apply_error_correction(dt)
+                            {
                                 player.x += corr_x;
                                 player.y += corr_y;
                             }
 
                             let moving = player.vel_x.abs() > 0.5;
                             let shooting = self.input.shoot || player.refire > 0.0;
-                            player.animation.update(!player.was_in_air, moving, shooting, player.vel_x.abs());
-                            
+                            player.animation.update(
+                                !player.was_in_air,
+                                moving,
+                                shooting,
+                                player.vel_x.abs(),
+                            );
+
                             if predicted.hit_jumppad {
-                                self.game_state.audio_events.push(crate::audio::events::AudioEvent::JumpPad { x: player.x });
+                                self.game_state.audio_events.push(
+                                    crate::audio::events::AudioEvent::JumpPad { x: player.x },
+                                );
                             }
                             if predicted.landed {
-                                self.game_state.audio_events.push(crate::audio::events::AudioEvent::PlayerLand { x: player.x });
+                                self.game_state.audio_events.push(
+                                    crate::audio::events::AudioEvent::PlayerLand { x: player.x },
+                                );
                             }
                         }
                     }
@@ -619,18 +712,23 @@ impl GameLoop {
             }
             return;
         }
-        
+
         if !self.game_state.game_results.show {
             if self.game_state.is_local_multiplayer {
                 self.local_mp_input.update(ignore_mouse_delta);
-                
-                for (player_idx, player_input) in [&self.local_mp_input.player1, &self.local_mp_input.player2]
-                    .iter()
-                    .enumerate()
+
+                for (player_idx, player_input) in
+                    [&self.local_mp_input.player1, &self.local_mp_input.player2]
+                        .iter()
+                        .enumerate()
                 {
                     if let Some(player) = self.game_state.players.get_mut(player_idx) {
                         player.manual_flip_x = Some(player_input.flip_x);
-                        let cmd = crate::game::usercmd::UserCmd::from_player_input(player_input, player.x, player.y);
+                        let cmd = crate::game::usercmd::UserCmd::from_player_input(
+                            player_input,
+                            player.x,
+                            player.y,
+                        );
                         let pmove_events = player.pmove(&cmd, dt, &self.game_state.map);
                         for event in pmove_events {
                             self.game_state.audio_events.push(event);
@@ -639,8 +737,12 @@ impl GameLoop {
                 }
             } else {
                 self.input.update(ignore_mouse_delta);
-                let cmd = crate::game::usercmd::UserCmd::from_input(&self.input, screen_width(), screen_height());
-                
+                let cmd = crate::game::usercmd::UserCmd::from_input(
+                    &self.input,
+                    screen_width(),
+                    screen_height(),
+                );
+
                 if let Some(player) = self.game_state.players.get_mut(0) {
                     let pmove_events = player.pmove(&cmd, dt, &self.game_state.map);
                     for event in pmove_events {
@@ -660,13 +762,48 @@ impl GameLoop {
             self.game_state.debug_md3 = !self.game_state.debug_md3;
         }
 
+        if is_key_down(KeyCode::U) {
+            self.game_state.debug_test_yaw -= 0.05;
+        }
+        if is_key_down(KeyCode::O) {
+            self.game_state.debug_test_yaw += 0.05;
+        }
+        if is_key_down(KeyCode::I) {
+            self.game_state.debug_test_pitch -= 0.05;
+        }
+        if is_key_down(KeyCode::K) {
+            self.game_state.debug_test_pitch += 0.05;
+        }
+        if is_key_down(KeyCode::J) {
+            self.game_state.debug_test_roll -= 0.05;
+        }
+        if is_key_down(KeyCode::L) {
+            self.game_state.debug_test_roll += 0.05;
+        }
+        if is_key_down(KeyCode::B) {
+            self.game_state.debug_test_yaw = 0.0;
+        }
+        if is_key_down(KeyCode::N) {
+            self.game_state.debug_test_pitch = 0.0;
+        }
+        if is_key_down(KeyCode::M) {
+            self.game_state.debug_test_roll = 0.0;
+        }
+
         if is_key_pressed(KeyCode::F8) {
             profiler::toggle();
         }
 
         if is_key_pressed(KeyCode::F3) {
             self.game_state.debug_hitboxes = !self.game_state.debug_hitboxes;
-            println!("[Debug] Hitbox debug: {}", if self.game_state.debug_hitboxes { "ON" } else { "OFF" });
+            println!(
+                "[Debug] Hitbox debug: {}",
+                if self.game_state.debug_hitboxes {
+                    "ON"
+                } else {
+                    "OFF"
+                }
+            );
         }
 
         if is_key_pressed(KeyCode::F4) {
@@ -675,55 +812,108 @@ impl GameLoop {
 
         if is_key_pressed(KeyCode::F10) {
             self.game_state.use_item_icons = !self.game_state.use_item_icons;
-            println!("[Debug] Item icons mode: {}", if self.game_state.use_item_icons { "ON (2D icons)" } else { "OFF (3D models)" });
+            println!(
+                "[Debug] Item icons mode: {}",
+                if self.game_state.use_item_icons {
+                    "ON (2D icons)"
+                } else {
+                    "OFF (3D models)"
+                }
+            );
         }
 
         if is_key_pressed(KeyCode::F11) {
             self.game_state.disable_shadows = !self.game_state.disable_shadows;
-            println!("[Perf] Shadows: {}", if self.game_state.disable_shadows { "OFF" } else { "ON" });
+            println!(
+                "[Perf] Shadows: {}",
+                if self.game_state.disable_shadows {
+                    "OFF"
+                } else {
+                    "ON"
+                }
+            );
         }
 
         if is_key_pressed(KeyCode::F12) {
             self.game_state.disable_dynamic_lights = !self.game_state.disable_dynamic_lights;
-            println!("[Perf] Dynamic lights: {}", if self.game_state.disable_dynamic_lights { "OFF" } else { "ON" });
+            println!(
+                "[Perf] Dynamic lights: {}",
+                if self.game_state.disable_dynamic_lights {
+                    "OFF"
+                } else {
+                    "ON"
+                }
+            );
         }
 
         if is_key_pressed(KeyCode::F6) {
             self.game_state.disable_particles = !self.game_state.disable_particles;
-            println!("[Perf] Particles: {}", if self.game_state.disable_particles { "OFF" } else { "ON" });
+            println!(
+                "[Perf] Particles: {}",
+                if self.game_state.disable_particles {
+                    "OFF"
+                } else {
+                    "ON"
+                }
+            );
         }
 
         if is_key_pressed(KeyCode::F2) {
             self.game_state.disable_deferred = !self.game_state.disable_deferred;
-            println!("[Perf] Deferred rendering: {}", if self.game_state.disable_deferred { "OFF (forward)" } else { "ON" });
+            println!(
+                "[Perf] Deferred rendering: {}",
+                if self.game_state.disable_deferred {
+                    "OFF (forward)"
+                } else {
+                    "ON"
+                }
+            );
         }
 
         if is_key_pressed(KeyCode::F1) {
-            self.game_state.render_scale = if self.game_state.render_scale > 1.5 { 1.0 } else { 2.0 };
+            self.game_state.render_scale = if self.game_state.render_scale > 1.5 {
+                1.0
+            } else {
+                2.0
+            };
             println!("[Perf] Render scale: {}x", self.game_state.render_scale);
         }
 
-        if is_key_pressed(KeyCode::Key1) && (is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift)) {
+        if is_key_pressed(KeyCode::Key1)
+            && (is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift))
+        {
             self.game_state.cartoon_shader = !self.game_state.cartoon_shader;
-            println!("[Visual] Cartoon shader: {}", if self.game_state.cartoon_shader { "ON" } else { "OFF" });
+            println!(
+                "[Visual] Cartoon shader: {}",
+                if self.game_state.cartoon_shader {
+                    "ON"
+                } else {
+                    "OFF"
+                }
+            );
         }
 
         if let Some(new_model) = self.handle_model_switching() {
             if let Some(p) = self.game_state.players.get_mut(0) {
                 p.model = new_model.clone();
             }
-            
+
             #[cfg(target_arch = "wasm32")]
             {
-                let _ = self.game_state.model_cache.get_or_load_async(&new_model).await;
+                let _ = self
+                    .game_state
+                    .model_cache
+                    .get_or_load_async(&new_model)
+                    .await;
             }
             #[cfg(not(target_arch = "wasm32"))]
             {
                 let _ = self.game_state.model_cache.get_or_load(&new_model);
             }
-            
+
             if let Some(model) = self.game_state.model_cache.get_mut(&new_model) {
-                let env_skin = std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
+                let env_skin =
+                    std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
                 model.load_textures(&new_model, &env_skin).await;
             }
             self.audio.load_player_sounds(&new_model).await;
@@ -735,7 +925,7 @@ impl GameLoop {
             self.selected_model_idx = (self.selected_model_idx + 1) % self.available_models.len();
             return self.available_models.get(self.selected_model_idx).cloned();
         }
-        
+
         if is_key_pressed(KeyCode::F5) && !self.available_models.is_empty() {
             self.selected_model_idx = if self.selected_model_idx == 0 {
                 self.available_models.len() - 1
@@ -744,7 +934,7 @@ impl GameLoop {
             };
             return self.available_models.get(self.selected_model_idx).cloned();
         }
-        
+
         None
     }
 
@@ -760,20 +950,32 @@ impl GameLoop {
         } else if let Some(player) = self.game_state.players.get(0) {
             if player.dead {
                 if let Some(tracking_id) = self.camera.tracking_projectile_id {
-                    if let Some(projectile) = self.game_state.projectiles.iter().find(|p| p.id == tracking_id && p.active) {
-                        self.camera.follow_projectile_with_zoom(projectile.x, projectile.y);
+                    if let Some(projectile) = self
+                        .game_state
+                        .projectiles
+                        .iter()
+                        .find(|p| p.id == tracking_id && p.active)
+                    {
+                        self.camera
+                            .follow_projectile_with_zoom(projectile.x, projectile.y);
                     } else {
                         self.camera.tracking_projectile_id = None;
                     }
                 } else {
-                    let player_projectile = self.game_state.projectiles.iter()
-                        .find(|p| p.owner_id == player.id 
-                            && p.active 
-                            && matches!(p.weapon_type, crate::game::weapon::Weapon::RocketLauncher | crate::game::weapon::Weapon::GrenadeLauncher));
-                    
+                    let player_projectile = self.game_state.projectiles.iter().find(|p| {
+                        p.owner_id == player.id
+                            && p.active
+                            && matches!(
+                                p.weapon_type,
+                                crate::game::weapon::Weapon::RocketLauncher
+                                    | crate::game::weapon::Weapon::GrenadeLauncher
+                            )
+                    });
+
                     if let Some(projectile) = player_projectile {
                         self.camera.tracking_projectile_id = Some(projectile.id);
-                        self.camera.follow_projectile_with_zoom(projectile.x, projectile.y);
+                        self.camera
+                            .follow_projectile_with_zoom(projectile.x, projectile.y);
                     } else {
                         self.camera.follow(player.x, player.y);
                     }
@@ -821,7 +1023,7 @@ impl GameLoop {
                 }
             }
         }
-        
+
         if self.game_state.is_local_multiplayer {
             let model2_cvar = crate::cvar::get_cvar_string("cg_model2");
             if !model2_cvar.is_empty() {
@@ -832,30 +1034,35 @@ impl GameLoop {
                 }
             }
         }
-        
-        self.game_state.render(self.camera.x, self.camera.y, self.camera.zoom);
+
+        self.game_state
+            .render(self.camera.x, self.camera.y, self.camera.zoom);
         self.game_state.render_messages();
-        
+
         {
             let _scope = profiler::scope("render_hud");
             HudScoreboard::render_hud(&self.game_state);
             HudScoreboard::render_crosshair(&self.game_state, &self.camera, &self.input);
-            HudScoreboard::render_crosshair_local_mp(&self.game_state, &self.camera, &self.local_mp_input);
+            HudScoreboard::render_crosshair_local_mp(
+                &self.game_state,
+                &self.camera,
+                &self.local_mp_input,
+            );
             HudScoreboard::render_scoreboard(&self.game_state);
             self.game_state.render_defrag_hud();
-            
+
             if let Some(ref net_client) = self.game_state.network_client {
                 self.game_state.net_hud.render(
                     net_client.get_stats(),
-                    net_client.get_prediction().get_prediction_error()
+                    net_client.get_prediction().get_prediction_error(),
                 );
             }
         }
-        
+
         profiler::end_frame();
 
         let frame_time = (get_time() - t_frame_start) * 1000.0;
-        
+
         {
             let _scope = profiler::scope("render_debug_ui");
             let show_fps = crate::cvar::get_cvar_bool("cg_drawFPS");
@@ -879,10 +1086,10 @@ impl GameLoop {
 
         let player_count = self.game_state.players.len();
         let bot_id = (player_count + 1) as u16;
-        
+
         let mut bot = crate::game::player::Player::new(bot_id, model.to_string(), true);
         bot.model = model.to_string();
-        
+
         let spawn_idx = player_count % self.game_state.map.spawn_points.len().max(1);
         if let Some(spawn_point) = self.game_state.map.spawn_points.get(spawn_idx) {
             bot.spawn(spawn_point.x, spawn_point.y, &self.game_state.map);
@@ -890,10 +1097,10 @@ impl GameLoop {
             let (spawn_x, spawn_y) = self.game_state.map.find_safe_spawn_position();
             bot.spawn(spawn_x, spawn_y, &self.game_state.map);
         }
-        
+
         bot.has_weapon = [true, true, false, false, false, false, false, false, false];
         bot.ammo = [255, 50, 0, 0, 0, 0, 0, 0, 0];
-        
+
         #[cfg(target_arch = "wasm32")]
         {
             let _ = self.game_state.model_cache.get_or_load_async(model).await;
@@ -902,16 +1109,21 @@ impl GameLoop {
         {
             let _ = self.game_state.model_cache.get_or_load(model);
         }
-        
+
         if let Some(player_model) = self.game_state.model_cache.get_mut(model) {
-            let env_skin = std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
+            let env_skin =
+                std::env::var("SAS_PLAYER_SKIN").unwrap_or_else(|_| "default".to_string());
             player_model.load_textures(model, &env_skin).await;
         }
-        
+
         self.audio.load_player_sounds(model).await;
-        
+
         self.game_state.players.push(bot);
-        println!("[GameLoop] Added bot: {} (total bots: {})", model, self.game_state.players.iter().filter(|p| p.is_bot).count());
+        println!(
+            "[GameLoop] Added bot: {} (total bots: {})",
+            model,
+            self.game_state.players.iter().filter(|p| p.is_bot).count()
+        );
     }
 
     fn decrease_bot_count(&mut self) {
@@ -924,7 +1136,11 @@ impl GameLoop {
             if let Some(bot_index) = self.game_state.players.iter().rposition(|p| p.is_bot) {
                 let bot_name = self.game_state.players[bot_index].name.clone();
                 self.game_state.players.remove(bot_index);
-                println!("[GameLoop] Removed bot: {} (F4). Remaining bots: {}", bot_name, bot_count - 1);
+                println!(
+                    "[GameLoop] Removed bot: {} (F4). Remaining bots: {}",
+                    bot_name,
+                    bot_count - 1
+                );
             }
         } else {
             println!("[GameLoop] No bots to remove (F4)");
@@ -959,7 +1175,10 @@ impl GameLoop {
             self.last_profiler_print = current_time;
             let samples = profiler::get_samples();
             println!("\n=== PROFILER (F8) ===");
-            println!("{:<20} {:>8} {:>8} {:>8} {:>8}", "Name", "Current", "Avg", "Min", "Max");
+            println!(
+                "{:<20} {:>8} {:>8} {:>8} {:>8}",
+                "Name", "Current", "Avg", "Min", "Max"
+            );
             println!("{}", "-".repeat(60));
             for (name, current, avg, min, max) in samples.iter().take(15) {
                 let status = if *current > 5.0 {
@@ -974,10 +1193,12 @@ impl GameLoop {
                     status, name, current, avg, min, max
                 );
             }
-            if let Some((_, total, _, _, _)) = samples.iter().find(|(n, _, _, _, _)| *n == "render_total") {
+            if let Some((_, total, _, _, _)) =
+                samples.iter().find(|(n, _, _, _, _)| *n == "render_total")
+            {
                 println!("{}", "-".repeat(60));
                 println!("Total render: {:.2}ms | Target: <8.33ms (120 FPS)", total);
-                
+
                 let shader_stats = profiler::get_shader_stats();
                 if !shader_stats.is_empty() {
                     let total_draws: usize = shader_stats.iter().map(|(_, count)| count).sum();
@@ -1007,15 +1228,15 @@ impl GameLoop {
 
     async fn load_next_story_level(&mut self, map_name: &str) -> bool {
         println!("[Story] Loading next level: {}", map_name);
-        
+
         let story_backup = self.game_state.story_mode.clone();
-        
+
         self.game_state = GameState::new_async(map_name).await;
         self.game_state.story_mode = story_backup;
-        
+
         self.setup_players().await;
         self.preload_assets().await;
-        
+
         true
     }
 }

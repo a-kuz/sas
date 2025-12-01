@@ -19,11 +19,7 @@ pub struct DebugRay {
 
 impl BulletHole {
     pub fn new(x: f32, y: f32) -> Self {
-        Self {
-            x,
-            y,
-            life: 0,
-        }
+        Self { x, y, life: 0 }
     }
 
     pub fn update(&mut self) -> bool {
@@ -34,9 +30,9 @@ impl BulletHole {
     pub fn render(&self, camera_x: f32, camera_y: f32) {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
-        
+
         let alpha = (1.0 - (self.life as f32 / 100.0)) * 0.6;
-        
+
         draw_circle(
             screen_x,
             screen_y,
@@ -68,15 +64,15 @@ impl DebugRay {
         let screen_start_y = self.start_y - camera_y;
         let screen_end_x = self.end_x - camera_x;
         let screen_end_y = self.end_y - camera_y;
-        
+
         let alpha = (1.0 - (self.life as f32 / 60.0)) * 0.8;
-        
+
         let color = if self.hit {
             Color::from_rgba(255, 50, 50, (alpha * 255.0) as u8)
         } else {
             Color::from_rgba(255, 255, 50, (alpha * 255.0) as u8)
         };
-        
+
         draw_line(
             screen_start_x,
             screen_start_y,
@@ -99,7 +95,7 @@ pub fn fire_hitscan(
     damage_per_pellet: i32,
 ) -> Vec<(f32, f32, f32, u16, i32)> {
     let mut rays = Vec::new();
-    
+
     for i in 0..count {
         let spread_angle = if count > 1 {
             let spread_range = spread;
@@ -108,10 +104,9 @@ pub fn fire_hitscan(
         } else {
             angle + (rand::gen_range(-spread, spread))
         };
-        
+
         rays.push((start_x, start_y, spread_angle, owner, damage_per_pellet));
     }
-    
+
     rays
 }
-

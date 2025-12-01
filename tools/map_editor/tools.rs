@@ -32,6 +32,7 @@ pub enum ItemPlaceType {
     Shotgun,
     GrenadeLauncher,
     RocketLauncher,
+    LightningGun,
     Railgun,
     Plasmagun,
     BFG,
@@ -54,6 +55,7 @@ impl ItemPlaceType {
             ItemPlaceType::Shotgun => "Shotgun",
             ItemPlaceType::GrenadeLauncher => "GrenadeLauncher",
             ItemPlaceType::RocketLauncher => "RocketLauncher",
+            ItemPlaceType::LightningGun => "LightningGun",
             ItemPlaceType::Railgun => "Railgun",
             ItemPlaceType::Plasmagun => "Plasmagun",
             ItemPlaceType::BFG => "BFG",
@@ -63,9 +65,10 @@ impl ItemPlaceType {
             ItemPlaceType::Flight => "Flight",
             ItemPlaceType::Haste => "Haste",
             ItemPlaceType::Invis => "Invis",
-        }.to_string()
+        }
+        .to_string()
     }
-    
+
     pub fn next(&self) -> Self {
         match self {
             ItemPlaceType::Health25 => ItemPlaceType::Health50,
@@ -75,7 +78,8 @@ impl ItemPlaceType {
             ItemPlaceType::Armor100 => ItemPlaceType::Shotgun,
             ItemPlaceType::Shotgun => ItemPlaceType::GrenadeLauncher,
             ItemPlaceType::GrenadeLauncher => ItemPlaceType::RocketLauncher,
-            ItemPlaceType::RocketLauncher => ItemPlaceType::Railgun,
+            ItemPlaceType::RocketLauncher => ItemPlaceType::LightningGun,
+            ItemPlaceType::LightningGun => ItemPlaceType::Railgun,
             ItemPlaceType::Railgun => ItemPlaceType::Plasmagun,
             ItemPlaceType::Plasmagun => ItemPlaceType::BFG,
             ItemPlaceType::BFG => ItemPlaceType::Quad,
@@ -88,4 +92,3 @@ impl ItemPlaceType {
         }
     }
 }
-

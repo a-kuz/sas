@@ -1,12 +1,13 @@
-use macroquad::prelude::*;
-use macroquad::miniquad;
-use crate::game::md3::Mesh;
-use crate::game::shader;
-use crate::game::map::LightSource;
-use std::sync::OnceLock;
-use std::collections::HashMap;
 use crate::count_shader;
+use crate::game::map::LightSource;
+use crate::game::md3::Mesh;
+use crate::game::md3_pose::Orientation;
+use crate::game::shader;
+use macroquad::miniquad;
+use macroquad::prelude::*;
 use std::cell::RefCell;
+use std::collections::HashMap;
+use std::sync::OnceLock;
 
 thread_local! {
     static GLOBAL_BATCH: RefCell<MD3Batch> = RefCell::new(MD3Batch::new());
@@ -99,7 +100,7 @@ impl MD3Batch {
 
         for item in &items_to_process {
             let mesh = unsafe { &*item.mesh };
-            
+
             if item.frame_idx >= mesh.vertices.len() {
                 continue;
             }
@@ -128,12 +129,13 @@ impl MD3Batch {
                 let v1_idx = triangle.vertex[1] as usize;
                 let v2_idx = triangle.vertex[2] as usize;
 
-                if v0_idx >= frame_verts.len() || 
-                   v1_idx >= frame_verts.len() || 
-                   v2_idx >= frame_verts.len() ||
-                   v0_idx >= mesh.tex_coords.len() ||
-                   v1_idx >= mesh.tex_coords.len() ||
-                   v2_idx >= mesh.tex_coords.len() {
+                if v0_idx >= frame_verts.len()
+                    || v1_idx >= frame_verts.len()
+                    || v2_idx >= frame_verts.len()
+                    || v0_idx >= mesh.tex_coords.len()
+                    || v1_idx >= mesh.tex_coords.len()
+                    || v2_idx >= mesh.tex_coords.len()
+                {
                     continue;
                 }
 
@@ -156,11 +158,7 @@ impl MD3Batch {
                     let rr = yx * sin_r + rz * cos_r;
                     let final_z = -yy / 1000.0;
 
-                    let pos = Vec3::new(
-                        item.screen_x + rx,
-                        item.screen_y - rr,
-                        final_z
-                    );
+                    let pos = Vec3::new(item.screen_x + rx, item.screen_y - rr, final_z);
 
                     let n = decode_md3_normal(v.normal);
                     let nx = n.x * x_mult;
@@ -188,13 +186,13 @@ impl MD3Batch {
                 let tc2 = &mesh.tex_coords[v2_idx];
 
                 let base = self.vertices.len();
-                
+
                 if base + 3 > 9000 {
                     self.draw_current_batch(&texture_to_use, lighting_context);
                 }
-                
+
                 let base = self.vertices.len() as u16;
-                
+
                 self.vertices.push(Vertex {
                     position: pos0,
                     uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
@@ -206,7 +204,7 @@ impl MD3Batch {
                     ],
                     normal: Vec4::new(norm0.x, norm0.y, norm0.z, 0.0),
                 });
-                
+
                 self.vertices.push(Vertex {
                     position: pos1,
                     uv: Vec2::new(tc1.coord[0], tc1.coord[1]),
@@ -218,7 +216,7 @@ impl MD3Batch {
                     ],
                     normal: Vec4::new(norm1.x, norm1.y, norm1.z, 0.0),
                 });
-                
+
                 self.vertices.push(Vertex {
                     position: pos2,
                     uv: Vec2::new(tc2.coord[0], tc2.coord[1]),
@@ -240,16 +238,20 @@ impl MD3Batch {
         self.draw_current_batch(&texture_to_use, lighting_context);
         self.items.clear();
     }
-    
-    fn draw_current_batch(&mut self, texture_to_use: &Option<Texture2D>, lighting_context: Option<&LightingContext>) {
+
+    fn draw_current_batch(
+        &mut self,
+        texture_to_use: &Option<Texture2D>,
+        lighting_context: Option<&LightingContext>,
+    ) {
         if self.vertices.is_empty() {
             return;
         }
-        
+
         if let Some(tex) = texture_to_use {
             let vertices = std::mem::take(&mut self.vertices);
             let indices = std::mem::take(&mut self.indices);
-            
+
             let mesh_data = macroquad::models::Mesh {
                 vertices,
                 indices,
@@ -270,7 +272,7 @@ impl MD3Batch {
                 } else {
                     0.0
                 };
-                
+
                 apply_lighting_uniforms(material, ctx, avg_x + ctx.camera_x, avg_y + ctx.camera_y);
                 draw_mesh(&mesh_data);
                 count_shader!("md3_batched_lit");
@@ -332,7 +334,8 @@ fn get_model_default_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -444,23 +447,23 @@ fn find_closest_lights(ctx: &LightingContext, world_x: f32, world_y: f32) -> ([u
     let grid_x = (world_x / 128.0) as i32;
     let grid_y = (world_y / 128.0) as i32;
     let cache_key = ((grid_x as u64) << 32) | (grid_y as u64 & 0xFFFFFFFF);
-    
+
     let current_frame = unsafe { LIGHT_CACHE_FRAME };
     let cache = get_light_cache();
-    
+
     if let Some(cached) = cache.get(&cache_key) {
         if cached.frame == current_frame {
             return (cached.light_indices, cached.num_lights);
         }
     }
-    
+
     let mut closest: [(usize, f32); 2] = [(0, f32::MAX), (0, f32::MAX)];
-    
+
     for (idx, light) in ctx.lights.iter().enumerate() {
         let dx = light.x - world_x;
         let dy = light.y - world_y;
         let dist_sq = dx * dx + dy * dy;
-        
+
         if dist_sq < closest[0].1 {
             closest[1] = closest[0];
             closest[0] = (idx, dist_sq);
@@ -468,38 +471,47 @@ fn find_closest_lights(ctx: &LightingContext, world_x: f32, world_y: f32) -> ([u
             closest[1] = (idx, dist_sq);
         }
     }
-    
+
     let mut num_lights = 0;
     let mut indices = [0usize, 0usize];
-    
+
     for i in 0..2 {
         if closest[i].1 < f32::MAX {
             indices[i] = closest[i].0;
             num_lights += 1;
         }
     }
-    
-    cache.insert(cache_key, CachedLighting {
-        light_indices: indices,
-        num_lights,
-        frame: current_frame,
-    });
-    
+
+    cache.insert(
+        cache_key,
+        CachedLighting {
+            light_indices: indices,
+            num_lights,
+            frame: current_frame,
+        },
+    );
+
     (indices, num_lights)
 }
 
 fn apply_lighting_uniforms(material: &Material, ctx: &LightingContext, world_x: f32, world_y: f32) {
     material.set_uniform("cameraPos", (ctx.camera_x, ctx.camera_y));
     material.set_uniform("ambientLight", ctx.ambient);
-    
+
     let (indices, num_lights) = find_closest_lights(ctx, world_x, world_y);
-    
+
     for i in 0..2 {
         if i < num_lights as usize {
             let light = &ctx.lights[indices[i]];
             material.set_uniform(&format!("lightPos{}", i), (light.x, light.y, 0.0f32));
-            material.set_uniform(&format!("lightColor{}", i), 
-                (light.r as f32 / 255.0, light.g as f32 / 255.0, light.b as f32 / 255.0));
+            material.set_uniform(
+                &format!("lightColor{}", i),
+                (
+                    light.r as f32 / 255.0,
+                    light.g as f32 / 255.0,
+                    light.b as f32 / 255.0,
+                ),
+            );
             material.set_uniform(&format!("lightRadius{}", i), light.radius);
         } else {
             material.set_uniform(&format!("lightPos{}", i), (0.0f32, 0.0f32, 0.0f32));
@@ -522,7 +534,19 @@ pub fn render_md3_mesh(
     pitch_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_with_yaw(mesh, frame_idx, screen_x, screen_y, scale, color, texture, flip_x, pitch_angle, 0.0, lighting_context);
+    render_md3_mesh_with_yaw(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        flip_x,
+        pitch_angle,
+        0.0,
+        lighting_context,
+    );
 }
 
 pub fn render_md3_mesh_with_yaw_ex(
@@ -539,7 +563,23 @@ pub fn render_md3_mesh_with_yaw_ex(
     yaw_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, texture_path, None, flip_x, pitch_angle, yaw_angle, 0.0, lighting_context, false);
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        0.0,
+        lighting_context,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_yaw_ex_shader(
@@ -557,7 +597,23 @@ pub fn render_md3_mesh_with_yaw_ex_shader(
     yaw_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, texture_path, shader_textures, flip_x, pitch_angle, yaw_angle, 0.0, lighting_context, false);
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        shader_textures,
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        0.0,
+        lighting_context,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_yaw_and_roll(
@@ -575,7 +631,23 @@ pub fn render_md3_mesh_with_yaw_and_roll(
     roll_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, texture_path, None, flip_x, pitch_angle, yaw_angle, roll_angle, lighting_context, false);
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        roll_angle,
+        lighting_context,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_yaw_and_roll_shader(
@@ -594,7 +666,23 @@ pub fn render_md3_mesh_with_yaw_and_roll_shader(
     roll_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, texture_path, shader_textures, flip_x, pitch_angle, yaw_angle, roll_angle, lighting_context, false);
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        shader_textures,
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        roll_angle,
+        lighting_context,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_yaw_and_roll_quad(
@@ -612,7 +700,23 @@ pub fn render_md3_mesh_with_yaw_and_roll_quad(
     roll_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, texture_path, None, flip_x, pitch_angle, yaw_angle, roll_angle, lighting_context, true);
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        roll_angle,
+        lighting_context,
+        true,
+    );
 }
 
 pub fn render_md3_mesh_xyz_shader(
@@ -663,7 +767,23 @@ pub fn render_md3_mesh_with_yaw(
     yaw_angle: f32,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_internal(mesh, frame_idx, screen_x, screen_y, scale, color, texture, None, None, flip_x, pitch_angle, yaw_angle, 0.0, lighting_context, false);
+    render_md3_mesh_internal(
+        mesh,
+        frame_idx,
+        screen_x,
+        screen_y,
+        scale,
+        color,
+        texture,
+        None,
+        None,
+        flip_x,
+        pitch_angle,
+        yaw_angle,
+        0.0,
+        lighting_context,
+        false,
+    );
 }
 
 fn render_md3_mesh_internal(
@@ -686,96 +806,97 @@ fn render_md3_mesh_internal(
     if mesh.vertices.len() <= frame_idx {
         return;
     }
-    
+
     let frame_verts = &mesh.vertices[frame_idx];
     if frame_verts.is_empty() || mesh.triangles.is_empty() {
         return;
     }
-    
+
     let x_mult = if flip_x { -1.0 } else { 1.0 };
-    
+
     let mut all_vertices: Vec<Vertex> = Vec::with_capacity(mesh.triangles.len() * 3);
     let mut all_indices: Vec<u16> = Vec::with_capacity(mesh.triangles.len() * 3);
-    
+
     for triangle in &mesh.triangles {
         let v0_idx = triangle.vertex[0] as usize;
         let v1_idx = triangle.vertex[1] as usize;
         let v2_idx = triangle.vertex[2] as usize;
-        
-        if v0_idx >= frame_verts.len() || 
-           v1_idx >= frame_verts.len() || 
-           v2_idx >= frame_verts.len() ||
-           v0_idx >= mesh.tex_coords.len() ||
-           v1_idx >= mesh.tex_coords.len() ||
-           v2_idx >= mesh.tex_coords.len() {
+
+        if v0_idx >= frame_verts.len()
+            || v1_idx >= frame_verts.len()
+            || v2_idx >= frame_verts.len()
+            || v0_idx >= mesh.tex_coords.len()
+            || v1_idx >= mesh.tex_coords.len()
+            || v2_idx >= mesh.tex_coords.len()
+        {
             continue;
         }
-        
+
         let v0 = &frame_verts[v0_idx];
         let v1 = &frame_verts[v1_idx];
         let v2 = &frame_verts[v2_idx];
-        
+
         let v0_x = v0.vertex[0] as f32 * scale / 64.0 * x_mult;
         let v0_y = v0.vertex[1] as f32 * scale / 64.0;
         let v0_z = v0.vertex[2] as f32 * scale / 64.0;
-        
+
         let v1_x = v1.vertex[0] as f32 * scale / 64.0 * x_mult;
         let v1_y = v1.vertex[1] as f32 * scale / 64.0;
         let v1_z = v1.vertex[2] as f32 * scale / 64.0;
-        
+
         let v2_x = v2.vertex[0] as f32 * scale / 64.0 * x_mult;
         let v2_y = v2.vertex[1] as f32 * scale / 64.0;
         let v2_z = v2.vertex[2] as f32 * scale / 64.0;
-        
+
         let pitch = pitch_angle.clamp(-0.15, 0.15);
         let cos_p = pitch.cos();
         let sin_p = pitch.sin();
-        
+
         let ry0 = v0_y * cos_p + v0_z * sin_p;
         let rz0 = -v0_y * sin_p + v0_z * cos_p;
-        
+
         let ry1 = v1_y * cos_p + v1_z * sin_p;
         let rz1 = -v1_y * sin_p + v1_z * cos_p;
-        
+
         let ry2 = v2_y * cos_p + v2_z * sin_p;
         let rz2 = -v2_y * sin_p + v2_z * cos_p;
-        
+
         let cos_y = yaw_angle.cos();
         let sin_y = yaw_angle.sin();
-        
+
         let yx0 = v0_x * cos_y - ry0 * sin_y;
         let yy0 = v0_x * sin_y + ry0 * cos_y;
         let yx1 = v1_x * cos_y - ry1 * sin_y;
         let yy1 = v1_x * sin_y + ry1 * cos_y;
         let yx2 = v2_x * cos_y - ry2 * sin_y;
         let yy2 = v2_x * sin_y + ry2 * cos_y;
-        
+
         let cos_r = roll_angle.cos();
         let sin_r = roll_angle.sin();
-        
+
         let rx0 = yx0 * cos_r - rz0 * sin_r;
         let rr0 = yx0 * sin_r + rz0 * cos_r;
         let rx1 = yx1 * cos_r - rz1 * sin_r;
         let rr1 = yx1 * sin_r + rz1 * cos_r;
         let rx2 = yx2 * cos_r - rz2 * sin_r;
         let rr2 = yx2 * sin_r + rz2 * cos_r;
-        
+
         let z0 = -yy0 / 1000.0;
         let z1 = -yy1 / 1000.0;
         let z2 = -yy2 / 1000.0;
-        
+
         let x0 = screen_x + rx0;
         let y0 = screen_y - rr0;
         let x1 = screen_x + rx1;
         let y1 = screen_y - rr1;
         let x2 = screen_x + rx2;
         let y2 = screen_y - rr2;
-        
+
         if let Some(_tex) = texture {
             let tc0 = &mesh.tex_coords[v0_idx];
             let tc1 = &mesh.tex_coords[v1_idx];
             let tc2 = &mesh.tex_coords[v2_idx];
-            
+
             let transform_normal = |n_raw: u16| -> Vec3 {
                 let n = decode_md3_normal(n_raw);
                 let nx = n.x * x_mult;
@@ -797,9 +918,39 @@ fn render_md3_mesh_internal(
             let n2 = transform_normal(v2.normal);
 
             let base = all_vertices.len() as u16;
-            all_vertices.push(Vertex { position: Vec3::new(x0, y0, z0), uv: Vec2::new(tc0.coord[0], tc0.coord[1]), color: [ (color.r * 255.0) as u8, (color.g * 255.0) as u8, (color.b * 255.0) as u8, (color.a * 255.0) as u8 ], normal: Vec4::new(n0.x, n0.y, n0.z, 0.0) });
-            all_vertices.push(Vertex { position: Vec3::new(x1, y1, z1), uv: Vec2::new(tc1.coord[0], tc1.coord[1]), color: [ (color.r * 255.0) as u8, (color.g * 255.0) as u8, (color.b * 255.0) as u8, (color.a * 255.0) as u8 ], normal: Vec4::new(n1.x, n1.y, n1.z, 0.0) });
-            all_vertices.push(Vertex { position: Vec3::new(x2, y2, z2), uv: Vec2::new(tc2.coord[0], tc2.coord[1]), color: [ (color.r * 255.0) as u8, (color.g * 255.0) as u8, (color.b * 255.0) as u8, (color.a * 255.0) as u8 ], normal: Vec4::new(n2.x, n2.y, n2.z, 0.0) });
+            all_vertices.push(Vertex {
+                position: Vec3::new(x0, y0, z0),
+                uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
+                color: [
+                    (color.r * 255.0) as u8,
+                    (color.g * 255.0) as u8,
+                    (color.b * 255.0) as u8,
+                    (color.a * 255.0) as u8,
+                ],
+                normal: Vec4::new(n0.x, n0.y, n0.z, 0.0),
+            });
+            all_vertices.push(Vertex {
+                position: Vec3::new(x1, y1, z1),
+                uv: Vec2::new(tc1.coord[0], tc1.coord[1]),
+                color: [
+                    (color.r * 255.0) as u8,
+                    (color.g * 255.0) as u8,
+                    (color.b * 255.0) as u8,
+                    (color.a * 255.0) as u8,
+                ],
+                normal: Vec4::new(n1.x, n1.y, n1.z, 0.0),
+            });
+            all_vertices.push(Vertex {
+                position: Vec3::new(x2, y2, z2),
+                uv: Vec2::new(tc2.coord[0], tc2.coord[1]),
+                color: [
+                    (color.r * 255.0) as u8,
+                    (color.g * 255.0) as u8,
+                    (color.b * 255.0) as u8,
+                    (color.a * 255.0) as u8,
+                ],
+                normal: Vec4::new(n2.x, n2.y, n2.z, 0.0),
+            });
             let area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
             if area >= 0.0 {
                 all_indices.push(base);
@@ -812,14 +963,23 @@ fn render_md3_mesh_internal(
             }
         } else {
             // no texture path: draw immediate
-            draw_triangle(Vec2::new(x0, y0), Vec2::new(x1, y1), Vec2::new(x2, y2), color);
+            draw_triangle(
+                Vec2::new(x0, y0),
+                Vec2::new(x1, y1),
+                Vec2::new(x2, y2),
+                color,
+            );
         }
     }
 
     if let Some(tex) = texture {
         if !all_vertices.is_empty() {
-            let mesh_data = macroquad::models::Mesh { vertices: all_vertices, indices: all_indices, texture: Some(tex.clone()) };
-            
+            let mesh_data = macroquad::models::Mesh {
+                vertices: all_vertices,
+                indices: all_indices,
+                texture: Some(tex.clone()),
+            };
+
             if use_quad_shader {
                 let material = shader::create_quad_damage_outline_material();
                 gl_use_material(material);
@@ -830,10 +990,10 @@ fn render_md3_mesh_internal(
                 gl_use_default_material();
             } else {
                 let mut shader_applied = false;
-                
+
                 if let Some(path) = texture_path {
                     let path_lower = path.to_lowercase();
-                    
+
                     if path_lower.contains("_h.") || path_lower.contains("_h/") {
                         if let Some(shader_tex) = shader_textures.and_then(|t| t.first()) {
                             let material = super::model_shader::get_fire_shader_material();
@@ -863,8 +1023,13 @@ fn render_md3_mesh_internal(
                         count_shader!("md3_alpha_test");
                         gl_use_default_material();
                         shader_applied = true;
-                    } else if (path_lower.contains("/xaero.") || path_lower.contains("xaero.png") || path_lower.contains("xaero.tga")) && 
-                              !path_lower.contains("_h") && !path_lower.contains("_a") && !path_lower.contains("_q") {
+                    } else if (path_lower.contains("/xaero.")
+                        || path_lower.contains("xaero.png")
+                        || path_lower.contains("xaero.tga"))
+                        && !path_lower.contains("_h")
+                        && !path_lower.contains("_a")
+                        && !path_lower.contains("_q")
+                    {
                         let material = super::model_shader::get_diffuse_specular_material();
                         gl_use_material(material);
                         draw_mesh(&mesh_data);
@@ -873,23 +1038,28 @@ fn render_md3_mesh_internal(
                         shader_applied = true;
                     }
                 }
-                
+
                 if !shader_applied {
                     let use_additive = if let Some(path) = texture_path {
                         let path_lower = path.to_lowercase();
-                        path_lower.contains("skate") || 
-                        path_lower.contains("null") ||
-                        path_lower.contains("_f.") ||
-                        path_lower.contains("/f_")
+                        path_lower.contains("skate")
+                            || path_lower.contains("null")
+                            || path_lower.contains("_f.")
+                            || path_lower.contains("/f_")
                     } else {
                         false
                     };
-                    
+
                     if use_additive {
                         let material = shader::create_model_additive_material();
                         gl_use_material(material);
                         if let Some(ctx) = lighting_context {
-                            apply_lighting_uniforms(material, ctx, screen_x + ctx.camera_x, screen_y + ctx.camera_y);
+                            apply_lighting_uniforms(
+                                material,
+                                ctx,
+                                screen_x + ctx.camera_x,
+                                screen_y + ctx.camera_y,
+                            );
                         }
                         draw_mesh(&mesh_data);
                         count_shader!("md3_additive");
@@ -898,7 +1068,12 @@ fn render_md3_mesh_internal(
                         if let Some(ctx) = lighting_context {
                             let material = get_model_lit_material();
                             gl_use_material(material);
-                            apply_lighting_uniforms(material, ctx, screen_x + ctx.camera_x, screen_y + ctx.camera_y);
+                            apply_lighting_uniforms(
+                                material,
+                                ctx,
+                                screen_x + ctx.camera_x,
+                                screen_y + ctx.camera_y,
+                            );
                             draw_mesh(&mesh_data);
                             count_shader!("md3_lit");
                             gl_use_default_material();
@@ -912,6 +1087,340 @@ fn render_md3_mesh_internal(
                     }
                 }
             }
+        }
+    }
+}
+
+pub fn render_md3_mesh_with_orientation(
+    mesh: &Mesh,
+    frame_idx: usize,
+    orientation: &Orientation,
+    screen_x: f32,
+    screen_y: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    shader_textures: Option<&[Texture2D]>,
+    lighting_context: Option<&LightingContext>,
+) {
+    render_md3_mesh_with_orientation_internal(
+        mesh,
+        frame_idx,
+        orientation,
+        screen_x,
+        screen_y,
+        color,
+        texture,
+        texture_path,
+        shader_textures,
+        lighting_context,
+        false,
+    );
+}
+
+pub fn render_md3_mesh_with_orientation_quad(
+    mesh: &Mesh,
+    frame_idx: usize,
+    orientation: &Orientation,
+    screen_x: f32,
+    screen_y: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    shader_textures: Option<&[Texture2D]>,
+    lighting_context: Option<&LightingContext>,
+) {
+    render_md3_mesh_with_orientation_internal(
+        mesh,
+        frame_idx,
+        orientation,
+        screen_x,
+        screen_y,
+        color,
+        texture,
+        texture_path,
+        shader_textures,
+        lighting_context,
+        true,
+    );
+}
+
+fn render_md3_mesh_with_orientation_internal(
+    mesh: &Mesh,
+    frame_idx: usize,
+    orientation: &Orientation,
+    screen_x: f32,
+    screen_y: f32,
+    color: Color,
+    texture: Option<&Texture2D>,
+    texture_path: Option<&str>,
+    shader_textures: Option<&[Texture2D]>,
+    lighting_context: Option<&LightingContext>,
+    use_quad_shader: bool,
+) {
+    if mesh.vertices.len() <= frame_idx {
+        return;
+    }
+    let frame_verts = &mesh.vertices[frame_idx];
+    if frame_verts.is_empty() || mesh.triangles.is_empty() {
+        return;
+    }
+    let axis = orientation.axis;
+    let origin = orientation.origin;
+    let scale = axis[0].length().max(1e-5);
+    let inv_scale = 1.0 / scale;
+    let normal_axis = [
+        axis[0] * inv_scale,
+        axis[1] * inv_scale,
+        axis[2] * inv_scale,
+    ];
+    let mut all_vertices: Vec<Vertex> = Vec::with_capacity(mesh.triangles.len() * 3);
+    let mut all_indices: Vec<u16> = Vec::with_capacity(mesh.triangles.len() * 3);
+    for triangle in &mesh.triangles {
+        let v0_idx = triangle.vertex[0] as usize;
+        let v1_idx = triangle.vertex[1] as usize;
+        let v2_idx = triangle.vertex[2] as usize;
+        if v0_idx >= frame_verts.len()
+            || v1_idx >= frame_verts.len()
+            || v2_idx >= frame_verts.len()
+            || v0_idx >= mesh.tex_coords.len()
+            || v1_idx >= mesh.tex_coords.len()
+            || v2_idx >= mesh.tex_coords.len()
+        {
+            continue;
+        }
+        let v0 = &frame_verts[v0_idx];
+        let v1 = &frame_verts[v1_idx];
+        let v2 = &frame_verts[v2_idx];
+        let transform_vertex = |vert: &super::md3::Vertex| -> (Vec3, Vec3) {
+            let local = vec3(
+                vert.vertex[0] as f32 / 64.0,
+                vert.vertex[1] as f32 / 64.0,
+                vert.vertex[2] as f32 / 64.0,
+            );
+            let mut world = origin;
+            world += axis[0] * local.x;
+            world += axis[1] * local.y;
+            world += axis[2] * local.z;
+            let pos = Vec3::new(screen_x + world.x, screen_y - world.z, -world.y / 1000.0);
+            let n = decode_md3_normal(vert.normal);
+            let mut world_normal = Vec3::ZERO;
+            world_normal.x =
+                normal_axis[0].x * n.x + normal_axis[1].x * n.y + normal_axis[2].x * n.z;
+            world_normal.y =
+                normal_axis[0].y * n.x + normal_axis[1].y * n.y + normal_axis[2].y * n.z;
+            world_normal.z =
+                normal_axis[0].z * n.x + normal_axis[1].z * n.y + normal_axis[2].z * n.z;
+            (pos, world_normal.normalize())
+        };
+        let (pos0, norm0) = transform_vertex(v0);
+        let (pos1, norm1) = transform_vertex(v1);
+        let (pos2, norm2) = transform_vertex(v2);
+        let tc0 = &mesh.tex_coords[v0_idx];
+        let tc1 = &mesh.tex_coords[v1_idx];
+        let tc2 = &mesh.tex_coords[v2_idx];
+        let base = all_vertices.len() as u16;
+        all_vertices.push(Vertex {
+            position: pos0,
+            uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
+            color: [
+                (color.r * 255.0) as u8,
+                (color.g * 255.0) as u8,
+                (color.b * 255.0) as u8,
+                (color.a * 255.0) as u8,
+            ],
+            normal: Vec4::new(norm0.x, norm0.y, norm0.z, 0.0),
+        });
+        all_vertices.push(Vertex {
+            position: pos1,
+            uv: Vec2::new(tc1.coord[0], tc1.coord[1]),
+            color: [
+                (color.r * 255.0) as u8,
+                (color.g * 255.0) as u8,
+                (color.b * 255.0) as u8,
+                (color.a * 255.0) as u8,
+            ],
+            normal: Vec4::new(norm1.x, norm1.y, norm1.z, 0.0),
+        });
+        all_vertices.push(Vertex {
+            position: pos2,
+            uv: Vec2::new(tc2.coord[0], tc2.coord[1]),
+            color: [
+                (color.r * 255.0) as u8,
+                (color.g * 255.0) as u8,
+                (color.b * 255.0) as u8,
+                (color.a * 255.0) as u8,
+            ],
+            normal: Vec4::new(norm2.x, norm2.y, norm2.z, 0.0),
+        });
+        let area = (pos1.x - pos0.x) * (pos2.y - pos0.y) - (pos2.x - pos0.x) * (pos1.y - pos0.y);
+        if area >= 0.0 {
+            all_indices.push(base);
+            all_indices.push(base + 1);
+            all_indices.push(base + 2);
+        } else {
+            all_indices.push(base);
+            all_indices.push(base + 2);
+            all_indices.push(base + 1);
+        }
+    }
+    if let Some(tex) = texture {
+        if all_vertices.is_empty() {
+            return;
+        }
+        let mesh_data = macroquad::models::Mesh {
+            vertices: all_vertices,
+            indices: all_indices,
+            texture: Some(tex.clone()),
+        };
+        if use_quad_shader {
+            let material = shader::create_quad_damage_outline_material();
+            gl_use_material(material);
+            material.set_uniform("time", get_time() as f32);
+            material.set_uniform("outlineWidth", 2.5f32);
+            draw_mesh(&mesh_data);
+            count_shader!("md3_quad_damage");
+            gl_use_default_material();
+            return;
+        }
+        let mut shader_applied = false;
+        if let Some(path) = texture_path {
+            let path_lower = path.to_lowercase();
+            if path_lower.contains("_h.") || path_lower.contains("_h/") {
+                if let Some(shader_tex) = shader_textures.and_then(|t| t.first()) {
+                    let material = super::model_shader::get_fire_shader_material();
+                    gl_use_material(material);
+                    material.set_uniform("time", get_time() as f32);
+                    material.set_texture("_fire_tex", shader_tex.clone());
+                    draw_mesh(&mesh_data);
+                    count_shader!("md3_fire_shader");
+                    gl_use_default_material();
+                    shader_applied = true;
+                }
+            } else if path_lower.contains("_a.") || path_lower.contains("_a/") {
+                if let Some(env_tex) = shader_textures.and_then(|t| t.first()) {
+                    let material = super::model_shader::get_envmap_shader_material();
+                    gl_use_material(material);
+                    material.set_uniform("time", get_time() as f32);
+                    material.set_texture("_env_map", env_tex.clone());
+                    draw_mesh(&mesh_data);
+                    count_shader!("md3_envmap_shader");
+                    gl_use_default_material();
+                    shader_applied = true;
+                }
+            } else if path_lower.contains("_q.") || path_lower.contains("_q/") {
+                let material = super::model_shader::get_alpha_test_shader_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_alpha_test");
+                gl_use_default_material();
+                shader_applied = true;
+            } else if (path_lower.contains("/xaero.")
+                || path_lower.contains("xaero.png")
+                || path_lower.contains("xaero.tga"))
+                && !path_lower.contains("_h")
+                && !path_lower.contains("_a")
+                && !path_lower.contains("_q")
+            {
+                let material = super::model_shader::get_diffuse_specular_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_diffuse_specular");
+                gl_use_default_material();
+                shader_applied = true;
+            }
+        }
+        if !shader_applied {
+            let use_additive = if let Some(path) = texture_path {
+                let path_lower = path.to_lowercase();
+                path_lower.contains("skate")
+                    || path_lower.contains("null")
+                    || path_lower.contains("_f.")
+                    || path_lower.contains("/f_")
+            } else {
+                false
+            };
+            if use_additive {
+                let material = shader::create_model_additive_material();
+                gl_use_material(material);
+                if let Some(ctx) = lighting_context {
+                    apply_lighting_uniforms(
+                        material,
+                        ctx,
+                        screen_x + ctx.camera_x,
+                        screen_y + ctx.camera_y,
+                    );
+                }
+                draw_mesh(&mesh_data);
+                count_shader!("md3_additive");
+                gl_use_default_material();
+            } else if let Some(ctx) = lighting_context {
+                let material = get_model_lit_material();
+                gl_use_material(material);
+                apply_lighting_uniforms(
+                    material,
+                    ctx,
+                    screen_x + ctx.camera_x,
+                    screen_y + ctx.camera_y,
+                );
+                draw_mesh(&mesh_data);
+                count_shader!("md3_lit");
+                gl_use_default_material();
+            } else {
+                let material = get_model_default_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_lit");
+                gl_use_default_material();
+            }
+        }
+    } else {
+        for triangle in &mesh.triangles {
+            let v0_idx = triangle.vertex[0] as usize;
+            let v1_idx = triangle.vertex[1] as usize;
+            let v2_idx = triangle.vertex[2] as usize;
+            if v0_idx >= frame_verts.len()
+                || v1_idx >= frame_verts.len()
+                || v2_idx >= frame_verts.len()
+            {
+                continue;
+            }
+            let v0 = &frame_verts[v0_idx];
+            let v1 = &frame_verts[v1_idx];
+            let v2 = &frame_verts[v2_idx];
+            let local0 = vec3(
+                v0.vertex[0] as f32 / 64.0,
+                v0.vertex[1] as f32 / 64.0,
+                v0.vertex[2] as f32 / 64.0,
+            );
+            let local1 = vec3(
+                v1.vertex[0] as f32 / 64.0,
+                v1.vertex[1] as f32 / 64.0,
+                v1.vertex[2] as f32 / 64.0,
+            );
+            let local2 = vec3(
+                v2.vertex[0] as f32 / 64.0,
+                v2.vertex[1] as f32 / 64.0,
+                v2.vertex[2] as f32 / 64.0,
+            );
+            let mut w0 = origin;
+            w0 += axis[0] * local0.x;
+            w0 += axis[1] * local0.y;
+            w0 += axis[2] * local0.z;
+            let mut w1 = origin;
+            w1 += axis[0] * local1.x;
+            w1 += axis[1] * local1.y;
+            w1 += axis[2] * local1.z;
+            let mut w2 = origin;
+            w2 += axis[0] * local2.x;
+            w2 += axis[1] * local2.y;
+            w2 += axis[2] * local2.z;
+            draw_triangle(
+                Vec2::new(screen_x + w0.x, screen_y - w0.z),
+                Vec2::new(screen_x + w1.x, screen_y - w1.z),
+                Vec2::new(screen_x + w2.x, screen_y - w2.z),
+                color,
+            );
         }
     }
 }
@@ -951,12 +1460,13 @@ pub fn _render_md3_mesh_with_transform(
         let v1_idx = triangle.vertex[1] as usize;
         let v2_idx = triangle.vertex[2] as usize;
 
-        if v0_idx >= frame_verts.len() ||
-           v1_idx >= frame_verts.len() ||
-           v2_idx >= frame_verts.len() ||
-           v0_idx >= mesh.tex_coords.len() ||
-           v1_idx >= mesh.tex_coords.len() ||
-           v2_idx >= mesh.tex_coords.len() {
+        if v0_idx >= frame_verts.len()
+            || v1_idx >= frame_verts.len()
+            || v2_idx >= frame_verts.len()
+            || v0_idx >= mesh.tex_coords.len()
+            || v1_idx >= mesh.tex_coords.len()
+            || v2_idx >= mesh.tex_coords.len()
+        {
             continue;
         }
 
@@ -964,15 +1474,29 @@ pub fn _render_md3_mesh_with_transform(
         let v1 = &frame_verts[v1_idx];
         let v2 = &frame_verts[v2_idx];
 
-        let mut p0 = [v0.vertex[0] as f32 / 64.0, v0.vertex[1] as f32 / 64.0, v0.vertex[2] as f32 / 64.0];
-        let mut p1 = [v1.vertex[0] as f32 / 64.0, v1.vertex[1] as f32 / 64.0, v1.vertex[2] as f32 / 64.0];
-        let mut p2 = [v2.vertex[0] as f32 / 64.0, v2.vertex[1] as f32 / 64.0, v2.vertex[2] as f32 / 64.0];
+        let mut p0 = [
+            v0.vertex[0] as f32 / 64.0,
+            v0.vertex[1] as f32 / 64.0,
+            v0.vertex[2] as f32 / 64.0,
+        ];
+        let mut p1 = [
+            v1.vertex[0] as f32 / 64.0,
+            v1.vertex[1] as f32 / 64.0,
+            v1.vertex[2] as f32 / 64.0,
+        ];
+        let mut p2 = [
+            v2.vertex[0] as f32 / 64.0,
+            v2.vertex[1] as f32 / 64.0,
+            v2.vertex[2] as f32 / 64.0,
+        ];
 
-        let tx = |p: [f32; 3]| -> [f32; 3] {[
-            r[0][0] * p[0] + r[0][1] * p[1] + r[0][2] * p[2] + t[0],
-            r[1][0] * p[0] + r[1][1] * p[1] + r[1][2] * p[2] + t[1],
-            r[2][0] * p[0] + r[2][1] * p[1] + r[2][2] * p[2] + t[2],
-        ]};
+        let tx = |p: [f32; 3]| -> [f32; 3] {
+            [
+                r[0][0] * p[0] + r[0][1] * p[1] + r[0][2] * p[2] + t[0],
+                r[1][0] * p[0] + r[1][1] * p[1] + r[1][2] * p[2] + t[1],
+                r[2][0] * p[0] + r[2][1] * p[1] + r[2][2] * p[2] + t[2],
+            ]
+        };
 
         p0 = tx(p0);
         p1 = tx(p1);
@@ -999,19 +1523,58 @@ pub fn _render_md3_mesh_with_transform(
             let z0 = -p0[1] / 1000.0;
             let z1 = -p1[1] / 1000.0;
             let z2 = -p2[1] / 1000.0;
-            
+
             let vertices = vec![
-                Vertex { position: Vec3::new(x0, y0, z0), uv: Vec2::new(tc0.coord[0], tc0.coord[1]), color: [(color.r * 255.0) as u8,(color.g * 255.0) as u8,(color.b * 255.0) as u8,(color.a * 255.0) as u8], normal: Vec4::new(0.0, 0.0, 1.0, 0.0) },
-                Vertex { position: Vec3::new(x1, y1, z1), uv: Vec2::new(tc1.coord[0], tc1.coord[1]), color: [(color.r * 255.0) as u8,(color.g * 255.0) as u8,(color.b * 255.0) as u8,(color.a * 255.0) as u8], normal: Vec4::new(0.0, 0.0, 1.0, 0.0) },
-                Vertex { position: Vec3::new(x2, y2, z2), uv: Vec2::new(tc2.coord[0], tc2.coord[1]), color: [(color.r * 255.0) as u8,(color.g * 255.0) as u8,(color.b * 255.0) as u8,(color.a * 255.0) as u8], normal: Vec4::new(0.0, 0.0, 1.0, 0.0) },
+                Vertex {
+                    position: Vec3::new(x0, y0, z0),
+                    uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
+                    color: [
+                        (color.r * 255.0) as u8,
+                        (color.g * 255.0) as u8,
+                        (color.b * 255.0) as u8,
+                        (color.a * 255.0) as u8,
+                    ],
+                    normal: Vec4::new(0.0, 0.0, 1.0, 0.0),
+                },
+                Vertex {
+                    position: Vec3::new(x1, y1, z1),
+                    uv: Vec2::new(tc1.coord[0], tc1.coord[1]),
+                    color: [
+                        (color.r * 255.0) as u8,
+                        (color.g * 255.0) as u8,
+                        (color.b * 255.0) as u8,
+                        (color.a * 255.0) as u8,
+                    ],
+                    normal: Vec4::new(0.0, 0.0, 1.0, 0.0),
+                },
+                Vertex {
+                    position: Vec3::new(x2, y2, z2),
+                    uv: Vec2::new(tc2.coord[0], tc2.coord[1]),
+                    color: [
+                        (color.r * 255.0) as u8,
+                        (color.g * 255.0) as u8,
+                        (color.b * 255.0) as u8,
+                        (color.a * 255.0) as u8,
+                    ],
+                    normal: Vec4::new(0.0, 0.0, 1.0, 0.0),
+                },
             ];
 
             let indices = vec![0_u16, 1, 2];
-            let mesh_data = macroquad::models::Mesh { vertices, indices, texture: Some(tex.clone()) };
+            let mesh_data = macroquad::models::Mesh {
+                vertices,
+                indices,
+                texture: Some(tex.clone()),
+            };
             draw_mesh(&mesh_data);
             count_shader!("md3_single");
         } else {
-            draw_triangle(Vec2::new(x0, y0), Vec2::new(x1, y1), Vec2::new(x2, y2), color);
+            draw_triangle(
+                Vec2::new(x0, y0),
+                Vec2::new(x1, y1),
+                Vec2::new(x2, y2),
+                color,
+            );
         }
     }
 }
@@ -1026,7 +1589,9 @@ pub fn render_md3_mesh_rotated(
     texture: Option<&Texture2D>,
     rotation: f32,
 ) {
-    render_md3_mesh_rotated_with_additive(mesh, frame_idx, screen_x, screen_y, scale, color, texture, None, rotation, false)
+    render_md3_mesh_rotated_with_additive(
+        mesh, frame_idx, screen_x, screen_y, scale, color, texture, None, rotation, false,
+    )
 }
 
 pub fn render_md3_mesh_rotated_with_additive(
@@ -1044,77 +1609,78 @@ pub fn render_md3_mesh_rotated_with_additive(
     if mesh.vertices.len() <= frame_idx {
         return;
     }
-    
+
     let frame_verts = &mesh.vertices[frame_idx];
     if frame_verts.is_empty() || mesh.triangles.is_empty() {
         return;
     }
-    
+
     let mesh_name = String::from_utf8_lossy(&mesh.header.name)
         .trim_end_matches('\0')
         .to_string();
-    
+
     let cos_r = rotation.cos();
     let sin_r = rotation.sin();
-    
+
     let mut all_vertices: Vec<Vertex> = Vec::with_capacity(mesh.triangles.len() * 3);
     let mut all_indices: Vec<u16> = Vec::with_capacity(mesh.triangles.len() * 3);
-    
+
     for triangle in &mesh.triangles {
         let v0_idx = triangle.vertex[0] as usize;
         let v1_idx = triangle.vertex[1] as usize;
         let v2_idx = triangle.vertex[2] as usize;
-        
-        if v0_idx >= frame_verts.len() || 
-           v1_idx >= frame_verts.len() || 
-           v2_idx >= frame_verts.len() ||
-           v0_idx >= mesh.tex_coords.len() ||
-           v1_idx >= mesh.tex_coords.len() ||
-           v2_idx >= mesh.tex_coords.len() {
+
+        if v0_idx >= frame_verts.len()
+            || v1_idx >= frame_verts.len()
+            || v2_idx >= frame_verts.len()
+            || v0_idx >= mesh.tex_coords.len()
+            || v1_idx >= mesh.tex_coords.len()
+            || v2_idx >= mesh.tex_coords.len()
+        {
             continue;
         }
-        
+
         let v0 = &frame_verts[v0_idx];
         let v1 = &frame_verts[v1_idx];
         let v2 = &frame_verts[v2_idx];
-        
+
         let v0_x = v0.vertex[0] as f32 * scale / 64.0;
         let v0_y = v0.vertex[1] as f32 * scale / 64.0;
         let v0_z = v0.vertex[2] as f32 * scale / 64.0;
-        
+
         let v1_x = v1.vertex[0] as f32 * scale / 64.0;
         let v1_y = v1.vertex[1] as f32 * scale / 64.0;
         let v1_z = v1.vertex[2] as f32 * scale / 64.0;
-        
+
         let v2_x = v2.vertex[0] as f32 * scale / 64.0;
         let v2_y = v2.vertex[1] as f32 * scale / 64.0;
         let v2_z = v2.vertex[2] as f32 * scale / 64.0;
-        
+
         let rx0 = v0_x * cos_r - v0_y * sin_r;
         let ry0 = v0_x * sin_r + v0_y * cos_r;
-        
+
         let rx1 = v1_x * cos_r - v1_y * sin_r;
         let ry1 = v1_x * sin_r + v1_y * cos_r;
-        
+
         let rx2 = v2_x * cos_r - v2_y * sin_r;
         let ry2 = v2_x * sin_r + v2_y * cos_r;
-        
+
         let z0 = -ry0 / 1000.0;
         let z1 = -ry1 / 1000.0;
         let z2 = -ry2 / 1000.0;
-        
+
         let x0 = screen_x + rx0;
         let y0 = screen_y - v0_z;
         let x1 = screen_x + rx1;
         let y1 = screen_y - v1_z;
         let x2 = screen_x + rx2;
         let y2 = screen_y - v2_z;
-        
+
         if let Some(_tex) = texture {
             let tc0 = &mesh.tex_coords[v0_idx];
             let tc1 = &mesh.tex_coords[v1_idx];
             let tc2 = &mesh.tex_coords[v2_idx];
-            
+
             let transform_normal = |n_raw: u16| -> Vec3 {
                 let n = decode_md3_normal(n_raw);
                 let n_rx = n.x * cos_r - n.y * sin_r;
@@ -1125,9 +1691,9 @@ pub fn render_md3_mesh_rotated_with_additive(
             let n0 = transform_normal(v0.normal);
             let n1 = transform_normal(v1.normal);
             let n2 = transform_normal(v2.normal);
-            
+
             let base = all_vertices.len() as u16;
-            
+
             all_vertices.push(Vertex {
                 position: Vec3::new(x0, y0, z0),
                 uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
@@ -1161,7 +1727,7 @@ pub fn render_md3_mesh_rotated_with_additive(
                 ],
                 normal: Vec4::new(n2.x, n2.y, n2.z, 0.0),
             });
-            
+
             let area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0);
             if area >= 0.0 {
                 all_indices.push(base);
@@ -1181,7 +1747,7 @@ pub fn render_md3_mesh_rotated_with_additive(
             );
         }
     }
-    
+
     if let Some(tex) = texture {
         if !all_vertices.is_empty() {
             let mesh_data = macroquad::models::Mesh {
@@ -1189,14 +1755,17 @@ pub fn render_md3_mesh_rotated_with_additive(
                 indices: all_indices,
                 texture: Some(tex.clone()),
             };
-            
-            let use_additive = force_additive || if let Some(path) = texture_path {
-                let path_lower = path.to_lowercase();
-                path_lower.contains("_f.") || path_lower.contains("/f_") || path_lower.contains("flash")
-            } else {
-                false
-            };
-            
+
+            let use_additive = force_additive
+                || if let Some(path) = texture_path {
+                    let path_lower = path.to_lowercase();
+                    path_lower.contains("_f.")
+                        || path_lower.contains("/f_")
+                        || path_lower.contains("flash")
+                } else {
+                    false
+                };
+
             if use_additive {
                 let material = shader::create_model_additive_material();
                 gl_use_material(material);
@@ -1244,12 +1813,13 @@ pub fn _render_md3_mesh_screen_rotated(
         let v1_idx = triangle.vertex[1] as usize;
         let v2_idx = triangle.vertex[2] as usize;
 
-        if v0_idx >= frame_verts.len() ||
-           v1_idx >= frame_verts.len() ||
-           v2_idx >= frame_verts.len() ||
-           v0_idx >= mesh.tex_coords.len() ||
-           v1_idx >= mesh.tex_coords.len() ||
-           v2_idx >= mesh.tex_coords.len() {
+        if v0_idx >= frame_verts.len()
+            || v1_idx >= frame_verts.len()
+            || v2_idx >= frame_verts.len()
+            || v0_idx >= mesh.tex_coords.len()
+            || v1_idx >= mesh.tex_coords.len()
+            || v2_idx >= mesh.tex_coords.len()
+        {
             continue;
         }
 
@@ -1372,7 +1942,10 @@ pub fn render_md3_mesh_with_pivot(
         .trim_end_matches('\0')
         .to_string();
     count_shader!(&format!("md3_pivot:{}", mesh_name));
-    render_md3_mesh_with_pivot_and_yaw(mesh, frame_idx, origin_x, origin_y, scale, color, texture, flip_x, angle, 0.0, pivot_x, pivot_y);
+    render_md3_mesh_with_pivot_and_yaw(
+        mesh, frame_idx, origin_x, origin_y, scale, color, texture, flip_x, angle, 0.0, pivot_x,
+        pivot_y,
+    );
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex(
@@ -1391,7 +1964,25 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex(
     pivot_y: f32,
     roll_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, 0.0, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(
+        mesh,
+        frame_idx,
+        origin_x,
+        origin_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        angle,
+        yaw_angle,
+        pivot_x,
+        pivot_y,
+        roll_angle,
+        0.0,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex_shader(
@@ -1411,7 +2002,25 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex_shader(
     pivot_y: f32,
     roll_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, shader_textures, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, 0.0, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(
+        mesh,
+        frame_idx,
+        origin_x,
+        origin_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        shader_textures,
+        flip_x,
+        angle,
+        yaw_angle,
+        pivot_x,
+        pivot_y,
+        roll_angle,
+        0.0,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad(
@@ -1430,7 +2039,25 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad(
     pivot_y: f32,
     roll_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, 0.0, true);
+    render_md3_mesh_with_pivot_and_yaw_internal(
+        mesh,
+        frame_idx,
+        origin_x,
+        origin_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        angle,
+        yaw_angle,
+        pivot_x,
+        pivot_y,
+        roll_angle,
+        0.0,
+        true,
+    );
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw(
@@ -1447,7 +2074,10 @@ pub fn render_md3_mesh_with_pivot_and_yaw(
     pivot_x: f32,
     pivot_y: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, None, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, 0.0, 0.0, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(
+        mesh, frame_idx, origin_x, origin_y, scale, color, texture, None, None, flip_x, angle,
+        yaw_angle, pivot_x, pivot_y, 0.0, 0.0, false,
+    );
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex_with_barrel(
@@ -1467,7 +2097,25 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex_with_barrel(
     roll_angle: f32,
     barrel_spin_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, barrel_spin_angle, false);
+    render_md3_mesh_with_pivot_and_yaw_internal(
+        mesh,
+        frame_idx,
+        origin_x,
+        origin_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        angle,
+        yaw_angle,
+        pivot_x,
+        pivot_y,
+        roll_angle,
+        barrel_spin_angle,
+        false,
+    );
 }
 
 pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad_with_barrel(
@@ -1487,7 +2135,25 @@ pub fn render_md3_mesh_with_pivot_and_yaw_ex_quad_with_barrel(
     roll_angle: f32,
     barrel_spin_angle: f32,
 ) {
-    render_md3_mesh_with_pivot_and_yaw_internal(mesh, frame_idx, origin_x, origin_y, scale, color, texture, texture_path, None, flip_x, angle, yaw_angle, pivot_x, pivot_y, roll_angle, barrel_spin_angle, true);
+    render_md3_mesh_with_pivot_and_yaw_internal(
+        mesh,
+        frame_idx,
+        origin_x,
+        origin_y,
+        scale,
+        color,
+        texture,
+        texture_path,
+        None,
+        flip_x,
+        angle,
+        yaw_angle,
+        pivot_x,
+        pivot_y,
+        roll_angle,
+        barrel_spin_angle,
+        true,
+    );
 }
 
 fn render_md3_mesh_with_pivot_and_yaw_internal(
@@ -1509,7 +2175,6 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
     barrel_spin_angle: f32,
     use_quad_shader: bool,
 ) {
-    
     if mesh.vertices.len() <= frame_idx {
         return;
     }
@@ -1540,12 +2205,13 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
         let v1_idx = triangle.vertex[1] as usize;
         let v2_idx = triangle.vertex[2] as usize;
 
-        if v0_idx >= frame_verts.len() ||
-           v1_idx >= frame_verts.len() ||
-           v2_idx >= frame_verts.len() ||
-           v0_idx >= mesh.tex_coords.len() ||
-           v1_idx >= mesh.tex_coords.len() ||
-           v2_idx >= mesh.tex_coords.len() {
+        if v0_idx >= frame_verts.len()
+            || v1_idx >= frame_verts.len()
+            || v2_idx >= frame_verts.len()
+            || v0_idx >= mesh.tex_coords.len()
+            || v1_idx >= mesh.tex_coords.len()
+            || v2_idx >= mesh.tex_coords.len()
+        {
             continue;
         }
 
@@ -1570,15 +2236,15 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
 
             let rdx = dx * cos_a - dy * sin_a;
             let rdy = dx * sin_a + dy * cos_a;
-            
+
             let ydx = rdx * cos_y - rdy * sin_y;
             let ydy = rdx * sin_y + rdy * cos_y;
-            
+
             let roll_dx = ydx * cos_r - ydy * sin_r;
             let roll_dy = ydx * sin_r + ydy * cos_r;
 
             let final_z = -ydy / 1000.0;
-            
+
             let final_x = origin_x + (roll_dx - pivot_x * x_mult);
             let final_y = origin_y + (roll_dy + pivot_y);
 
@@ -1603,7 +2269,7 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
             let n_ydx = n_rdx * cos_y - n_rdy * sin_y;
             let n_ydy = n_rdx * sin_y + n_rdy * cos_y;
             let n_yz = ny;
-            
+
             let n_roll_dx = n_ydx * cos_r - n_ydy * sin_r;
             let n_roll_dy = n_ydx * sin_r + n_ydy * cos_r;
 
@@ -1622,7 +2288,7 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
             let tc2 = &mesh.tex_coords[v2_idx];
 
             let base = all_vertices.len() as u16;
-            
+
             all_vertices.push(Vertex {
                 position: pos0,
                 uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
@@ -1657,12 +2323,12 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
 
     if let Some(tex) = texture {
         if !all_vertices.is_empty() {
-            let mesh_data = macroquad::models::Mesh { 
-                vertices: all_vertices, 
-                indices: all_indices, 
-                texture: Some(tex.clone()) 
+            let mesh_data = macroquad::models::Mesh {
+                vertices: all_vertices,
+                indices: all_indices,
+                texture: Some(tex.clone()),
             };
-            
+
             if use_quad_shader {
                 let material = shader::create_quad_damage_outline_material();
                 gl_use_material(material);
@@ -1681,4 +2347,3 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
         }
     }
 }
-

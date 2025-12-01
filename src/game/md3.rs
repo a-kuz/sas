@@ -18,7 +18,6 @@ pub struct MD3Header {
     pub file_size: i32,
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Tag {
     pub name: [u8; 64],
@@ -80,39 +79,39 @@ impl MD3Model {
             Err("Use load_async for WASM".to_string())
         }
     }
-    
+
     pub async fn load_async(path: &str) -> Result<Self, String> {
         let data = super::file_loader::load_file_bytes(path).await?;
         Self::parse_from_bytes(&data)
     }
-    
+
     #[cfg(not(target_arch = "wasm32"))]
     fn load_sync<P: AsRef<Path>>(path: P) -> Result<Self, String> {
         let mut file = File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
-        
+
         let mut header_bytes = [0u8; 108];
         file.read_exact(&mut header_bytes)
             .map_err(|e| format!("Failed to read header: {}", e))?;
-        
+
         let header = unsafe { std::ptr::read(header_bytes.as_ptr() as *const MD3Header) };
-        
+
         if &header.id != b"IDP3" {
             return Err("Invalid MD3 file format".to_string());
         }
-        
+
         for _ in 0..header.num_bone_frames {
             let mut frame_bytes = [0u8; 56];
             file.read_exact(&mut frame_bytes)
                 .map_err(|e| format!("Failed to read bone frame: {}", e))?;
         }
-        
+
         let mut tags = vec![Vec::new(); header.num_bone_frames as usize];
         for frame_idx in 0..header.num_bone_frames as usize {
             for _ in 0..header.num_tags {
                 let mut tag_bytes = [0u8; 112];
                 file.read_exact(&mut tag_bytes)
                     .map_err(|e| format!("Failed to read tag: {}", e))?;
-                
+
                 let mut name = [0u8; 64];
                 name.copy_from_slice(&tag_bytes[0..64]);
 
@@ -139,51 +138,70 @@ impl MD3Model {
                         ]);
                     }
                 }
-                
-                tags[frame_idx].push(Tag { name, position, axis });
+
+                tags[frame_idx].push(Tag {
+                    name,
+                    position,
+                    axis,
+                });
             }
         }
-        
+
         let mut meshes = Vec::with_capacity(header.num_meshes as usize);
         for _ in 0..header.num_meshes {
-            let mesh_start = file.stream_position()
-                .map_err(|e| format!("Failed to get position: {}", e))? as i64;
-            
+            let mesh_start =
+                file.stream_position()
+                    .map_err(|e| format!("Failed to get position: {}", e))? as i64;
+
             let mut mesh_header_bytes = [0u8; 108];
             file.read_exact(&mut mesh_header_bytes)
                 .map_err(|e| format!("Failed to read mesh header: {}", e))?;
-            
+
             let mut name = [0u8; 68];
             name.copy_from_slice(&mesh_header_bytes[4..72]);
             let num_mesh_frames = i32::from_le_bytes([
-                mesh_header_bytes[72], mesh_header_bytes[73], 
-                mesh_header_bytes[74], mesh_header_bytes[75]
+                mesh_header_bytes[72],
+                mesh_header_bytes[73],
+                mesh_header_bytes[74],
+                mesh_header_bytes[75],
             ]);
             let num_vertices = i32::from_le_bytes([
-                mesh_header_bytes[80], mesh_header_bytes[81], 
-                mesh_header_bytes[82], mesh_header_bytes[83]
+                mesh_header_bytes[80],
+                mesh_header_bytes[81],
+                mesh_header_bytes[82],
+                mesh_header_bytes[83],
             ]);
             let num_triangles = i32::from_le_bytes([
-                mesh_header_bytes[84], mesh_header_bytes[85], 
-                mesh_header_bytes[86], mesh_header_bytes[87]
+                mesh_header_bytes[84],
+                mesh_header_bytes[85],
+                mesh_header_bytes[86],
+                mesh_header_bytes[87],
             ]);
             let tri_start = i32::from_le_bytes([
-                mesh_header_bytes[88], mesh_header_bytes[89], 
-                mesh_header_bytes[90], mesh_header_bytes[91]
+                mesh_header_bytes[88],
+                mesh_header_bytes[89],
+                mesh_header_bytes[90],
+                mesh_header_bytes[91],
             ]);
             let tex_vector_start = i32::from_le_bytes([
-                mesh_header_bytes[96], mesh_header_bytes[97], 
-                mesh_header_bytes[98], mesh_header_bytes[99]
+                mesh_header_bytes[96],
+                mesh_header_bytes[97],
+                mesh_header_bytes[98],
+                mesh_header_bytes[99],
             ]);
             let vertex_start = i32::from_le_bytes([
-                mesh_header_bytes[100], mesh_header_bytes[101], 
-                mesh_header_bytes[102], mesh_header_bytes[103]
+                mesh_header_bytes[100],
+                mesh_header_bytes[101],
+                mesh_header_bytes[102],
+                mesh_header_bytes[103],
             ]);
             let mesh_size = i32::from_le_bytes([
-                mesh_header_bytes[104], mesh_header_bytes[105], 
-                mesh_header_bytes[106], mesh_header_bytes[107]
+                mesh_header_bytes[104],
+                mesh_header_bytes[105],
+                mesh_header_bytes[106],
+                mesh_header_bytes[107],
             ]);
-            
+
             let mesh_header = MeshHeader {
                 name,
                 num_mesh_frames,
@@ -194,10 +212,12 @@ impl MD3Model {
                 vertex_start,
                 mesh_size,
             };
-            
-            file.seek(SeekFrom::Start((mesh_start + mesh_header.tri_start as i64) as u64))
-                .map_err(|e| format!("Failed to seek: {}", e))?;
-            
+
+            file.seek(SeekFrom::Start(
+                (mesh_start + mesh_header.tri_start as i64) as u64,
+            ))
+            .map_err(|e| format!("Failed to seek: {}", e))?;
+
             let mut triangles = Vec::with_capacity(mesh_header.num_triangles as usize);
             for _ in 0..mesh_header.num_triangles {
                 let mut tri_bytes = [0u8; 12];
@@ -206,10 +226,12 @@ impl MD3Model {
                 let tri = unsafe { std::ptr::read(tri_bytes.as_ptr() as *const Triangle) };
                 triangles.push(tri);
             }
-            
-            file.seek(SeekFrom::Start((mesh_start + mesh_header.tex_vector_start as i64) as u64))
-                .map_err(|e| format!("Failed to seek: {}", e))?;
-            
+
+            file.seek(SeekFrom::Start(
+                (mesh_start + mesh_header.tex_vector_start as i64) as u64,
+            ))
+            .map_err(|e| format!("Failed to seek: {}", e))?;
+
             let mut tex_coords = Vec::with_capacity(mesh_header.num_vertices as usize);
             for _ in 0..mesh_header.num_vertices {
                 let mut tc_bytes = [0u8; 8];
@@ -218,10 +240,12 @@ impl MD3Model {
                 let tc = unsafe { std::ptr::read(tc_bytes.as_ptr() as *const TexCoord) };
                 tex_coords.push(tc);
             }
-            
-            file.seek(SeekFrom::Start((mesh_start + mesh_header.vertex_start as i64) as u64))
-                .map_err(|e| format!("Failed to seek: {}", e))?;
-            
+
+            file.seek(SeekFrom::Start(
+                (mesh_start + mesh_header.vertex_start as i64) as u64,
+            ))
+            .map_err(|e| format!("Failed to seek: {}", e))?;
+
             let mut vertices = Vec::with_capacity(mesh_header.num_mesh_frames as usize);
             for _ in 0..mesh_header.num_mesh_frames {
                 let mut frame_verts = Vec::with_capacity(mesh_header.num_vertices as usize);
@@ -239,49 +263,51 @@ impl MD3Model {
                 }
                 vertices.push(frame_verts);
             }
-            
+
             meshes.push(Mesh {
                 header: mesh_header,
                 triangles,
                 tex_coords,
                 vertices,
             });
-            
-            file.seek(SeekFrom::Start((mesh_start + mesh_header.mesh_size as i64) as u64))
-                .map_err(|e| format!("Failed to seek: {}", e))?;
+
+            file.seek(SeekFrom::Start(
+                (mesh_start + mesh_header.mesh_size as i64) as u64,
+            ))
+            .map_err(|e| format!("Failed to seek: {}", e))?;
         }
-        
+
         Ok(MD3Model {
             header,
             tags,
             meshes,
         })
     }
-    
+
     fn parse_from_bytes(data: &[u8]) -> Result<Self, String> {
         if data.len() < 108 {
             return Err("File too small to be valid MD3".to_string());
         }
-        
+
         let mut offset = 0;
-        
+
         let header_bytes = &data[offset..offset + 108];
         let header = unsafe { std::ptr::read(header_bytes.as_ptr() as *const MD3Header) };
         offset += 108;
-        
+
         if &header.id != b"IDP3" {
             return Err("Invalid MD3 file format".to_string());
         }
-        
+
         for _ in 0..header.num_bone_frames {
             offset += 56;
         }
-        
+
         let mut tags = vec![Vec::new(); header.num_bone_frames as usize];
         for frame_idx in 0..header.num_bone_frames as usize {
             for _ in 0..header.num_tags {
                 let tag_bytes = &data[offset..offset + 112];
-                
+
                 let mut name = [0u8; 64];
                 name.copy_from_slice(&tag_bytes[0..64]);
 
@@ -309,48 +335,66 @@ impl MD3Model {
                     }
                 }
 
-                tags[frame_idx].push(Tag { name, position, axis });
+                tags[frame_idx].push(Tag {
+                    name,
+                    position,
+                    axis,
+                });
                 offset += 112;
             }
         }
-        
+
         let mut meshes = Vec::with_capacity(header.num_meshes as usize);
         for _ in 0..header.num_meshes {
             let mesh_start = offset;
-            
+
             let mesh_header_bytes = &data[offset..offset + 108];
-            
+
             let mut name = [0u8; 68];
             name.copy_from_slice(&mesh_header_bytes[4..72]);
             let num_mesh_frames = i32::from_le_bytes([
-                mesh_header_bytes[72], mesh_header_bytes[73], 
-                mesh_header_bytes[74], mesh_header_bytes[75]
+                mesh_header_bytes[72],
+                mesh_header_bytes[73],
+                mesh_header_bytes[74],
+                mesh_header_bytes[75],
             ]);
             let num_vertices = i32::from_le_bytes([
-                mesh_header_bytes[80], mesh_header_bytes[81], 
-                mesh_header_bytes[82], mesh_header_bytes[83]
+                mesh_header_bytes[80],
+                mesh_header_bytes[81],
+                mesh_header_bytes[82],
+                mesh_header_bytes[83],
             ]);
             let num_triangles = i32::from_le_bytes([
-                mesh_header_bytes[84], mesh_header_bytes[85], 
-                mesh_header_bytes[86], mesh_header_bytes[87]
+                mesh_header_bytes[84],
+                mesh_header_bytes[85],
+                mesh_header_bytes[86],
+                mesh_header_bytes[87],
             ]);
             let tri_start = i32::from_le_bytes([
-                mesh_header_bytes[88], mesh_header_bytes[89], 
-                mesh_header_bytes[90], mesh_header_bytes[91]
+                mesh_header_bytes[88],
+                mesh_header_bytes[89],
+                mesh_header_bytes[90],
+                mesh_header_bytes[91],
             ]);
             let tex_vector_start = i32::from_le_bytes([
-                mesh_header_bytes[96], mesh_header_bytes[97], 
-                mesh_header_bytes[98], mesh_header_bytes[99]
+                mesh_header_bytes[96],
+                mesh_header_bytes[97],
+                mesh_header_bytes[98],
+                mesh_header_bytes[99],
             ]);
             let vertex_start = i32::from_le_bytes([
-                mesh_header_bytes[100], mesh_header_bytes[101], 
-                mesh_header_bytes[102], mesh_header_bytes[103]
+                mesh_header_bytes[100],
+                mesh_header_bytes[101],
+                mesh_header_bytes[102],
+                mesh_header_bytes[103],
             ]);
             let mesh_size = i32::from_le_bytes([
-                mesh_header_bytes[104], mesh_header_bytes[105], 
-                mesh_header_bytes[106], mesh_header_bytes[107]
+                mesh_header_bytes[104],
+                mesh_header_bytes[105],
+                mesh_header_bytes[106],
+                mesh_header_bytes[107],
             ]);
-            
+
             let mesh_header = MeshHeader {
                 name,
                 num_mesh_frames,
@@ -361,7 +405,7 @@ impl MD3Model {
                 vertex_start,
                 mesh_size,
             };
-            
+
             let tri_offset = mesh_start + tri_start as usize;
             let mut triangles = Vec::with_capacity(num_triangles as usize);
             for i in 0..num_triangles as usize {
@@ -369,7 +413,7 @@ impl MD3Model {
                 let tri = unsafe { std::ptr::read(tri_bytes.as_ptr() as *const Triangle) };
                 triangles.push(tri);
             }
-            
+
             let tc_offset = mesh_start + tex_vector_start as usize;
             let mut tex_coords = Vec::with_capacity(num_vertices as usize);
             for i in 0..num_vertices as usize {
@@ -377,7 +421,7 @@ impl MD3Model {
                 let tc = unsafe { std::ptr::read(tc_bytes.as_ptr() as *const TexCoord) };
                 tex_coords.push(tc);
             }
-            
+
             let vert_offset = mesh_start + vertex_start as usize;
             let mut vertices = Vec::with_capacity(num_mesh_frames as usize);
             for frame_idx in 0..num_mesh_frames as usize {
@@ -395,17 +439,17 @@ impl MD3Model {
                 }
                 vertices.push(frame_verts);
             }
-            
+
             meshes.push(Mesh {
                 header: mesh_header,
                 triangles,
                 tex_coords,
                 vertices,
             });
-            
+
             offset = mesh_start + mesh_size as usize;
         }
-        
+
         Ok(MD3Model {
             header,
             tags,
@@ -413,4 +457,3 @@ impl MD3Model {
         })
     }
 }
-

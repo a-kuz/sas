@@ -22,7 +22,7 @@ pub fn draw_profiler() {
         panel_height,
         Color::from_rgba(0, 0, 0, 200),
     );
-    
+
     draw_rectangle_lines(
         panel_x,
         panel_y,
@@ -64,7 +64,8 @@ pub fn draw_profiler() {
     );
     y += 8.0;
 
-    let max_time = samples.iter()
+    let max_time = samples
+        .iter()
         .map(|(_, current, _, _, max)| current.max(*max))
         .fold(0.0, f64::max)
         .max(1.0);
@@ -90,13 +91,7 @@ pub fn draw_profiler() {
 
         draw_text(name, panel_x + 10.0, y, 11.0, WHITE);
 
-        draw_text(
-            &format!("{:.2}", current),
-            panel_x + 140.0,
-            y,
-            11.0,
-            color,
-        );
+        draw_text(&format!("{:.2}", current), panel_x + 140.0, y, 11.0, color);
 
         draw_text(
             &format!("{:.2}", avg),
@@ -182,16 +177,18 @@ pub fn draw_profiler() {
         Color::from_rgba(100, 100, 100, 255),
     );
 
-    let total_time = samples.iter().find(|(name, _, _, _, _)| *name == "render_total")
+    let total_time = samples
+        .iter()
+        .find(|(name, _, _, _, _)| *name == "render_total")
         .map(|(_, current, _, _, _)| current)
         .unwrap_or(&0.0);
 
     let shader_stats = crate::profiler::get_shader_stats();
     let total_draws: usize = shader_stats.iter().map(|(_, count)| count).sum();
-    
+
     // Debug: всегда показываем секцию шейдеров для отладки
     let debug_show_shaders = true;
-    
+
     let help_color = Color::from_rgba(150, 150, 150, 255);
     draw_text(
         &format!("Total: {:.2}ms | Target: <8.33ms (120 FPS)", total_time),
@@ -200,7 +197,7 @@ pub fn draw_profiler() {
         11.0,
         help_color,
     );
-    
+
     draw_text(
         &format!("Draw calls: {}", total_draws),
         panel_x + 10.0,
@@ -208,12 +205,12 @@ pub fn draw_profiler() {
         11.0,
         help_color,
     );
-    
+
     if debug_show_shaders || !shader_stats.is_empty() {
         let mut shader_y = bottom_y + 50.0;
         draw_text("Shader Stats:", panel_x + 10.0, shader_y, 12.0, WHITE);
         shader_y += 15.0;
-        
+
         if shader_stats.is_empty() {
             draw_text(
                 "No shader stats (draw calls = 0)",
@@ -231,7 +228,7 @@ pub fn draw_profiler() {
                 } else {
                     Color::from_rgba(150, 255, 150, 255)
                 };
-                
+
                 draw_text(
                     &format!("{}: {}", shader_name, count),
                     panel_x + 15.0,
@@ -244,4 +241,3 @@ pub fn draw_profiler() {
         }
     }
 }
-

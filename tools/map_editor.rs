@@ -62,8 +62,8 @@ pub mod state;
 #[path = "map_editor/map_selector.rs"]
 mod map_selector;
 
-use state::EditorState;
 use map_selector::MapSelector;
+use state::EditorState;
 
 #[cfg(feature = "profiler")]
 mod profiler {
@@ -86,61 +86,61 @@ fn window_conf() -> Conf {
 #[macroquad::main(window_conf)]
 async fn main() {
     let args: Vec<String> = std::env::args().collect();
-    
+
     if args.len() > 1 {
         let map_name = args[1].clone();
-    println!("SAS Map Editor");
-    println!("Loading map: {}", map_name);
-    
-    let mut editor = EditorState::new(&map_name);
-    
-    println!("Loading textures...");
-    editor.load_textures().await;
-    println!("Textures loaded!");
-    
-    loop {
-        editor.handle_input();
-        editor.render();
-        
-        next_frame().await;
-    }
+        println!("SAS Map Editor");
+        println!("Loading map: {}", map_name);
+
+        let mut editor = EditorState::new(&map_name);
+
+        println!("Loading textures...");
+        editor.load_textures().await;
+        println!("Textures loaded!");
+
+        loop {
+            editor.handle_input();
+            editor.render();
+
+            next_frame().await;
+        }
     } else {
         println!("SAS Map Editor - Map Selector");
-        
+
         let mut selector = MapSelector::new().await;
         let mut previews_loaded = false;
-        
+
         loop {
             if is_key_pressed(KeyCode::Escape) {
                 break;
             }
-            
+
             if !previews_loaded {
                 selector.ensure_previews_loaded().await;
                 previews_loaded = true;
             }
-            
+
             if let Some(map_name) = selector.handle_input_and_render() {
                 println!("Selected map: {}", map_name);
-                
+
                 let mut editor = EditorState::new(&map_name);
                 editor.load_textures().await;
-                
+
                 loop {
-                    if is_key_pressed(KeyCode::Escape) && 
-                       (is_key_down(KeyCode::LeftControl) || is_key_down(KeyCode::RightControl)) {
+                    if is_key_pressed(KeyCode::Escape)
+                        && (is_key_down(KeyCode::LeftControl) || is_key_down(KeyCode::RightControl))
+                    {
                         break;
                     }
-                    
+
                     editor.handle_input();
                     editor.render();
-                    
+
                     next_frame().await;
                 }
             }
-            
+
             next_frame().await;
         }
     }
 }
-

@@ -1,27 +1,27 @@
-pub mod protocol;
 pub mod client;
-pub mod server;
-pub mod debug;
-pub mod prediction_debug;
-pub mod snapshot_delta;
-pub mod prediction;
-pub mod interpolation;
 pub mod client_prediction;
-pub mod trajectory;
-pub mod net_stats;
+pub mod debug;
+pub mod interpolation;
 pub mod net_hud;
+pub mod net_stats;
+pub mod prediction;
+pub mod prediction_debug;
+pub mod protocol;
+pub mod server;
+pub mod snapshot_delta;
+pub mod trajectory;
 
 pub use client::NetworkClient;
-pub use server::NetworkServer;
-pub use debug::NetDebug;
-pub use prediction_debug::PredictionDebugRenderer;
-pub use snapshot_delta::{SnapshotDelta, DummySnapshot, PlayerStateDelta, ProjectileStateDelta};
-pub use prediction::{CommandBuffer, UserCommand, CMD_BACKUP};
-pub use interpolation::{SnapshotBuffer, InterpolatedPlayer, InterpolatedProjectile};
 pub use client_prediction::{ClientPrediction, PredictedPlayerState, PredictionError};
-pub use trajectory::{Trajectory, TrajectoryType, ProjectileTrajectory};
-pub use net_stats::NetStats;
+pub use debug::NetDebug;
+pub use interpolation::{InterpolatedPlayer, InterpolatedProjectile, SnapshotBuffer};
 pub use net_hud::NetHud;
+pub use net_stats::NetStats;
+pub use prediction::{CommandBuffer, UserCommand, CMD_BACKUP};
+pub use prediction_debug::PredictionDebugRenderer;
+pub use server::NetworkServer;
+pub use snapshot_delta::{DummySnapshot, PlayerStateDelta, ProjectileStateDelta, SnapshotDelta};
+pub use trajectory::{ProjectileTrajectory, Trajectory, TrajectoryType};
 
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
@@ -46,7 +46,7 @@ pub fn get_network_time() -> f64 {
         let start = START_TIME.get_or_init(|| Instant::now());
         start.elapsed().as_secs_f64()
     }
-    
+
     #[cfg(target_arch = "wasm32")]
     {
         macroquad::prelude::get_time()
@@ -59,18 +59,24 @@ pub fn get_absolute_time() -> String {
         .unwrap();
     let total_secs = now.as_secs();
     let millis = now.subsec_millis();
-    
+
     let secs_in_day = total_secs % 86400;
     let hours = (secs_in_day / 3600) % 24;
     let minutes = (secs_in_day / 60) % 60;
     let seconds = secs_in_day % 60;
-    
-    format!("{:02}:{:02}:{:02}.{:02}", hours, minutes, seconds, millis / 10)
+
+    format!(
+        "{:02}:{:02}:{:02}.{:02}",
+        hours,
+        minutes,
+        seconds,
+        millis / 10
+    )
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum NetMessage {
-    ConnectRequest { 
+    ConnectRequest {
         player_name: String,
         protocol_version: u32,
     },
@@ -79,7 +85,7 @@ pub enum NetMessage {
         accepted: bool,
         reason: String,
     },
-    Disconnect { 
+    Disconnect {
         player_id: u16,
         reason: String,
     },
@@ -126,7 +132,7 @@ pub enum NetMessage {
         player_id: u16,
         commands: Vec<PlayerInputCmd>,
     },
-    PlayerShoot { 
+    PlayerShoot {
         player_id: u16,
         weapon: u8,
         origin: (f32, f32),
@@ -142,7 +148,7 @@ pub enum NetMessage {
         vel_y: f32,
         spawn_time: u32,
     },
-    PlayerDamaged { 
+    PlayerDamaged {
         target_id: u16,
         attacker_id: u16,
         damage: i32,
@@ -150,7 +156,7 @@ pub enum NetMessage {
         knockback_x: f32,
         knockback_y: f32,
     },
-    PlayerDied { 
+    PlayerDied {
         player_id: u16,
         killer_id: u16,
         gibbed: bool,
@@ -165,17 +171,17 @@ pub enum NetMessage {
         player_id: u16,
         position: (f32, f32),
     },
-    Chat { 
+    Chat {
         player_id: u16,
         message: String,
     },
-    ServerInfo { 
+    ServerInfo {
         map_name: String,
         gametype: u8,
         max_players: u8,
         current_players: u8,
     },
-    MapChange { 
+    MapChange {
         map_name: String,
     },
     Heartbeat,
@@ -267,4 +273,3 @@ impl Default for NetworkConfig {
         }
     }
 }
-

@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
 use super::map::Map;
 use crate::compat_rand::*;
+use macroquad::prelude::*;
 
 #[derive(Clone, Debug)]
 pub enum ParticleType {
@@ -29,7 +29,6 @@ pub struct Particle {
 
 impl Particle {
     pub fn new(x: f32, y: f32, vel_x: f32, vel_y: f32, long: bool) -> Self {
-        
         Self {
             x,
             y,
@@ -49,7 +48,6 @@ impl Particle {
     }
 
     pub fn new_smoke(x: f32, y: f32, vel_x: f32, vel_y: f32, radius: f32, duration: f32) -> Self {
-        
         Self {
             x,
             y,
@@ -69,7 +67,6 @@ impl Particle {
     }
 
     pub fn new_explosion(x: f32, y: f32, vel_x: f32, vel_y: f32, size: f32) -> Self {
-        
         Self {
             x,
             y,
@@ -90,7 +87,7 @@ impl Particle {
 
     pub fn update(&mut self, dt: f32, map: &Map) -> bool {
         let dt_60fps = dt * 60.0;
-        
+
         self.x += self.vel_x * dt_60fps;
         self.y += self.vel_y * dt_60fps;
 
@@ -112,7 +109,7 @@ impl Particle {
                     self.y = (self.y / 16.0).round() * 16.0;
                     self.vel_x = 0.0;
                     self.vel_y = 0.0;
-                    
+
                     if gen_range_i32(0, 2) == 0 {
                         self.life = (self.life - dt).max(0.0);
                     }
@@ -121,20 +118,22 @@ impl Particle {
             ParticleType::Smoke => {
                 self.vel_x *= 0.98_f32.powf(dt_60fps);
                 self.vel_y *= 0.98_f32.powf(dt_60fps);
-                
+
                 let life_ratio = self.life / self.max_life;
                 self.alpha = 0.33 * (1.0 - life_ratio);
-                self.radius = self.start_radius + (self.end_radius - self.start_radius) * life_ratio;
+                self.radius =
+                    self.start_radius + (self.end_radius - self.start_radius) * life_ratio;
             }
             ParticleType::Explosion => {
                 self.vel_x *= 0.95_f32.powf(dt_60fps);
                 self.vel_y *= 0.95_f32.powf(dt_60fps);
-                
+
                 let life_ratio = self.life / self.max_life;
-                
+
                 if life_ratio < 0.3 {
                     self.alpha = 1.0;
-                    self.radius = self.start_radius + (self.end_radius - self.start_radius) * (life_ratio / 0.3);
+                    self.radius = self.start_radius
+                        + (self.end_radius - self.start_radius) * (life_ratio / 0.3);
                 } else {
                     self.alpha = 1.0 - ((life_ratio - 0.3) / 0.7);
                     self.radius = self.end_radius;
@@ -150,18 +149,18 @@ impl Particle {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
 
-        if screen_x < -32.0 || screen_x > screen_width() + 32.0 || screen_y < -32.0 || screen_y > screen_height() + 32.0 {
+        if screen_x < -32.0
+            || screen_x > screen_width() + 32.0
+            || screen_y < -32.0
+            || screen_y > screen_height() + 32.0
+        {
             return;
         }
 
         match self.particle_type {
-            ParticleType::Blood => {
-            }
-            ParticleType::Smoke => {
-            }
-            ParticleType::Explosion => {
-            }
+            ParticleType::Blood => {}
+            ParticleType::Smoke => {}
+            ParticleType::Explosion => {}
         }
     }
 }
-

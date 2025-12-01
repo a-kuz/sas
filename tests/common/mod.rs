@@ -1,7 +1,7 @@
-use sas::network::{NetworkConfig, NetworkServer, NetMessage, PlayerState};
+use sas::game::bg_pmove::{pmove, PmoveCmd, PmoveState};
 use sas::game::map::Map;
-use sas::game::bg_pmove::{PmoveState, PmoveCmd, pmove};
 use sas::game::usercmd::UserCmd;
+use sas::network::{NetMessage, NetworkConfig, NetworkServer, PlayerState};
 use std::collections::HashMap;
 use std::process::Command;
 
@@ -11,7 +11,7 @@ pub fn kill_process_on_port(port: u16) {
         let output = Command::new("lsof")
             .args(&["-ti", &format!(":{}", port)])
             .output();
-        
+
         if let Ok(output) = output {
             if !output.stdout.is_empty() {
                 let pids = String::from_utf8_lossy(&output.stdout);
@@ -28,24 +28,22 @@ pub fn kill_process_on_port(port: u16) {
             }
         }
     }
-    
+
     #[cfg(target_os = "linux")]
     {
         let output = Command::new("fuser")
             .args(&["-k", "-TERM", &format!("{}/tcp", port)])
             .output();
-        
+
         if output.is_ok() {
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
     }
-    
+
     #[cfg(target_os = "windows")]
     {
-        let output = Command::new("netstat")
-            .args(&["-ano"])
-            .output();
-        
+        let output = Command::new("netstat").args(&["-ano"]).output();
+
         if let Ok(output) = output {
             let output_str = String::from_utf8_lossy(&output.stdout);
             for line in output_str.lines() {
@@ -89,17 +87,24 @@ pub struct ServerPlayer {
 impl TestServer {
     pub fn new(port: u16) -> Self {
         kill_process_on_port(port);
-        
+
         let mut config = NetworkConfig::default();
         config.server_port = port;
-        
-        let map = Map::load_from_file("0-arena")
-            .unwrap_or_else(|_| {
-                let mut map = Map::new("test_map");
-                map.spawn_points.push(sas::game::map::SpawnPoint { x: 100.0, y: 100.0, team: 0 });
-                map.spawn_points.push(sas::game::map::SpawnPoint { x: 200.0, y: 200.0, team: 0 });
-                map
+
+        let map = Map::load_from_file("0-arena").unwrap_or_else(|_| {
+            let mut map = Map::new("test_map");
+            map.spawn_points.push(sas::game::map::SpawnPoint {
+                x: 100.0,
+                y: 100.0,
+                team: 0,
             });
+            map.spawn_points.push(sas::game::map::SpawnPoint {
+                x: 200.0,
+                y: 200.0,
+                team: 0,
+            });
+            map
+        });
 
         Self {
             server: NetworkServer::new(config),
@@ -115,7 +120,7 @@ impl TestServer {
 
     pub fn update(&mut self) {
         let (messages, _timeouts) = self.server.update();
-        
+
         for (client_id, msg) in messages {
             self.handle_message(client_id, msg);
         }
@@ -129,7 +134,7 @@ impl TestServer {
 
     fn handle_message(&mut self, client_id: u16, msg: NetMessage) {
         self.server.update_delta_message(client_id);
-        
+
         match msg {
             NetMessage::ConnectRequest { player_name, .. } => {
                 println!("[SERVER] Client {} connecting: {}", client_id, player_name);
@@ -139,12 +144,33 @@ impl TestServer {
                 println!("[SERVER] Client {} disconnected", client_id);
                 self.players.remove(&client_id);
             }
-            NetMessage::PlayerInput { move_forward, move_right, angle, buttons, server_time, .. } => {
-                self.update_player_input(client_id, move_forward, move_right, angle, buttons, server_time);
+            NetMessage::PlayerInput {
+                move_forward,
+                move_right,
+                angle,
+                buttons,
+                server_time,
+                ..
+            } => {
+                self.update_player_input(
+                    client_id,
+                    move_forward,
+                    move_right,
+                    angle,
+                    buttons,
+                    server_time,
+                );
             }
             NetMessage::PlayerInputBatch { commands, .. } => {
                 if let Some(last_cmd) = commands.last() {
-                    self.update_player_input(client_id, 0.0, last_cmd.move_right, last_cmd.angle, last_cmd.buttons, last_cmd.server_time);
+                    self.update_player_input(
+                        client_id,
+                        0.0,
+                        last_cmd.move_right,
+                        last_cmd.angle,
+                        last_cmd.buttons,
+                        last_cmd.server_time,
+                    );
                 }
             }
             _ => {}
@@ -154,7 +180,7 @@ impl TestServer {
     fn add_player(&mut self, client_id: u16) {
         let spawn_idx = (client_id as usize) % self.map.spawn_points.len().max(1);
         let spawn = &self.map.spawn_points[spawn_idx];
-        
+
         let player = ServerPlayer {
             pmove_state: PmoveState {
                 x: spawn.x,
@@ -189,7 +215,15 @@ impl TestServer {
         self.server.broadcast(respawn_msg).ok();
     }
 
-    fn update_player_input(&mut self, client_id: u16, _move_forward: f32, move_right: f32, angle: f32, buttons: u32, server_time: u32) {
+    fn update_player_input(
+        &mut self,
+        client_id: u16,
+        _move_forward: f32,
+        move_right: f32,
+        angle: f32,
+        buttons: u32,
+        server_time: u32,
+    ) {
         if let Some(player) = self.players.get_mut(&client_id) {
             player.angle = angle;
             player.last_cmd = UserCmd {
@@ -205,21 +239,21 @@ impl TestServer {
         let current_tick = self.tick;
         let tick_rate = 60;
         let current_server_time = ((current_tick as u64) * 1000 / tick_rate) as u32;
-        
+
         for (_, player) in self.players.iter_mut() {
             player.last_executed_time = current_server_time;
-            
+
             let cmd = player.last_cmd;
-            
+
             let pmove_cmd = PmoveCmd {
                 move_right: cmd.right,
                 jump: (cmd.buttons & 2) != 0,
                 crouch: (cmd.buttons & 4) != 0,
                 haste_active: false,
             };
-            
+
             let result = pmove(&player.pmove_state, &pmove_cmd, dt, &self.map);
-            
+
             player.pmove_state.x = result.new_x;
             player.pmove_state.y = result.new_y;
             player.pmove_state.vel_x = result.new_vel_x;
@@ -229,8 +263,10 @@ impl TestServer {
     }
 
     fn broadcast_state(&mut self) {
-        let player_states: Vec<PlayerState> = self.players.iter().map(|(id, p)| {
-            PlayerState {
+        let player_states: Vec<PlayerState> = self
+            .players
+            .iter()
+            .map(|(id, p)| PlayerState {
                 player_id: *id,
                 position: (p.pmove_state.x, p.pmove_state.y),
                 velocity: (p.pmove_state.vel_x, p.pmove_state.vel_y),
@@ -247,14 +283,17 @@ impl TestServer {
                 is_crouching: (p.last_cmd.buttons & 4) != 0,
                 is_attacking: false,
                 is_dead: false,
-            }
-        }).collect();
+            })
+            .collect();
 
-        self.server.broadcast_game_state(self.tick, player_states, vec![]).ok();
+        self.server
+            .broadcast_game_state(self.tick, player_states, vec![])
+            .ok();
     }
 
     pub fn get_player_position(&self, client_id: u16) -> Option<(f32, f32)> {
-        self.players.get(&client_id).map(|p| (p.pmove_state.x, p.pmove_state.y))
+        self.players
+            .get(&client_id)
+            .map(|p| (p.pmove_state.x, p.pmove_state.y))
     }
 }
-

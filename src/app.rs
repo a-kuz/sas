@@ -1,9 +1,9 @@
-use macroquad::prelude::*;
-use crate::menu::MenuState;
-use crate::game_loop::GameLoop;
-use crate::render;
 use crate::console::Console;
 use crate::cvar;
+use crate::game_loop::GameLoop;
+use crate::menu::MenuState;
+use crate::render;
+use macroquad::prelude::*;
 
 pub struct App {
     menu_state: Option<MenuState>,
@@ -31,15 +31,15 @@ impl App {
         render::load_q3_font2_prop().await;
         render::load_q3_numbers().await;
         render::load_custom_font().await;
-        
+
         render::load_hud_icons().await;
-        
+
         render::load_item_icons().await;
-        
+
         self.console.init();
         self.console.load_texture().await;
         self.console.print("SAS III Console initialized\n");
-        
+
         if let Some(menu_state) = &mut self.menu_state {
             menu_state.init().await;
         }
@@ -49,8 +49,9 @@ impl App {
         loop {
             clear_background(BLACK);
 
-            let mut should_toggle_console = is_key_pressed(KeyCode::GraveAccent) || is_key_pressed(KeyCode::F12);
-            
+            let mut should_toggle_console =
+                is_key_pressed(KeyCode::GraveAccent) || is_key_pressed(KeyCode::F12);
+
             if !should_toggle_console {
                 let char_input = get_char_pressed();
                 if let Some(ch) = char_input {
@@ -59,7 +60,7 @@ impl App {
                     }
                 }
             }
-            
+
             if should_toggle_console {
                 self.console.toggle();
                 if self.console.is_open() {
@@ -80,7 +81,7 @@ impl App {
                     self.ignore_mouse_delta_for_one_frame = true;
                 }
             }
-            
+
             if is_key_pressed(KeyCode::F5) {
                 crate::cvar::save_config();
                 self.console.print("Config saved to sas_config.cfg\n");
@@ -123,24 +124,24 @@ impl App {
                 if is_key_pressed(KeyCode::PageDown) {
                     self.console.scroll_down();
                 }
-                
+
                 let (_mx, my) = mouse_wheel();
                 if my > 0.0 {
                     self.console.scroll_up();
                 } else if my < 0.0 {
                     self.console.scroll_down();
                 }
-                
+
                 let shift = is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift);
                 let ctrl = is_key_down(KeyCode::LeftControl) || is_key_down(KeyCode::RightControl);
-                
+
                 if ctrl && is_key_pressed(KeyCode::C) {
                     self.console.copy_to_clipboard();
                 }
                 if ctrl && is_key_pressed(KeyCode::V) {
                     self.console.paste_from_clipboard();
                 }
-                
+
                 if !should_toggle_console {
                     let chars: Vec<char> = get_keys_pressed()
                         .iter()
@@ -148,7 +149,7 @@ impl App {
                             if ctrl {
                                 return None;
                             }
-                            
+
                             let ch = match key {
                                 KeyCode::Space => Some(' '),
                                 KeyCode::A => Some(if shift { 'A' } else { 'a' }),
@@ -203,7 +204,7 @@ impl App {
                             ch
                         })
                         .collect();
-                    
+
                     for ch in chars {
                         self.console.handle_character(ch);
                     }
@@ -214,30 +215,31 @@ impl App {
                 show_mouse(true);
                 let dt = get_frame_time();
                 menu_state.update(dt);
-                
+
                 if let Some(game_state) = menu_state.handle_input().await {
                     let selected_model_idx = menu_state.get_selected_model_index();
                     let available_models = menu_state.available_models.clone();
-                    
-                    let mut game_loop = GameLoop::new(game_state, selected_model_idx, available_models).await;
+
+                    let mut game_loop =
+                        GameLoop::new(game_state, selected_model_idx, available_models).await;
                     game_loop.initialize_game().await;
-                    
+
                     self.game_loop = Some(game_loop);
                     self.menu_state = None;
-                    
+
                     let show_cursor = cvar::get_cvar_bool("m_show_cursor");
                     show_mouse(show_cursor);
                     let grab_mouse = cvar::get_cvar_bool("m_grab");
                     if grab_mouse {
                         set_cursor_grab(true);
                     }
-                    
+
                     #[cfg(target_os = "macos")]
                     {
                         next_frame().await;
                         crate::input::center_mouse_cursor();
                     }
-                    
+
                     mouse_delta_position();
                     self.ignore_mouse_delta_for_one_frame = true;
                 } else {

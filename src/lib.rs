@@ -1,19 +1,19 @@
 pub mod audio;
+mod compat_rand;
 pub mod game;
 pub mod input;
-pub mod render;
-mod compat_rand;
 pub mod network;
+pub mod render;
 
-pub mod menu;
-pub mod game_loop;
-pub mod weapon_handler;
-pub mod bot_handler;
-pub mod hud_scoreboard;
 pub mod app;
-pub mod cvar;
+pub mod bot_handler;
 pub mod console;
+pub mod cvar;
+pub mod game_loop;
+pub mod hud_scoreboard;
+pub mod menu;
 pub mod resource_path;
+pub mod weapon_handler;
 
 #[cfg(feature = "profiler")]
 pub mod profiler;

@@ -1,5 +1,5 @@
-use macroquad::prelude::*;
 use macroquad::miniquad;
+use macroquad::prelude::*;
 use std::sync::OnceLock;
 
 static GLOW_WAVE_MATERIAL: OnceLock<Material> = OnceLock::new();
@@ -84,18 +84,7 @@ pub fn get_glow_wave_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
-
-
-
-
-
-
-
-
-
-
-
-

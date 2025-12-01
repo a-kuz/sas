@@ -1,7 +1,7 @@
-use macroquad::prelude::*;
-use macroquad::audio::{Sound, play_sound, PlaySoundParams};
 use crate::game::GameState;
 use crate::render;
+use macroquad::audio::{play_sound, PlaySoundParams, Sound};
+use macroquad::prelude::*;
 
 pub struct MenuState {
     pub current_menu: String,
@@ -35,15 +35,21 @@ impl MenuState {
     pub async fn init(&mut self) {
         self.available_maps = list_available_maps();
         self.available_models = list_available_models();
-        
+
         let env_model = std::env::var("SAS_PLAYER_MODEL").unwrap_or_else(|_| "sarge".to_string());
-        self.model_menu_selected = self.available_models.iter()
+        self.model_menu_selected = self
+            .available_models
+            .iter()
             .position(|m| m == &env_model)
             .unwrap_or(0);
 
-        self.menu_move_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu1.wav").await.ok();
-        self.menu_select_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu2.wav").await.ok();
-        
+        self.menu_move_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu1.wav")
+            .await
+            .ok();
+        self.menu_select_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu2.wav")
+            .await
+            .ok();
+
         // Load logo
         self.logo_texture = load_texture("assets/logo-alfa.png").await.ok();
     }
@@ -87,7 +93,8 @@ impl MenuState {
             }
             "map_select" => {
                 if is_key_pressed(KeyCode::Down) {
-                    self.map_menu_selected = (self.map_menu_selected + 1) % self.available_maps.len();
+                    self.map_menu_selected =
+                        (self.map_menu_selected + 1) % self.available_maps.len();
                 }
                 if is_key_pressed(KeyCode::Up) {
                     self.map_menu_selected = if self.map_menu_selected == 0 {
@@ -112,7 +119,8 @@ impl MenuState {
             }
             "1v1_map_select" => {
                 if is_key_pressed(KeyCode::Down) {
-                    self.map_menu_selected = (self.map_menu_selected + 1) % self.available_maps.len();
+                    self.map_menu_selected =
+                        (self.map_menu_selected + 1) % self.available_maps.len();
                 }
                 if is_key_pressed(KeyCode::Up) {
                     self.map_menu_selected = if self.map_menu_selected == 0 {
@@ -142,7 +150,8 @@ impl MenuState {
             "settings" => {
                 if !self.available_models.is_empty() {
                     if is_key_pressed(KeyCode::Down) {
-                        self.model_menu_selected = (self.model_menu_selected + 1) % self.available_models.len();
+                        self.model_menu_selected =
+                            (self.model_menu_selected + 1) % self.available_models.len();
                     }
                     if is_key_pressed(KeyCode::Up) {
                         self.model_menu_selected = if self.model_menu_selected == 0 {
@@ -157,7 +166,7 @@ impl MenuState {
                         self.play_select_sound();
                     }
                 }
-                
+
                 if is_key_pressed(KeyCode::Escape) {
                     self.current_menu = "main".to_string();
                 }
@@ -181,7 +190,11 @@ impl MenuState {
 
         match self.current_menu.as_str() {
             "main" => {
-                render::menu_shader::draw_menu_items(self.main_menu_selected, &main_menu_items, self.logo_texture.as_ref());
+                render::menu_shader::draw_menu_items(
+                    self.main_menu_selected,
+                    &main_menu_items,
+                    self.logo_texture.as_ref(),
+                );
             }
             "map_select" => {
                 let map_names: Vec<&str> = self.available_maps.iter().map(|s| s.as_str()).collect();
@@ -192,11 +205,19 @@ impl MenuState {
                 render::draw_1v1_map_select_menu(self.map_menu_selected, &map_names, hover_idx);
             }
             "settings" => {
-                let model_names: Vec<&str> = self.available_models.iter().map(|s| s.as_str()).collect();
-                let selected_model_name = self.available_models.get(self.model_menu_selected)
+                let model_names: Vec<&str> =
+                    self.available_models.iter().map(|s| s.as_str()).collect();
+                let selected_model_name = self
+                    .available_models
+                    .get(self.model_menu_selected)
                     .map(|s| s.as_str())
                     .unwrap_or("sarge");
-                render::draw_settings_menu(self.model_menu_selected, &model_names, selected_model_name, hover_idx);
+                render::draw_settings_menu(
+                    self.model_menu_selected,
+                    &model_names,
+                    selected_model_name,
+                    hover_idx,
+                );
             }
             _ => {}
         }
@@ -206,22 +227,31 @@ impl MenuState {
         let mouse_pos = mouse_position();
         let w = screen_width();
         let h = screen_height();
-        
+
         match self.current_menu.as_str() {
             "main" => {
                 let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
                 let item_h = 54.0;
                 let start_y = h * 0.5 - (main_menu_items.len() as f32 * (item_h + 12.0)) * 0.5;
                 let right_margin = 100.0;
-                
+
                 for i in 0..main_menu_items.len() {
                     let y = start_y + (i as f32) * (item_h + 12.0);
-                    let size = if i == self.main_menu_selected { 36.0 } else { 30.0 };
-                    let text_width = crate::render::measure_q3_banner_string(&main_menu_items[i].to_uppercase(), size);
+                    let size = if i == self.main_menu_selected {
+                        36.0
+                    } else {
+                        30.0
+                    };
+                    let text_width = crate::render::measure_q3_banner_string(
+                        &main_menu_items[i].to_uppercase(),
+                        size,
+                    );
                     let x = w - text_width - right_margin;
-                    
-                    if mouse_pos.0 >= x && mouse_pos.0 <= w - right_margin
-                        && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+
+                    if mouse_pos.0 >= x
+                        && mouse_pos.0 <= w - right_margin
+                        && mouse_pos.1 >= y
+                        && mouse_pos.1 <= y + item_h
                     {
                         return Some(i);
                     }
@@ -232,12 +262,14 @@ impl MenuState {
                 let item_h = 54.0;
                 let item_w = 400.0;
                 let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5;
-                
+
                 for i in 0..num_items {
                     let y = start_y + (i as f32) * (item_h + 12.0);
                     let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
-                        && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+                    if mouse_pos.0 >= x
+                        && mouse_pos.0 <= x + item_w
+                        && mouse_pos.1 >= y
+                        && mouse_pos.1 <= y + item_h
                     {
                         return Some(i);
                     }
@@ -248,12 +280,14 @@ impl MenuState {
                 let item_h = 54.0;
                 let item_w = 400.0;
                 let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5 + 20.0;
-                
+
                 for i in 0..num_items {
                     let y = start_y + (i as f32) * (item_h + 12.0);
                     let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
-                        && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+                    if mouse_pos.0 >= x
+                        && mouse_pos.0 <= x + item_w
+                        && mouse_pos.1 >= y
+                        && mouse_pos.1 <= y + item_h
                     {
                         return Some(i);
                     }
@@ -263,22 +297,24 @@ impl MenuState {
                 let max_visible = 6;
                 let item_h = 54.0;
                 let item_w = 400.0;
-                
+
                 let scroll_offset = if self.model_menu_selected >= max_visible {
                     self.model_menu_selected - max_visible + 1
                 } else {
                     0
                 };
-                
+
                 let num_visible = (self.available_models.len() - scroll_offset).min(max_visible);
                 let start_y = h * 0.5 - (num_visible as f32 * (item_h + 12.0)) * 0.5 + 40.0;
-                
+
                 for idx in 0..num_visible {
                     let orig_i = scroll_offset + idx;
                     let y = start_y + (idx as f32) * (item_h + 12.0);
                     let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
-                        && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+                    if mouse_pos.0 >= x
+                        && mouse_pos.0 <= x + item_w
+                        && mouse_pos.1 >= y
+                        && mouse_pos.1 <= y + item_h
                     {
                         return Some(orig_i);
                     }
@@ -286,7 +322,7 @@ impl MenuState {
             }
             _ => {}
         }
-        
+
         None
     }
 
@@ -314,7 +350,7 @@ impl MenuState {
         let mouse_pos = mouse_position();
         let w = screen_width();
         let h = screen_height();
-        
+
         let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
         let item_h = 54.0;
         let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5;
@@ -322,12 +358,19 @@ impl MenuState {
 
         for i in 0..num_items {
             let y = start_y + (i as f32) * (item_h + 12.0);
-            let size = if i == self.main_menu_selected { 36.0 } else { 30.0 };
-            let text_width = crate::render::measure_q3_banner_string(&main_menu_items[i].to_uppercase(), size);
+            let size = if i == self.main_menu_selected {
+                36.0
+            } else {
+                30.0
+            };
+            let text_width =
+                crate::render::measure_q3_banner_string(&main_menu_items[i].to_uppercase(), size);
             let x = w - text_width - right_margin;
 
-            if mouse_pos.0 >= x && mouse_pos.0 <= w - right_margin
-                && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+            if mouse_pos.0 >= x
+                && mouse_pos.0 <= w - right_margin
+                && mouse_pos.1 >= y
+                && mouse_pos.1 <= y + item_h
             {
                 return Some(i);
             }
@@ -344,7 +387,7 @@ impl MenuState {
         let mouse_pos = mouse_position();
         let w = screen_width();
         let h = screen_height();
-        
+
         let num_items = self.available_maps.len();
         let item_h = 54.0;
         let item_w = 400.0;
@@ -354,8 +397,10 @@ impl MenuState {
             let y = start_y + (i as f32) * (item_h + 12.0);
             let x = w * 0.5 - item_w * 0.5;
 
-            if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
-                && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+            if mouse_pos.0 >= x
+                && mouse_pos.0 <= x + item_w
+                && mouse_pos.1 >= y
+                && mouse_pos.1 <= y + item_h
             {
                 return Some(i);
             }
@@ -372,17 +417,17 @@ impl MenuState {
         let mouse_pos = mouse_position();
         let w = screen_width();
         let h = screen_height();
-        
+
         let max_visible = 6;
         let item_h = 54.0;
         let item_w = 400.0;
-        
+
         let scroll_offset = if self.model_menu_selected >= max_visible {
             self.model_menu_selected - max_visible + 1
         } else {
             0
         };
-        
+
         let num_visible = (self.available_models.len() - scroll_offset).min(max_visible);
         let start_y = h * 0.5 - (num_visible as f32 * (item_h + 12.0)) * 0.5 + 40.0;
 
@@ -391,8 +436,10 @@ impl MenuState {
             let y = start_y + (idx as f32) * (item_h + 12.0);
             let x = w * 0.5 - item_w * 0.5;
 
-            if mouse_pos.0 >= x && mouse_pos.0 <= x + item_w
-                && mouse_pos.1 >= y && mouse_pos.1 <= y + item_h
+            if mouse_pos.0 >= x
+                && mouse_pos.0 <= x + item_w
+                && mouse_pos.1 >= y
+                && mouse_pos.1 <= y + item_h
             {
                 return Some(orig_i);
             }
@@ -430,7 +477,7 @@ fn list_available_models() -> Vec<String> {
             "xaero".to_string(),
         ]
     }
-    
+
     #[cfg(not(target_arch = "wasm32"))]
     {
         let base = "q3-resources/models/players";
@@ -469,14 +516,14 @@ fn list_available_maps() -> Vec<String> {
             "new_map".to_string(),
         ]
     }
-    
+
     #[cfg(not(target_arch = "wasm32"))]
     {
         let maps_dir = "maps";
         let mut maps = Vec::new();
 
         println!("[MENU] Scanning maps directory: {}", maps_dir);
-        
+
         match std::fs::read_dir(maps_dir) {
             Ok(dir) => {
                 let mut file_count = 0;
@@ -484,12 +531,17 @@ fn list_available_maps() -> Vec<String> {
                     file_count += 1;
                     if let Ok(ft) = entry.file_type() {
                         let file_name = entry.file_name().to_string_lossy().to_string();
-                        println!("[MENU] Found file: {} (is_file: {})", file_name, ft.is_file());
-                        
+                        println!(
+                            "[MENU] Found file: {} (is_file: {})",
+                            file_name,
+                            ft.is_file()
+                        );
+
                         if ft.is_file() {
-                            if file_name.ends_with(".json") && 
-                               !file_name.ends_with("_navgraph.json") && 
-                               !file_name.ends_with("_defrag.json") {
+                            if file_name.ends_with(".json")
+                                && !file_name.ends_with("_navgraph.json")
+                                && !file_name.ends_with("_defrag.json")
+                            {
                                 let map_name = file_name.trim_end_matches(".json").to_string();
                                 println!("[MENU] Added map: {}", map_name);
                                 maps.push(map_name);

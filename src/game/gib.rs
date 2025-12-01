@@ -1,6 +1,6 @@
-use macroquad::prelude::*;
 use crate::game::map::Map;
 use crate::game::md3::MD3Model;
+use macroquad::prelude::*;
 use std::collections::HashMap;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -32,11 +32,15 @@ impl GibModelCache {
 
     pub async fn load(&mut self) {
         let base_path = "q3-resources/models/gibs";
-        
+
         // Load texture
-        if let Some(tex) = crate::game::skin_loader::load_texture_file(&format!("{}/gibs.png", base_path)).await {
+        if let Some(tex) =
+            crate::game::skin_loader::load_texture_file(&format!("{}/gibs.png", base_path)).await
+        {
             self.texture = Some(tex);
-        } else if let Some(tex) = crate::game::skin_loader::load_texture_file(&format!("{}/gibs.jpg", base_path)).await {
+        } else if let Some(tex) =
+            crate::game::skin_loader::load_texture_file(&format!("{}/gibs.jpg", base_path)).await
+        {
             self.texture = Some(tex);
         }
 
@@ -93,7 +97,7 @@ pub struct Gib {
 impl Gib {
     pub fn new(x: f32, y: f32, vel_x: f32, vel_y: f32, gib_type: GibType) -> Self {
         use crate::compat_rand::*;
-        
+
         Self {
             x,
             y,
@@ -120,64 +124,66 @@ impl Gib {
 
     pub fn update(&mut self, dt: f32, map: &Map) -> bool {
         self.life += 1;
-        
+
         if self.life > 600 {
             return false;
         }
 
         let dt_norm = dt * 60.0;
-        
+
         self.vel_y += 0.5 * dt_norm;
-        
+
         if self.vel_y > 15.0 {
             self.vel_y = 15.0;
         }
-        
+
         self.pitch += self.spin_pitch * dt_norm;
         self.yaw += self.spin_yaw * dt_norm;
         self.roll += self.spin_roll * dt_norm;
-        
+
         self.x += self.vel_x * dt_norm;
         self.y += self.vel_y * dt_norm;
-        
+
         let tile_x = (self.x / 32.0) as i32;
         let tile_y = ((self.y + 4.0) / 16.0) as i32;
-        
+
         if map.is_solid(tile_x, tile_y) {
             self.vel_y = -self.vel_y * 0.4;
             self.vel_x *= 0.7;
             self.spin_pitch *= 0.8;
             self.spin_yaw *= 0.8;
             self.spin_roll *= 0.8;
-            
+
             let max_corrections = 16;
             let mut correction_count = 0;
-            while correction_count < max_corrections && map.is_solid(tile_x, ((self.y + 4.0) / 16.0) as i32) {
+            while correction_count < max_corrections
+                && map.is_solid(tile_x, ((self.y + 4.0) / 16.0) as i32)
+            {
                 self.y -= 1.0;
                 correction_count += 1;
             }
-            
+
             if self.vel_y.abs() < 0.5 && self.vel_x.abs() < 0.5 {
                 self.vel_y = 0.0;
                 self.vel_x *= 0.95;
             }
         }
-        
+
         let wall_tile_left = ((self.x - 4.0) / 32.0) as i32;
         let wall_tile_right = ((self.x + 4.0) / 32.0) as i32;
         let wall_y = (self.y / 16.0) as i32;
-        
+
         if map.is_solid(wall_tile_left, wall_y) || map.is_solid(wall_tile_right, wall_y) {
             self.vel_x = -self.vel_x * 0.4;
         }
-        
+
         true
     }
 
     pub fn render(&self, camera_x: f32, camera_y: f32, cache: &GibModelCache) {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
-        
+
         let alpha = if self.life > 300 {
             ((600 - self.life) as f32 / 300.0).clamp(0.0, 1.0)
         } else {
@@ -186,7 +192,7 @@ impl Gib {
 
         if let Some(model) = cache.models.get(&self.gib_type) {
             let color = Color::from_rgba(255, 255, 255, (255.0 * alpha) as u8);
-            
+
             for mesh in &model.meshes {
                 let safe_frame = 0;
                 crate::game::md3_render::render_md3_mesh_with_yaw_and_roll(
@@ -206,37 +212,57 @@ impl Gib {
                 );
             }
         } else {
-            draw_circle(screen_x, screen_y, self.size, Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8));
+            draw_circle(
+                screen_x,
+                screen_y,
+                self.size,
+                Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8),
+            );
         }
-        
+
         if self.life < 40 {
             let screen_w = macroquad::window::screen_width();
             let screen_h = macroquad::window::screen_height();
             let margin = 100.0;
             let blood_trail = (self.life as f32 * 0.7) as i32;
             let vel_mag = (self.vel_x * self.vel_x + self.vel_y * self.vel_y).sqrt();
-            
+
             if vel_mag.is_finite() && vel_mag < 50.0 {
                 for i in 0..blood_trail {
                     let trail_x = screen_x - self.vel_x * (i as f32 * 0.4);
                     let trail_y = screen_y - self.vel_y * (i as f32 * 0.4);
-                    
-                    if trail_x.is_finite() && trail_y.is_finite() &&
-                       trail_x >= -margin && trail_x <= screen_w + margin &&
-                       trail_y >= -margin && trail_y <= screen_h + margin {
+
+                    if trail_x.is_finite()
+                        && trail_y.is_finite()
+                        && trail_x >= -margin
+                        && trail_x <= screen_w + margin
+                        && trail_y >= -margin
+                        && trail_y <= screen_h + margin
+                    {
                         let trail_alpha = ((blood_trail - i) as f32 / blood_trail as f32) * 0.5;
                         let size = 2.0 - (i as f32 / blood_trail as f32) * 1.0;
-                        draw_circle(trail_x, trail_y, size, Color::from_rgba(200, 10, 10, (255.0 * trail_alpha) as u8));
+                        draw_circle(
+                            trail_x,
+                            trail_y,
+                            size,
+                            Color::from_rgba(200, 10, 10, (255.0 * trail_alpha) as u8),
+                        );
                     }
                 }
             }
         }
     }
 
-    pub fn render_batched(&self, camera_x: f32, camera_y: f32, cache: &GibModelCache, batch: &mut crate::game::md3_render::MD3Batch) {
+    pub fn render_batched(
+        &self,
+        camera_x: f32,
+        camera_y: f32,
+        cache: &GibModelCache,
+        batch: &mut crate::game::md3_render::MD3Batch,
+    ) {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
-        
+
         let alpha = if self.life > 300 {
             ((600 - self.life) as f32 / 300.0).clamp(0.0, 1.0)
         } else {
@@ -245,7 +271,7 @@ impl Gib {
 
         if let Some(model) = cache.models.get(&self.gib_type) {
             let color = Color::from_rgba(255, 255, 255, (255.0 * alpha) as u8);
-            
+
             for mesh in &model.meshes {
                 let safe_frame = 0;
                 crate::game::md3_render::render_md3_mesh_batched_with_roll(
@@ -264,27 +290,41 @@ impl Gib {
                 );
             }
         } else {
-            draw_circle(screen_x, screen_y, self.size, Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8));
+            draw_circle(
+                screen_x,
+                screen_y,
+                self.size,
+                Color::from_rgba(200, 50, 50, (255.0 * alpha) as u8),
+            );
         }
-        
+
         if self.life < 40 {
             let screen_w = macroquad::window::screen_width();
             let screen_h = macroquad::window::screen_height();
             let margin = 100.0;
             let blood_trail = (self.life as f32 * 0.7) as i32;
             let vel_mag = (self.vel_x * self.vel_x + self.vel_y * self.vel_y).sqrt();
-            
+
             if vel_mag.is_finite() && vel_mag < 50.0 {
                 for i in 0..blood_trail {
                     let trail_x = screen_x - self.vel_x * (i as f32 * 0.4);
                     let trail_y = screen_y - self.vel_y * (i as f32 * 0.4);
-                    
-                    if trail_x.is_finite() && trail_y.is_finite() &&
-                       trail_x >= -margin && trail_x <= screen_w + margin &&
-                       trail_y >= -margin && trail_y <= screen_h + margin {
+
+                    if trail_x.is_finite()
+                        && trail_y.is_finite()
+                        && trail_x >= -margin
+                        && trail_x <= screen_w + margin
+                        && trail_y >= -margin
+                        && trail_y <= screen_h + margin
+                    {
                         let trail_alpha = ((blood_trail - i) as f32 / blood_trail as f32) * 0.5;
                         let size = 2.0 - (i as f32 / blood_trail as f32) * 1.0;
-                        draw_circle(trail_x, trail_y, size, Color::from_rgba(200, 10, 10, (255.0 * trail_alpha) as u8));
+                        draw_circle(
+                            trail_x,
+                            trail_y,
+                            size,
+                            Color::from_rgba(200, 10, 10, (255.0 * trail_alpha) as u8),
+                        );
                     }
                 }
             }
@@ -294,19 +334,41 @@ impl Gib {
 
 pub fn spawn_gibs(x: f32, y: f32) -> Vec<Gib> {
     use crate::compat_rand::*;
-    
+
     let mut gibs = Vec::new();
-    
+
     let gib_velocity = 10.0;
     let gib_jump = -10.0;
-    
+
     let mega_explosion = gen_bool(0.1);
-    
-    gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Skull));
-    gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Chest));
-    gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, GibType::Abdomen));
-    
-    let limb_count = if mega_explosion { gen_range_usize(15, 30) } else { gen_range_usize(3, 6) };
+
+    gibs.push(Gib::new(
+        x,
+        y,
+        (gen_f32() - 0.5) * gib_velocity,
+        gib_jump + (gen_f32() - 0.5) * gib_velocity,
+        GibType::Skull,
+    ));
+    gibs.push(Gib::new(
+        x,
+        y,
+        (gen_f32() - 0.5) * gib_velocity,
+        gib_jump + (gen_f32() - 0.5) * gib_velocity,
+        GibType::Chest,
+    ));
+    gibs.push(Gib::new(
+        x,
+        y,
+        (gen_f32() - 0.5) * gib_velocity,
+        gib_jump + (gen_f32() - 0.5) * gib_velocity,
+        GibType::Abdomen,
+    ));
+
+    let limb_count = if mega_explosion {
+        gen_range_usize(15, 30)
+    } else {
+        gen_range_usize(3, 6)
+    };
     for _ in 0..limb_count {
         let limb_type = match gen_range_usize(0, 4) {
             0 => GibType::Arm,
@@ -314,18 +376,34 @@ pub fn spawn_gibs(x: f32, y: f32) -> Vec<Gib> {
             2 => GibType::Forearm,
             _ => GibType::Foot,
         };
-        gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, limb_type));
+        gibs.push(Gib::new(
+            x,
+            y,
+            (gen_f32() - 0.5) * gib_velocity,
+            gib_jump + (gen_f32() - 0.5) * gib_velocity,
+            limb_type,
+        ));
     }
-    
-    let organ_count = if mega_explosion { gen_range_usize(10, 40) } else { gen_range_usize(2, 5) };
+
+    let organ_count = if mega_explosion {
+        gen_range_usize(10, 40)
+    } else {
+        gen_range_usize(2, 5)
+    };
     for _ in 0..organ_count {
         let organ_type = match gen_range_usize(0, 3) {
             0 => GibType::Brain,
             1 => GibType::Intestine,
             _ => GibType::Fist,
         };
-        gibs.push(Gib::new(x, y, (gen_f32() - 0.5) * gib_velocity, gib_jump + (gen_f32() - 0.5) * gib_velocity, organ_type));
+        gibs.push(Gib::new(
+            x,
+            y,
+            (gen_f32() - 0.5) * gib_velocity,
+            gib_jump + (gen_f32() - 0.5) * gib_velocity,
+            organ_type,
+        ));
     }
-    
+
     gibs
 }

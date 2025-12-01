@@ -1,6 +1,6 @@
+use crate::count_shader;
 use macroquad::prelude::*;
 use std::sync::OnceLock;
-use crate::count_shader;
 
 pub mod menu_shader;
 
@@ -73,28 +73,162 @@ const PROPB_HEIGHT: f32 = 36.0;
 const PROPB_SPACE_WIDTH: f32 = 12.0;
 const PROPB_GAP_WIDTH: f32 = 4.0;
 const PROPB_MAP: [(u16, u16, u16); 26] = [
-    (11, 12, 33), (49, 12, 31), (85, 12, 31), (120, 12, 30), (156, 12, 21), (183, 12, 21), (207, 12, 32),
-    (13, 55, 30), (49, 55, 13), (66, 55, 29), (101, 55, 31), (135, 55, 21), (158, 55, 40), (204, 55, 32),
-    (12, 97, 31), (48, 97, 31), (82, 97, 30), (118, 97, 30), (153, 97, 30), (185, 97, 25), (213, 97, 30),
-    (11, 139, 32), (42, 139, 51), (93, 139, 32), (126, 139, 31), (158, 139, 25),
+    (11, 12, 33),
+    (49, 12, 31),
+    (85, 12, 31),
+    (120, 12, 30),
+    (156, 12, 21),
+    (183, 12, 21),
+    (207, 12, 32),
+    (13, 55, 30),
+    (49, 55, 13),
+    (66, 55, 29),
+    (101, 55, 31),
+    (135, 55, 21),
+    (158, 55, 40),
+    (204, 55, 32),
+    (12, 97, 31),
+    (48, 97, 31),
+    (82, 97, 30),
+    (118, 97, 30),
+    (153, 97, 30),
+    (185, 97, 25),
+    (213, 97, 30),
+    (11, 139, 32),
+    (42, 139, 51),
+    (93, 139, 32),
+    (126, 139, 31),
+    (158, 139, 25),
 ];
 const _PROP_MAP: [(u16, u16, u16); 128] = [
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
-    (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0), (0, 0, 0),
-    (0, 0, 8), (11, 122, 7), (154, 181, 14), (55, 122, 17), (79, 122, 18), (101, 122, 23), (153, 122, 18), (9, 93, 7),
-    (207, 122, 8), (230, 122, 9), (177, 122, 18), (30, 152, 18), (85, 181, 7), (34, 93, 11), (110, 181, 6), (130, 152, 14),
-    (22, 64, 17), (41, 64, 12), (58, 64, 17), (78, 64, 18), (98, 64, 19), (120, 64, 18), (141, 64, 18), (204, 64, 16),
-    (162, 64, 17), (182, 64, 18), (59, 181, 7), (35, 181, 7), (203, 152, 14), (56, 93, 14), (228, 152, 14), (177, 181, 18),
-    (28, 122, 22), (5, 4, 18), (27, 4, 18), (48, 4, 18), (69, 4, 17), (90, 4, 13), (106, 4, 13), (121, 4, 18),
-    (143, 4, 17), (164, 4, 8), (175, 4, 16), (195, 4, 18), (216, 4, 12), (230, 4, 23), (6, 34, 18), (27, 34, 18),
-    (48, 34, 18), (68, 34, 18), (90, 34, 17), (110, 34, 18), (130, 34, 14), (146, 34, 18), (166, 34, 19), (185, 34, 29),
-    (215, 34, 18), (234, 34, 18), (5, 64, 14), (60, 152, 7), (106, 151, 13), (83, 152, 7), (128, 122, 17), (4, 152, 21),
-    (134, 181, 5), (5, 4, 18), (27, 4, 18), (48, 4, 18), (69, 4, 17), (90, 4, 13), (106, 4, 13), (121, 4, 18),
-    (143, 4, 17), (164, 4, 8), (175, 4, 16), (195, 4, 18), (216, 4, 12), (230, 4, 23), (6, 34, 18), (27, 34, 18),
-    (48, 34, 18), (68, 34, 18), (90, 34, 17), (110, 34, 18), (130, 34, 14), (146, 34, 18), (166, 34, 19), (185, 34, 29),
-    (215, 34, 18), (234, 34, 18), (5, 64, 14), (153, 152, 13), (11, 181, 5), (180, 152, 13), (79, 93, 17), (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 0),
+    (0, 0, 8),
+    (11, 122, 7),
+    (154, 181, 14),
+    (55, 122, 17),
+    (79, 122, 18),
+    (101, 122, 23),
+    (153, 122, 18),
+    (9, 93, 7),
+    (207, 122, 8),
+    (230, 122, 9),
+    (177, 122, 18),
+    (30, 152, 18),
+    (85, 181, 7),
+    (34, 93, 11),
+    (110, 181, 6),
+    (130, 152, 14),
+    (22, 64, 17),
+    (41, 64, 12),
+    (58, 64, 17),
+    (78, 64, 18),
+    (98, 64, 19),
+    (120, 64, 18),
+    (141, 64, 18),
+    (204, 64, 16),
+    (162, 64, 17),
+    (182, 64, 18),
+    (59, 181, 7),
+    (35, 181, 7),
+    (203, 152, 14),
+    (56, 93, 14),
+    (228, 152, 14),
+    (177, 181, 18),
+    (28, 122, 22),
+    (5, 4, 18),
+    (27, 4, 18),
+    (48, 4, 18),
+    (69, 4, 17),
+    (90, 4, 13),
+    (106, 4, 13),
+    (121, 4, 18),
+    (143, 4, 17),
+    (164, 4, 8),
+    (175, 4, 16),
+    (195, 4, 18),
+    (216, 4, 12),
+    (230, 4, 23),
+    (6, 34, 18),
+    (27, 34, 18),
+    (48, 34, 18),
+    (68, 34, 18),
+    (90, 34, 17),
+    (110, 34, 18),
+    (130, 34, 14),
+    (146, 34, 18),
+    (166, 34, 19),
+    (185, 34, 29),
+    (215, 34, 18),
+    (234, 34, 18),
+    (5, 64, 14),
+    (60, 152, 7),
+    (106, 151, 13),
+    (83, 152, 7),
+    (128, 122, 17),
+    (4, 152, 21),
+    (134, 181, 5),
+    (5, 4, 18),
+    (27, 4, 18),
+    (48, 4, 18),
+    (69, 4, 17),
+    (90, 4, 13),
+    (106, 4, 13),
+    (121, 4, 18),
+    (143, 4, 17),
+    (164, 4, 8),
+    (175, 4, 16),
+    (195, 4, 18),
+    (216, 4, 12),
+    (230, 4, 23),
+    (6, 34, 18),
+    (27, 34, 18),
+    (48, 34, 18),
+    (68, 34, 18),
+    (90, 34, 17),
+    (110, 34, 18),
+    (130, 34, 14),
+    (146, 34, 18),
+    (166, 34, 19),
+    (185, 34, 29),
+    (215, 34, 18),
+    (234, 34, 18),
+    (5, 64, 14),
+    (153, 152, 13),
+    (11, 181, 5),
+    (180, 152, 13),
+    (79, 93, 17),
+    (0, 0, 0),
 ];
 
 pub async fn load_custom_font() {
@@ -111,9 +245,11 @@ pub async fn load_custom_font() {
 }
 
 pub async fn load_q3_numbers() {
-    let digit_names = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"];
+    let digit_names = [
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+    ];
     let mut digits: Vec<Texture2D> = Vec::new();
-    
+
     for name in &digit_names {
         let path = format!("q3-resources/gfx/2d/numbers/{}_32b.png", name);
         match load_texture(&path).await {
@@ -127,7 +263,7 @@ pub async fn load_q3_numbers() {
             }
         }
     }
-    
+
     let minus_path = "q3-resources/gfx/2d/numbers/minus_32b.png";
     let minus = match load_texture(minus_path).await {
         Ok(tex) => {
@@ -139,12 +275,14 @@ pub async fn load_q3_numbers() {
             Texture2D::from_image(&fallback)
         }
     };
-    
+
     let numbers = Q3Numbers {
-        digits: digits.try_into().unwrap_or_else(|_| panic!("Invalid digit count")),
+        digits: digits
+            .try_into()
+            .unwrap_or_else(|_| panic!("Invalid digit count")),
         minus,
     };
-    
+
     let _ = Q3_NUMBERS.set(numbers);
     println!("[Q3HUD] Loaded Q3-style number textures");
 }
@@ -288,11 +426,11 @@ pub fn draw_q3_small_char(x: f32, y: f32, size: f32, ch: u8, color: Color) {
         let ch_idx = ch as usize;
         let row = ch_idx / 16;
         let col = ch_idx % 16;
-        
+
         let char_size = 16.0;
         let src_x = (col as f32) * char_size;
         let src_y = (row as f32) * char_size;
-        
+
         draw_texture_ex(
             bigchars,
             x,
@@ -315,7 +453,7 @@ fn draw_q3_char(x: f32, y: f32, ch: char, size: f32, color: Color) {
         Some(t) => t,
         None => return,
     };
-    
+
     let ch_code = ch as u8;
     let col: i32;
     let row: i32;
@@ -332,14 +470,19 @@ fn draw_q3_char(x: f32, y: f32, ch: char, size: f32, color: Color) {
     let dy = y.round();
     let ds = size.round();
     let inset = 0.5;
-    
+
     draw_texture_ex(
         bigchars,
         dx,
         dy,
         color,
         DrawTextureParams {
-            source: Some(Rect::new(src_x + inset, src_y + inset, char_w - inset * 2.0, char_h - inset * 2.0)),
+            source: Some(Rect::new(
+                src_x + inset,
+                src_y + inset,
+                char_w - inset * 2.0,
+                char_h - inset * 2.0,
+            )),
             dest_size: Some(vec2(ds, ds)),
             ..Default::default()
         },
@@ -358,7 +501,6 @@ pub fn draw_q3_string(text: &str, x: f32, y: f32, size: f32, color: Color) {
         curr_x += advance;
     }
 }
-
 
 pub fn draw_q3_banner_string(text: &str, x: f32, y: f32, size: f32, color: Color) {
     let tex = match Q3_FONT2_PROP.get() {
@@ -397,14 +539,22 @@ pub fn draw_q3_banner_string(text: &str, x: f32, y: f32, size: f32, color: Color
                 dx + 2.0,
                 dy + 2.0,
                 shadow,
-                DrawTextureParams { source: Some(src), dest_size: Some(vec2(aw, ah)), ..Default::default() },
+                DrawTextureParams {
+                    source: Some(src),
+                    dest_size: Some(vec2(aw, ah)),
+                    ..Default::default()
+                },
             );
             draw_texture_ex(
                 tex,
                 dx,
                 dy,
                 color,
-                DrawTextureParams { source: Some(src), dest_size: Some(vec2(aw, ah)), ..Default::default() },
+                DrawTextureParams {
+                    source: Some(src),
+                    dest_size: Some(vec2(aw, ah)),
+                    ..Default::default()
+                },
             );
             ax += (aw + PROPB_GAP_WIDTH * size_scale).round();
         } else {
@@ -419,10 +569,10 @@ pub fn measure_q3_banner_string(text: &str, size: f32) -> f32 {
     if Q3_FONT2_PROP.get().is_none() {
         return text.len() as f32 * size;
     }
-    
+
     let mut width = 0.0;
     let size_scale = size / PROPB_HEIGHT;
-    
+
     for ch in text.chars() {
         let upper = ch.to_ascii_uppercase();
         if upper == ' ' {
@@ -438,10 +588,9 @@ pub fn measure_q3_banner_string(text: &str, size: f32) -> f32 {
             width += size.round();
         }
     }
-    
+
     width
 }
-
 
 pub struct Camera {
     pub x: f32,
@@ -478,13 +627,13 @@ impl Camera {
 
     pub fn follow(&mut self, target_x: f32, target_y: f32) {
         const HUD_HEIGHT: f32 = 80.0;
-        
+
         let view_w = screen_width();
         let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
-        
+
         let center_y_offset = effective_view_h * 0.5;
-        
+
         let left = self.x + view_w * 0.5 - self.dead_zone_w * 0.5;
         let right = self.x + view_w * 0.5 + self.dead_zone_w * 0.5;
         let top = self.y + center_y_offset - self.dead_zone_h * 0.5;
@@ -492,39 +641,55 @@ impl Camera {
 
         let mut desired_x = self.x;
         let mut desired_y = self.y;
-        if target_x < left { desired_x = target_x - (view_w * 0.5 - self.dead_zone_w * 0.5); }
-        if target_x > right { desired_x = target_x - (view_w * 0.5 + self.dead_zone_w * 0.5); }
-        if target_y < top { desired_y = target_y - (center_y_offset - self.dead_zone_h * 0.5); }
-        if target_y > bottom { desired_y = target_y - (center_y_offset + self.dead_zone_h * 0.5); }
+        if target_x < left {
+            desired_x = target_x - (view_w * 0.5 - self.dead_zone_w * 0.5);
+        }
+        if target_x > right {
+            desired_x = target_x - (view_w * 0.5 + self.dead_zone_w * 0.5);
+        }
+        if target_y < top {
+            desired_y = target_y - (center_y_offset - self.dead_zone_h * 0.5);
+        }
+        if target_y > bottom {
+            desired_y = target_y - (center_y_offset + self.dead_zone_h * 0.5);
+        }
 
         self.target_x = desired_x;
         self.target_y = desired_y;
         self.target_zoom = 1.0;
     }
-    
+
     pub fn follow_two_players(&mut self, p1_x: f32, p1_y: f32, p2_x: f32, p2_y: f32) {
         const HUD_HEIGHT: f32 = 80.0;
-        
+
         let center_x = (p1_x + p2_x) * 0.5;
         let center_y = (p1_y + p2_y) * 0.5;
-        
+
         let dist_x = (p1_x - p2_x).abs();
         let dist_y = (p1_y - p2_y).abs();
-        
+
         let view_w = screen_width();
         let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
-        
+
         let min_zoom_w = dist_x + 400.0;
         let min_zoom_h = dist_y + 300.0;
-        
-        let zoom_factor_x = if min_zoom_w > view_w { min_zoom_w / view_w } else { 1.0 };
-        let zoom_factor_y = if min_zoom_h > effective_view_h { min_zoom_h / effective_view_h } else { 1.0 };
+
+        let zoom_factor_x = if min_zoom_w > view_w {
+            min_zoom_w / view_w
+        } else {
+            1.0
+        };
+        let zoom_factor_y = if min_zoom_h > effective_view_h {
+            min_zoom_h / effective_view_h
+        } else {
+            1.0
+        };
         let zoom_factor = zoom_factor_x.max(zoom_factor_y).min(2.5);
-        
+
         self.dead_zone_w = 160.0 * zoom_factor;
         self.dead_zone_h = 120.0 * zoom_factor;
-        
+
         self.target_x = center_x - view_w * 0.5;
         self.target_y = center_y - effective_view_h * 0.5;
         self.target_zoom = 1.0;
@@ -532,22 +697,22 @@ impl Camera {
 
     pub fn follow_projectile(&mut self, projectile_x: f32, projectile_y: f32) {
         const HUD_HEIGHT: f32 = 80.0;
-        
+
         let view_w = screen_width();
         let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
-        
+
         self.target_x = projectile_x - view_w * 0.5;
         self.target_y = projectile_y - effective_view_h * 0.5;
     }
-    
+
     pub fn follow_projectile_with_zoom(&mut self, projectile_x: f32, projectile_y: f32) {
         const HUD_HEIGHT: f32 = 80.0;
-        
+
         let view_w = screen_width();
         let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
-        
+
         self.target_x = projectile_x - view_w * 0.5;
         self.target_y = projectile_y - effective_view_h * 0.5;
         self.target_zoom = 1.2;
@@ -556,7 +721,7 @@ impl Camera {
     pub fn update(&mut self, dt: f32, map_width: f32, map_height: f32) {
         const SMOOTHNESS: f32 = 3.0;
         const HUD_HEIGHT: f32 = 80.0;
-        
+
         self.x += (self.target_x - self.x) * SMOOTHNESS * dt;
         self.y += (self.target_y - self.y) * SMOOTHNESS * dt;
         self.zoom += (self.target_zoom - self.zoom) * 2.0 * dt;
@@ -567,15 +732,15 @@ impl Camera {
         let map_h_pixels = map_height * 16.0;
 
         let effective_view_h = screen_h - HUD_HEIGHT;
-        
+
         self.x = self.x.clamp(0.0, (map_w_pixels - screen_w).max(0.0));
-        
+
         if map_h_pixels < effective_view_h {
             self.y = map_h_pixels - effective_view_h;
         } else {
             self.y = self.y.clamp(0.0, map_h_pixels - effective_view_h);
         }
-        
+
         if self.shake_intensity > 0.1 {
             use macroquad::rand::gen_range;
             self.shake_x = gen_range(-self.shake_intensity, self.shake_intensity);
@@ -586,7 +751,7 @@ impl Camera {
             self.shake_y = 0.0;
             self.shake_intensity = 0.0;
         }
-        
+
         self.x = (self.x + self.shake_x).round();
         self.y = (self.y + self.shake_y).round();
     }
@@ -594,7 +759,7 @@ impl Camera {
 
 pub fn draw_text_outlined(text: &str, x: f32, y: f32, size: f32, color: Color) {
     let shadow = Color::from_rgba(0, 0, 0, 255);
-    
+
     if let Some(font) = CUSTOM_FONT.get() {
         let params = TextParams {
             font: Some(font),
@@ -603,7 +768,7 @@ pub fn draw_text_outlined(text: &str, x: f32, y: f32, size: f32, color: Color) {
             ..Default::default()
         };
         draw_text_ex(text, x + 1.0, y + 1.0, params);
-        
+
         let params = TextParams {
             font: Some(font),
             font_size: size as u16,
@@ -617,30 +782,61 @@ pub fn draw_text_outlined(text: &str, x: f32, y: f32, size: f32, color: Color) {
     }
 }
 
-
-pub fn draw_hud(health: i32, armor: i32, ammo: u8, _weapon_name: &str, frags: i32, weapon: u8, leader_frags: i32, has_weapon: &[bool; 9], ammo_counts: &[u8; 9], match_time: f32, time_limit: f32) {
+pub fn draw_hud(
+    health: i32,
+    armor: i32,
+    ammo: u8,
+    _weapon_name: &str,
+    frags: i32,
+    weapon: u8,
+    leader_frags: i32,
+    has_weapon: &[bool; 9],
+    ammo_counts: &[u8; 9],
+    match_time: f32,
+    time_limit: f32,
+) {
     let screen_w = screen_width();
     let screen_h = screen_height();
-    
+
     let hud_height = 80.0;
     let hud_y = screen_h - hud_height;
-    
-    draw_rectangle(0.0, hud_y, screen_w, hud_height, Color::from_rgba(0, 0, 0, 180));
-    draw_line(0.0, hud_y, screen_w, hud_y, 2.0, Color::from_rgba(100, 100, 100, 255));
-    
+
+    draw_rectangle(
+        0.0,
+        hud_y,
+        screen_w,
+        hud_height,
+        Color::from_rgba(0, 0, 0, 180),
+    );
+    draw_line(
+        0.0,
+        hud_y,
+        screen_w,
+        hud_y,
+        2.0,
+        Color::from_rgba(100, 100, 100, 255),
+    );
+
     let q3_red = Color::from_rgba(255, 51, 51, 255);
     let q3_yellow = Color::from_rgba(255, 255, 0, 255);
     let q3_white = Color::from_rgba(255, 255, 255, 255);
     let q3_green = Color::from_rgba(0, 255, 0, 255);
     let q3_blue = Color::from_rgba(100, 149, 237, 255);
-    
+
     let number_size = 40.0;
     let number_y = hud_y + 35.0;
-    
+
     let ammo_x = 30.0;
     let ammo_color = if ammo < 10 { q3_red } else { q3_white };
-    draw_hud_element_with_icon(ammo_x, number_y, ammo as i32, ammo_color, number_size, get_ammo_icon(weapon));
-    
+    draw_hud_element_with_icon(
+        ammo_x,
+        number_y,
+        ammo as i32,
+        ammo_color,
+        number_size,
+        get_ammo_icon(weapon),
+    );
+
     let health_x = 150.0;
     let health_color = if health > super::game::constants::STARTING_HEALTH {
         q3_blue
@@ -651,20 +847,41 @@ pub fn draw_hud(health: i32, armor: i32, ammo: u8, _weapon_name: &str, frags: i3
     } else {
         q3_red
     };
-    draw_hud_element_with_icon(health_x, number_y, health, health_color, number_size, get_health_icon(health));
-    
+    draw_hud_element_with_icon(
+        health_x,
+        number_y,
+        health,
+        health_color,
+        number_size,
+        get_health_icon(health),
+    );
+
     let armor_x = screen_w - 120.0;
     if armor > 0 {
         let armor_color = q3_green;
-        draw_hud_element_with_icon(armor_x, number_y, armor, armor_color, number_size, get_armor_icon(armor));
+        draw_hud_element_with_icon(
+            armor_x,
+            number_y,
+            armor,
+            armor_color,
+            number_size,
+            get_armor_icon(armor),
+        );
     }
-    
+
     draw_weapon_icons_with_ammo(weapon, hud_y + 5.0, has_weapon, ammo_counts);
-    
+
     draw_match_timer_and_scores(frags, leader_frags, match_time, time_limit);
 }
 
-fn draw_hud_element_with_icon(x: f32, y: f32, number: i32, color: Color, size: f32, icon: Option<&Texture2D>) {
+fn draw_hud_element_with_icon(
+    x: f32,
+    y: f32,
+    number: i32,
+    color: Color,
+    size: f32,
+    icon: Option<&Texture2D>,
+) {
     if let Some(icon_tex) = icon {
         let icon_size = 24.0;
         draw_texture_ex(
@@ -741,11 +958,11 @@ fn draw_large_q3_number(x: f32, y: f32, number: i32, color: Color, size: f32) {
         Some(n) => n,
         None => return,
     };
-    
+
     let num_str = format!("{}", number.abs());
     let char_width = size * 0.6;
     let mut draw_x = x;
-    
+
     if number < 0 {
         draw_texture_ex(
             &numbers.minus,
@@ -759,7 +976,7 @@ fn draw_large_q3_number(x: f32, y: f32, number: i32, color: Color, size: f32) {
         );
         draw_x += char_width;
     }
-    
+
     for ch in num_str.chars() {
         if let Some(digit) = ch.to_digit(10) {
             draw_texture_ex(
@@ -777,44 +994,60 @@ fn draw_large_q3_number(x: f32, y: f32, number: i32, color: Color, size: f32) {
     }
 }
 
-fn draw_weapon_icons_with_ammo(current_weapon: u8, y: f32, has_weapon: &[bool; 9], ammo_counts: &[u8; 9]) {
+fn draw_weapon_icons_with_ammo(
+    current_weapon: u8,
+    y: f32,
+    has_weapon: &[bool; 9],
+    ammo_counts: &[u8; 9],
+) {
     let screen_w = screen_width();
     let icon_size = 28.0;
     let icon_spacing = 35.0;
-    
+
     let available_weapons: Vec<u8> = (1..=8)
         .filter(|&weapon_id| {
             let idx = weapon_id as usize;
             has_weapon[idx] && (ammo_counts[idx] > 0 || weapon_id == 1)
         })
         .collect();
-    
+
     if available_weapons.is_empty() {
         return;
     }
-    
+
     let total_width = available_weapons.len() as f32 * icon_spacing - icon_spacing;
     let start_x = screen_w * 0.5 - total_width * 0.5;
-    
+
     for (i, weapon_id) in available_weapons.iter().enumerate() {
         let x = start_x + i as f32 * icon_spacing;
         let is_current = *weapon_id == current_weapon;
         let weapon_ammo = ammo_counts[*weapon_id as usize];
-        
+
         let bg_color = if is_current {
             Color::from_rgba(255, 255, 0, 100)
         } else {
             Color::from_rgba(100, 100, 100, 50)
         };
-        
+
         draw_rectangle(x - 2.0, y - 2.0, icon_size + 4.0, icon_size + 4.0, bg_color);
-        
+
         if is_current {
-            draw_rectangle_lines(x - 2.0, y - 2.0, icon_size + 4.0, icon_size + 4.0, 2.0, Color::from_rgba(255, 255, 0, 255));
+            draw_rectangle_lines(
+                x - 2.0,
+                y - 2.0,
+                icon_size + 4.0,
+                icon_size + 4.0,
+                2.0,
+                Color::from_rgba(255, 255, 0, 255),
+            );
         }
-        
+
         if let Some(weapon_icon) = get_weapon_icon(*weapon_id) {
-            let icon_color = if is_current { WHITE } else { Color::from_rgba(200, 200, 200, 255) };
+            let icon_color = if is_current {
+                WHITE
+            } else {
+                Color::from_rgba(200, 200, 200, 255)
+            };
             draw_texture_ex(
                 weapon_icon,
                 x + 2.0,
@@ -826,7 +1059,7 @@ fn draw_weapon_icons_with_ammo(current_weapon: u8, y: f32, has_weapon: &[bool; 9
                 },
             );
         }
-        
+
         if *weapon_id != 1 {
             let ammo_color = if weapon_ammo < 10 {
                 Color::from_rgba(255, 100, 100, 255)
@@ -835,23 +1068,49 @@ fn draw_weapon_icons_with_ammo(current_weapon: u8, y: f32, has_weapon: &[bool; 9
             } else {
                 Color::from_rgba(200, 200, 200, 255)
             };
-            draw_q3_string(&weapon_ammo.to_string(), x + 1.0, y + icon_size - 2.0, 8.0, ammo_color);
+            draw_q3_string(
+                &weapon_ammo.to_string(),
+                x + 1.0,
+                y + icon_size - 2.0,
+                8.0,
+                ammo_color,
+            );
         }
-        
-        draw_q3_string(&weapon_id.to_string(), x + icon_size - 8.0, y + 8.0, 6.0, Color::from_rgba(150, 150, 150, 255));
+
+        draw_q3_string(
+            &weapon_id.to_string(),
+            x + icon_size - 8.0,
+            y + 8.0,
+            6.0,
+            Color::from_rgba(150, 150, 150, 255),
+        );
     }
 }
 
-fn draw_match_timer_and_scores(player_score: i32, competitor_score: i32, match_time: f32, time_limit: f32) {
+fn draw_match_timer_and_scores(
+    player_score: i32,
+    competitor_score: i32,
+    match_time: f32,
+    time_limit: f32,
+) {
     let screen_w = screen_width();
     let y = 30.0;
-    
+
     let time_remaining = (time_limit - match_time).max(0.0);
     let minutes = (time_remaining / 60.0) as u32;
     let seconds = (time_remaining % 60.0) as u32;
-    
-    let score_text = format!("{} {:02}:{:02} {}", player_score, minutes, seconds, competitor_score);
-    draw_q3_string(&score_text, screen_w * 0.5 - 60.0, y, 20.0, Color::from_rgba(255, 255, 255, 255));
+
+    let score_text = format!(
+        "{} {:02}:{:02} {}",
+        player_score, minutes, seconds, competitor_score
+    );
+    draw_q3_string(
+        &score_text,
+        screen_w * 0.5 - 60.0,
+        y,
+        20.0,
+        Color::from_rgba(255, 255, 255, 255),
+    );
 }
 
 pub fn draw_crosshair(player_x: f32, player_y: f32, camera_x: f32, camera_y: f32, aim_angle: f32) {
@@ -859,28 +1118,67 @@ pub fn draw_crosshair(player_x: f32, player_y: f32, camera_x: f32, camera_y: f32
     if crosshair_size_cvar <= 0.0 {
         return;
     }
-    
+
     let distance = 200.0;
     let angle = aim_angle;
-    
+
     let world_crosshair_x = player_x + angle.cos() * distance;
     let world_crosshair_y = player_y + angle.sin() * distance;
-    
+
     let screen_crosshair_x = world_crosshair_x - camera_x;
     let screen_crosshair_y = world_crosshair_y - camera_y;
-    
+
     let size = crosshair_size_cvar * 0.5;
     let gap = 6.0;
     let thickness = 2.0;
-    
-    draw_circle(screen_crosshair_x, screen_crosshair_y, 2.0, Color::from_rgba(0, 255, 0, 100));
-    
-    draw_line(screen_crosshair_x - size - gap, screen_crosshair_y, screen_crosshair_x - gap, screen_crosshair_y, thickness, Color::from_rgba(0, 255, 0, 255));
-    draw_line(screen_crosshair_x + gap, screen_crosshair_y, screen_crosshair_x + size + gap, screen_crosshair_y, thickness, Color::from_rgba(0, 255, 0, 255));
-    draw_line(screen_crosshair_x, screen_crosshair_y - size - gap, screen_crosshair_x, screen_crosshair_y - gap, thickness, Color::from_rgba(0, 255, 0, 255));
-    draw_line(screen_crosshair_x, screen_crosshair_y + gap, screen_crosshair_x, screen_crosshair_y + size + gap, thickness, Color::from_rgba(0, 255, 0, 255));
-    
-    draw_circle_lines(screen_crosshair_x, screen_crosshair_y, gap - 1.0, 1.0, Color::from_rgba(0, 255, 0, 150));
+
+    draw_circle(
+        screen_crosshair_x,
+        screen_crosshair_y,
+        2.0,
+        Color::from_rgba(0, 255, 0, 100),
+    );
+
+    draw_line(
+        screen_crosshair_x - size - gap,
+        screen_crosshair_y,
+        screen_crosshair_x - gap,
+        screen_crosshair_y,
+        thickness,
+        Color::from_rgba(0, 255, 0, 255),
+    );
+    draw_line(
+        screen_crosshair_x + gap,
+        screen_crosshair_y,
+        screen_crosshair_x + size + gap,
+        screen_crosshair_y,
+        thickness,
+        Color::from_rgba(0, 255, 0, 255),
+    );
+    draw_line(
+        screen_crosshair_x,
+        screen_crosshair_y - size - gap,
+        screen_crosshair_x,
+        screen_crosshair_y - gap,
+        thickness,
+        Color::from_rgba(0, 255, 0, 255),
+    );
+    draw_line(
+        screen_crosshair_x,
+        screen_crosshair_y + gap,
+        screen_crosshair_x,
+        screen_crosshair_y + size + gap,
+        thickness,
+        Color::from_rgba(0, 255, 0, 255),
+    );
+
+    draw_circle_lines(
+        screen_crosshair_x,
+        screen_crosshair_y,
+        gap - 1.0,
+        1.0,
+        Color::from_rgba(0, 255, 0, 150),
+    );
 }
 
 pub fn draw_main_menu(selected: usize, items: &[&str], _hover_idx: Option<usize>) {
@@ -888,18 +1186,34 @@ pub fn draw_main_menu(selected: usize, items: &[&str], _hover_idx: Option<usize>
     let h = screen_height();
     clear_background(Color::from_rgba(18, 22, 28, 255));
 
-    draw_q3_banner_string("SAS III", w * 0.5 - 100.0, 80.0, 48.0, Color::from_rgba(255, 176, 0, 255));
-    draw_q3_banner_string("STILL ALIVE SOMEHOW??", w * 0.5 - 160.0, 130.0, 24.0, Color::from_rgba(180, 220, 255, 220));
+    draw_q3_banner_string(
+        "SAS III",
+        w * 0.5 - 100.0,
+        80.0,
+        48.0,
+        Color::from_rgba(255, 176, 0, 255),
+    );
+    draw_q3_banner_string(
+        "STILL ALIVE SOMEHOW??",
+        w * 0.5 - 160.0,
+        130.0,
+        24.0,
+        Color::from_rgba(180, 220, 255, 220),
+    );
 
     let item_h = 54.0;
     let item_w = 400.0;
     let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5;
-    
+
     for (i, label) in items.iter().enumerate() {
         let y = start_y + (i as f32) * (item_h + 12.0);
         let x = w * 0.5 - item_w * 0.5;
-        
-        let text_color = if i == selected { Color::from_rgba(255, 64, 64, 255) } else { Color::from_rgba(210, 220, 230, 255) };
+
+        let text_color = if i == selected {
+            Color::from_rgba(255, 64, 64, 255)
+        } else {
+            Color::from_rgba(210, 220, 230, 255)
+        };
         if i == selected {
             draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, 36.0, text_color);
         } else {
@@ -907,20 +1221,42 @@ pub fn draw_main_menu(selected: usize, items: &[&str], _hover_idx: Option<usize>
         }
     }
 
-    draw_q3_string("ENTER/CLICK TO SELECT", w * 0.5 - 120.0, h - 40.0, 14.0, Color::from_rgba(180, 190, 200, 200));
+    draw_q3_string(
+        "ENTER/CLICK TO SELECT",
+        w * 0.5 - 120.0,
+        h - 40.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
 }
 
 pub fn draw_map_select_menu(selected: usize, items: &[&str], _hover_idx: Option<usize>) {
-    println!("[RENDER] draw_map_select_menu called with {} items: {:?}", items.len(), items);
-    
+    println!(
+        "[RENDER] draw_map_select_menu called with {} items: {:?}",
+        items.len(),
+        items
+    );
+
     let w = screen_width();
     let h = screen_height();
     clear_background(Color::from_rgba(18, 22, 28, 255));
 
-    draw_q3_banner_string("SELECT MAP", w * 0.5 - 100.0, 80.0, 40.0, Color::from_rgba(255, 176, 0, 255));
+    draw_q3_banner_string(
+        "SELECT MAP",
+        w * 0.5 - 100.0,
+        80.0,
+        40.0,
+        Color::from_rgba(255, 176, 0, 255),
+    );
 
     if items.is_empty() {
-        draw_q3_banner_string("NO MAPS FOUND", w * 0.5 - 120.0, h * 0.5, 32.0, Color::from_rgba(255, 100, 100, 255));
+        draw_q3_banner_string(
+            "NO MAPS FOUND",
+            w * 0.5 - 120.0,
+            h * 0.5,
+            32.0,
+            Color::from_rgba(255, 100, 100, 255),
+        );
         println!("[RENDER] WARNING: No items to display!");
         return;
     }
@@ -928,13 +1264,17 @@ pub fn draw_map_select_menu(selected: usize, items: &[&str], _hover_idx: Option<
     let item_h = 54.0;
     let item_w = 400.0;
     let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5;
-    
+
     for (i, label) in items.iter().enumerate() {
         println!("[RENDER] Drawing item {}: '{}'", i, label);
         let y = start_y + (i as f32) * (item_h + 12.0);
         let x = w * 0.5 - item_w * 0.5;
-        
-        let text_color = if i == selected { Color::from_rgba(255, 64, 64, 255) } else { Color::from_rgba(210, 220, 230, 255) };
+
+        let text_color = if i == selected {
+            Color::from_rgba(255, 64, 64, 255)
+        } else {
+            Color::from_rgba(210, 220, 230, 255)
+        };
         if i == selected {
             draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, 36.0, text_color);
         } else {
@@ -942,21 +1282,49 @@ pub fn draw_map_select_menu(selected: usize, items: &[&str], _hover_idx: Option<
         }
     }
 
-    draw_q3_string("ENTER TO SELECT  ESC TO GO BACK", w * 0.5 - 140.0, h - 40.0, 14.0, Color::from_rgba(180, 190, 200, 200));
+    draw_q3_string(
+        "ENTER TO SELECT  ESC TO GO BACK",
+        w * 0.5 - 140.0,
+        h - 40.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
 }
 
 pub fn draw_1v1_map_select_menu(selected: usize, items: &[&str], _hover_idx: Option<usize>) {
-    println!("[RENDER] draw_1v1_map_select_menu called with {} items: {:?}", items.len(), items);
-    
+    println!(
+        "[RENDER] draw_1v1_map_select_menu called with {} items: {:?}",
+        items.len(),
+        items
+    );
+
     let w = screen_width();
     let h = screen_height();
     clear_background(Color::from_rgba(18, 22, 28, 255));
 
-    draw_q3_banner_string("1V1 LOCAL", w * 0.5 - 80.0, 60.0, 40.0, Color::from_rgba(255, 176, 0, 255));
-    draw_q3_banner_string("SELECT MAP", w * 0.5 - 100.0, 110.0, 32.0, Color::from_rgba(180, 220, 255, 220));
+    draw_q3_banner_string(
+        "1V1 LOCAL",
+        w * 0.5 - 80.0,
+        60.0,
+        40.0,
+        Color::from_rgba(255, 176, 0, 255),
+    );
+    draw_q3_banner_string(
+        "SELECT MAP",
+        w * 0.5 - 100.0,
+        110.0,
+        32.0,
+        Color::from_rgba(180, 220, 255, 220),
+    );
 
     if items.is_empty() {
-        draw_q3_banner_string("NO MAPS FOUND", w * 0.5 - 120.0, h * 0.5, 32.0, Color::from_rgba(255, 100, 100, 255));
+        draw_q3_banner_string(
+            "NO MAPS FOUND",
+            w * 0.5 - 120.0,
+            h * 0.5,
+            32.0,
+            Color::from_rgba(255, 100, 100, 255),
+        );
         println!("[RENDER] WARNING: No items to display!");
         return;
     }
@@ -964,13 +1332,17 @@ pub fn draw_1v1_map_select_menu(selected: usize, items: &[&str], _hover_idx: Opt
     let item_h = 54.0;
     let item_w = 400.0;
     let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5 + 20.0;
-    
+
     for (i, label) in items.iter().enumerate() {
         println!("[RENDER] Drawing item {}: '{}'", i, label);
         let y = start_y + (i as f32) * (item_h + 12.0);
         let x = w * 0.5 - item_w * 0.5;
-        
-        let text_color = if i == selected { Color::from_rgba(255, 64, 64, 255) } else { Color::from_rgba(210, 220, 230, 255) };
+
+        let text_color = if i == selected {
+            Color::from_rgba(255, 64, 64, 255)
+        } else {
+            Color::from_rgba(210, 220, 230, 255)
+        };
         if i == selected {
             draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, 36.0, text_color);
         } else {
@@ -978,33 +1350,86 @@ pub fn draw_1v1_map_select_menu(selected: usize, items: &[&str], _hover_idx: Opt
         }
     }
 
-    draw_q3_string("CONTROLS:", w * 0.5 - 60.0, h - 100.0, 18.0, Color::from_rgba(255, 200, 120, 255));
-    draw_q3_string("PLAYER1: WASD + SPACE SHOOT + 1-5 WEAPONS", w * 0.5 - 200.0, h - 78.0, 14.0, Color::from_rgba(180, 190, 200, 200));
-    draw_q3_string("PLAYER2: ARROWS + RCTRL SHOOT + 6-0 WEAPONS", w * 0.5 - 200.0, h - 62.0, 14.0, Color::from_rgba(180, 190, 200, 200));
-    draw_q3_string("ENTER TO SELECT  ESC TO GO BACK", w * 0.5 - 140.0, h - 40.0, 14.0, Color::from_rgba(180, 190, 200, 200));
+    draw_q3_string(
+        "CONTROLS:",
+        w * 0.5 - 60.0,
+        h - 100.0,
+        18.0,
+        Color::from_rgba(255, 200, 120, 255),
+    );
+    draw_q3_string(
+        "PLAYER1: WASD + SPACE SHOOT + 1-5 WEAPONS",
+        w * 0.5 - 200.0,
+        h - 78.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
+    draw_q3_string(
+        "PLAYER2: ARROWS + RCTRL SHOOT + 6-0 WEAPONS",
+        w * 0.5 - 200.0,
+        h - 62.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
+    draw_q3_string(
+        "ENTER TO SELECT  ESC TO GO BACK",
+        w * 0.5 - 140.0,
+        h - 40.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
 }
 
-pub fn draw_settings_menu(selected: usize, items: &[&str], selected_model: &str, _hover_idx: Option<usize>) {
+pub fn draw_settings_menu(
+    selected: usize,
+    items: &[&str],
+    selected_model: &str,
+    _hover_idx: Option<usize>,
+) {
     let w = screen_width();
     let h = screen_height();
     clear_background(Color::from_rgba(18, 22, 28, 255));
 
-    draw_q3_banner_string("SETTINGS", w * 0.5 - 80.0, 60.0, 48.0, Color::from_rgba(255, 176, 0, 255));
-    draw_q3_banner_string("PLAYER MODEL", w * 0.5 - 120.0, 110.0, 32.0, Color::from_rgba(180, 220, 255, 220));
-    
-    draw_q3_string("CURRENT MODEL:", w * 0.5 - 80.0, 150.0, 20.0, Color::from_rgba(200, 210, 220, 255));
-    draw_q3_string(selected_model, w * 0.5 + 40.0, 150.0, 20.0, Color::from_rgba(120, 200, 255, 255));
+    draw_q3_banner_string(
+        "SETTINGS",
+        w * 0.5 - 80.0,
+        60.0,
+        48.0,
+        Color::from_rgba(255, 176, 0, 255),
+    );
+    draw_q3_banner_string(
+        "PLAYER MODEL",
+        w * 0.5 - 120.0,
+        110.0,
+        32.0,
+        Color::from_rgba(180, 220, 255, 220),
+    );
+
+    draw_q3_string(
+        "CURRENT MODEL:",
+        w * 0.5 - 80.0,
+        150.0,
+        20.0,
+        Color::from_rgba(200, 210, 220, 255),
+    );
+    draw_q3_string(
+        selected_model,
+        w * 0.5 + 40.0,
+        150.0,
+        20.0,
+        Color::from_rgba(120, 200, 255, 255),
+    );
 
     let max_visible = 6;
     let item_h = 54.0;
     let item_w = 400.0;
-    
+
     let scroll_offset = if selected >= max_visible {
         selected - max_visible + 1
     } else {
         0
     };
-    
+
     let visible_items: Vec<(usize, &str)> = items
         .iter()
         .enumerate()
@@ -1012,17 +1437,17 @@ pub fn draw_settings_menu(selected: usize, items: &[&str], selected_model: &str,
         .take(max_visible)
         .map(|(i, s)| (i, *s))
         .collect();
-    
+
     let start_y = h * 0.5 - (visible_items.len() as f32 * (item_h + 12.0)) * 0.5 + 40.0;
-    
+
     for (idx, (orig_i, label)) in visible_items.iter().enumerate() {
         let y = start_y + (idx as f32) * (item_h + 12.0);
         let x = w * 0.5 - item_w * 0.5;
-        
-        let text_color = if *orig_i == selected { 
-            Color::from_rgba(255, 64, 64, 255) 
-        } else { 
-            Color::from_rgba(210, 220, 230, 255) 
+
+        let text_color = if *orig_i == selected {
+            Color::from_rgba(255, 64, 64, 255)
+        } else {
+            Color::from_rgba(210, 220, 230, 255)
         };
         if *orig_i == selected {
             draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, 36.0, text_color);
@@ -1030,38 +1455,92 @@ pub fn draw_settings_menu(selected: usize, items: &[&str], selected_model: &str,
             draw_q3_banner_string(&label.to_uppercase(), x + 18.0, y + 10.0, 30.0, text_color);
         }
     }
-    
+
     if items.len() > max_visible {
         let scroll_text = format!("{} / {}", selected + 1, items.len());
-        draw_q3_string(&scroll_text, w - 100.0, 150.0, 14.0, Color::from_rgba(180, 190, 200, 200));
+        draw_q3_string(
+            &scroll_text,
+            w - 100.0,
+            150.0,
+            14.0,
+            Color::from_rgba(180, 190, 200, 200),
+        );
     }
 
-    draw_q3_string("USE UP/DOWN TO CHANGE MODEL", w * 0.5 - 140.0, h - 80.0, 14.0, Color::from_rgba(180, 190, 200, 200));
-    draw_q3_string("F5/F6 ALSO WORK IN GAME", w * 0.5 - 100.0, h - 62.0, 14.0, Color::from_rgba(140, 150, 160, 180));
-    draw_q3_string("ESC TO GO BACK", w * 0.5 - 60.0, h - 40.0, 14.0, Color::from_rgba(180, 190, 200, 200));
+    draw_q3_string(
+        "USE UP/DOWN TO CHANGE MODEL",
+        w * 0.5 - 140.0,
+        h - 80.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
+    draw_q3_string(
+        "F5/F6 ALSO WORK IN GAME",
+        w * 0.5 - 100.0,
+        h - 62.0,
+        14.0,
+        Color::from_rgba(140, 150, 160, 180),
+    );
+    draw_q3_string(
+        "ESC TO GO BACK",
+        w * 0.5 - 60.0,
+        h - 40.0,
+        14.0,
+        Color::from_rgba(180, 190, 200, 200),
+    );
 }
 
-pub fn draw_hud_player2(health: i32, armor: i32, ammo: u8, _weapon_name: &str, _frags: i32, weapon: u8, _leader_frags: i32, has_weapon: &[bool; 9], ammo_counts: &[u8; 9]) {
+pub fn draw_hud_player2(
+    health: i32,
+    armor: i32,
+    ammo: u8,
+    _weapon_name: &str,
+    _frags: i32,
+    weapon: u8,
+    _leader_frags: i32,
+    has_weapon: &[bool; 9],
+    ammo_counts: &[u8; 9],
+) {
     let screen_w = screen_width();
-    
+
     let hud_height = 80.0;
     let hud_y = 10.0;
-    
-    draw_rectangle(0.0, hud_y, screen_w, hud_height, Color::from_rgba(0, 0, 0, 180));
-    draw_line(0.0, hud_y + hud_height, screen_w, hud_y + hud_height, 2.0, Color::from_rgba(100, 100, 100, 255));
-    
+
+    draw_rectangle(
+        0.0,
+        hud_y,
+        screen_w,
+        hud_height,
+        Color::from_rgba(0, 0, 0, 180),
+    );
+    draw_line(
+        0.0,
+        hud_y + hud_height,
+        screen_w,
+        hud_y + hud_height,
+        2.0,
+        Color::from_rgba(100, 100, 100, 255),
+    );
+
     let q3_red = Color::from_rgba(255, 51, 51, 255);
     let q3_yellow = Color::from_rgba(255, 255, 0, 255);
     let q3_white = Color::from_rgba(255, 255, 255, 255);
     let q3_blue = Color::from_rgba(100, 149, 237, 255);
-    
+
     let number_size = 40.0;
     let number_y = hud_y + 35.0;
-    
+
     let ammo_x = 30.0;
     let ammo_color = if ammo < 10 { q3_red } else { q3_blue };
-    draw_hud_element_with_icon(ammo_x, number_y, ammo as i32, ammo_color, number_size, get_ammo_icon(weapon));
-    
+    draw_hud_element_with_icon(
+        ammo_x,
+        number_y,
+        ammo as i32,
+        ammo_color,
+        number_size,
+        get_ammo_icon(weapon),
+    );
+
     let health_x = 150.0;
     let health_color = if health > 100 {
         q3_white
@@ -1070,58 +1549,84 @@ pub fn draw_hud_player2(health: i32, armor: i32, ammo: u8, _weapon_name: &str, _
     } else {
         q3_red
     };
-    draw_hud_element_with_icon(health_x, number_y, health, health_color, number_size, get_health_icon(health));
-    
+    draw_hud_element_with_icon(
+        health_x,
+        number_y,
+        health,
+        health_color,
+        number_size,
+        get_health_icon(health),
+    );
+
     let armor_x = screen_w - 120.0;
     if armor > 0 {
         let armor_color = q3_blue;
-        draw_hud_element_with_icon(armor_x, number_y, armor, armor_color, number_size, get_armor_icon(armor));
+        draw_hud_element_with_icon(
+            armor_x,
+            number_y,
+            armor,
+            armor_color,
+            number_size,
+            get_armor_icon(armor),
+        );
     }
-    
+
     draw_weapon_icons_player2_with_ammo(weapon, hud_y + 5.0, has_weapon, ammo_counts);
 }
 
-fn draw_weapon_icons_player2_with_ammo(current_weapon: u8, y: f32, has_weapon: &[bool; 9], ammo_counts: &[u8; 9]) {
+fn draw_weapon_icons_player2_with_ammo(
+    current_weapon: u8,
+    y: f32,
+    has_weapon: &[bool; 9],
+    ammo_counts: &[u8; 9],
+) {
     let screen_w = screen_width();
     let icon_size = 28.0;
     let icon_spacing = 35.0;
-    
+
     let available_weapons: Vec<u8> = (1..=8)
         .filter(|&weapon_id| {
             let idx = weapon_id as usize;
             has_weapon[idx] && (ammo_counts[idx] > 0 || weapon_id == 1)
         })
         .collect();
-    
+
     if available_weapons.is_empty() {
         return;
     }
-    
+
     let total_width = available_weapons.len() as f32 * icon_spacing - icon_spacing;
     let start_x = screen_w * 0.5 - total_width * 0.5;
-    
+
     for (i, weapon_id) in available_weapons.iter().enumerate() {
         let x = start_x + i as f32 * icon_spacing;
         let is_current = *weapon_id == current_weapon;
         let weapon_ammo = ammo_counts[*weapon_id as usize];
-        
+
         let bg_color = if is_current {
             Color::from_rgba(100, 149, 237, 100)
         } else {
             Color::from_rgba(100, 100, 100, 50)
         };
-        
+
         draw_rectangle(x - 2.0, y - 2.0, icon_size + 4.0, icon_size + 4.0, bg_color);
-        
+
         if is_current {
-            draw_rectangle_lines(x - 2.0, y - 2.0, icon_size + 4.0, icon_size + 4.0, 2.0, Color::from_rgba(100, 149, 237, 255));
+            draw_rectangle_lines(
+                x - 2.0,
+                y - 2.0,
+                icon_size + 4.0,
+                icon_size + 4.0,
+                2.0,
+                Color::from_rgba(100, 149, 237, 255),
+            );
         }
-        
+
         if let Some(weapon_icon) = get_weapon_icon(*weapon_id) {
-            let icon_color = if is_current { 
-                Color::from_rgba(100, 149, 237, 255) 
-            } else { 
-                Color::from_rgba(200, 200, 200, 255) 
+            let icon_color = if is_current {
+                Color::from_rgba(100, 149, 237, 255)
+            } else {
+                Color::from_rgba(200, 200, 200, 255)
             };
             draw_texture_ex(
                 weapon_icon,
@@ -1134,7 +1639,7 @@ fn draw_weapon_icons_player2_with_ammo(current_weapon: u8, y: f32, has_weapon: &
                 },
             );
         }
-        
+
         if *weapon_id != 1 {
             let ammo_color = if weapon_ammo < 10 {
                 Color::from_rgba(255, 100, 100, 255)
@@ -1143,16 +1648,30 @@ fn draw_weapon_icons_player2_with_ammo(current_weapon: u8, y: f32, has_weapon: &
             } else {
                 Color::from_rgba(200, 200, 200, 255)
             };
-            draw_q3_string(&weapon_ammo.to_string(), x + 1.0, y + icon_size - 2.0, 8.0, ammo_color);
+            draw_q3_string(
+                &weapon_ammo.to_string(),
+                x + 1.0,
+                y + icon_size - 2.0,
+                8.0,
+                ammo_color,
+            );
         }
-        
-        draw_q3_string(&weapon_id.to_string(), x + icon_size - 8.0, y + 8.0, 6.0, Color::from_rgba(150, 150, 150, 255));
+
+        draw_q3_string(
+            &weapon_id.to_string(),
+            x + icon_size - 8.0,
+            y + 8.0,
+            6.0,
+            Color::from_rgba(150, 150, 150, 255),
+        );
     }
 }
 
-pub fn get_item_icon_for_type(item_type: &crate::game::map::ItemType) -> Option<&'static Texture2D> {
+pub fn get_item_icon_for_type(
+    item_type: &crate::game::map::ItemType,
+) -> Option<&'static Texture2D> {
     let icons = ITEM_ICONS.get()?;
-    
+
     use crate::game::map::ItemType;
     match item_type {
         ItemType::Health25 => Some(&icons.health_green),
@@ -1163,6 +1682,7 @@ pub fn get_item_icon_for_type(item_type: &crate::game::map::ItemType) -> Option<
         ItemType::Shotgun => Some(&icons.weapon_shotgun),
         ItemType::GrenadeLauncher => Some(&icons.weapon_grenade),
         ItemType::RocketLauncher => Some(&icons.weapon_rocket),
+        ItemType::LightningGun => Some(&icons.weapon_lightning),
         ItemType::Railgun => Some(&icons.weapon_railgun),
         ItemType::Plasmagun => Some(&icons.weapon_plasma),
         ItemType::BFG => Some(&icons.weapon_bfg),
@@ -1175,7 +1695,13 @@ pub fn get_item_icon_for_type(item_type: &crate::game::map::ItemType) -> Option<
     }
 }
 
-pub fn draw_item_icon(x: f32, y: f32, item_type: &crate::game::map::ItemType, size: f32, color: Color) {
+pub fn draw_item_icon(
+    x: f32,
+    y: f32,
+    item_type: &crate::game::map::ItemType,
+    size: f32,
+    color: Color,
+) {
     if let Some(icon) = get_item_icon_for_type(item_type) {
         let half_size = size * 0.5;
         draw_texture_ex(

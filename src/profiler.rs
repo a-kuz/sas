@@ -76,7 +76,7 @@ impl ProfileScope {
             start: macroquad::time::get_time(),
         }
     }
-    
+
     pub fn with_shader(name: &'static str, shader: &'static str) -> Self {
         Self {
             name,
@@ -95,7 +95,7 @@ impl Drop for ProfileScope {
         let elapsed = self.start.elapsed().as_secs_f64() * 1000.0;
         #[cfg(target_arch = "wasm32")]
         let elapsed = (macroquad::time::get_time() - self.start) * 1000.0;
-        
+
         #[cfg(not(target_arch = "wasm32"))]
         PROFILER.with(|p| {
             p.borrow_mut().record(self.name, elapsed, self.shader);
@@ -109,7 +109,7 @@ struct SampleData {
     avg: f64,
     min: f64,
     max: f64,
-    history: Vec<f64>
+    history: Vec<f64>,
 }
 
 impl SampleData {
@@ -126,11 +126,11 @@ impl SampleData {
     fn record(&mut self, value: f64) {
         self.current = value;
         self.history.push(value);
-        
+
         if self.history.len() > MAX_HISTORY {
             self.history.remove(0);
         }
-        
+
         if !self.history.is_empty() {
             self.avg = self.history.iter().sum::<f64>() / self.history.len() as f64;
             self.min = self.history.iter().copied().fold(f64::MAX, f64::min);
@@ -172,7 +172,7 @@ impl Profiler {
         }
 
         *self.frame_samples.entry(name).or_insert(0.0) += time_ms;
-        
+
         #[cfg(not(target_arch = "wasm32"))]
         if let Some(shader_name) = shader {
             SHADER_COUNTS.with(|s| {
@@ -196,15 +196,20 @@ impl Profiler {
         }
 
         for (name, time) in self.frame_samples.drain() {
-            self.samples.entry(name).or_insert_with(SampleData::new).record(time);
+            self.samples
+                .entry(name)
+                .or_insert_with(SampleData::new)
+                .record(time);
         }
     }
 
     pub fn get_samples(&self) -> Vec<(&'static str, f64, f64, f64, f64)> {
-        let mut result: Vec<_> = self.samples.iter()
+        let mut result: Vec<_> = self
+            .samples
+            .iter()
             .map(|(name, data)| (*name, data.current, data.avg, data.min, data.max))
             .collect();
-        
+
         result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         result
     }
@@ -239,13 +244,13 @@ pub fn end_frame() {
     #[cfg(not(target_arch = "wasm32"))]
     {
         PROFILER.with(|p| p.borrow_mut().end_frame());
-        
+
         SHADER_COUNTS.with(|counts| {
             SHADER_DISPLAY.with(|display| {
                 *display.borrow_mut() = counts.borrow().clone();
             });
         });
-        
+
         SHADER_COUNTS.with(|s| {
             s.borrow_mut().clear();
         });
@@ -262,7 +267,8 @@ pub fn get_samples() -> Vec<(&'static str, f64, f64, f64, f64)> {
 pub fn get_history(name: &'static str) -> Vec<f64> {
     #[cfg(not(target_arch = "wasm32"))]
     return PROFILER.with(|p| {
-        p.borrow().get_history(name)
+        p.borrow()
+            .get_history(name)
             .map(|h| h.to_vec())
             .unwrap_or_default()
     });
@@ -281,9 +287,7 @@ pub fn count_shader(_shader: &str) {
 pub fn get_shader_stats() -> Vec<(String, usize)> {
     #[cfg(not(target_arch = "wasm32"))]
     return SHADER_DISPLAY.with(|d| {
-        let mut stats: Vec<_> = d.borrow().iter()
-            .map(|(k, v)| (k.clone(), *v))
-            .collect();
+        let mut stats: Vec<_> = d.borrow().iter().map(|(k, v)| (k.clone(), *v)).collect();
         stats.sort_by(|a, b| b.1.cmp(&a.1));
         stats
     });
@@ -294,7 +298,7 @@ pub fn get_shader_stats() -> Vec<(String, usize)> {
 pub fn print_shader_stats() {
     let stats = get_shader_stats();
     let total: usize = stats.iter().map(|(_, count)| count).sum();
-    
+
     if total > 0 {
         println!("\n=== DRAW CALL BREAKDOWN ===");
         println!("Total draw calls: {}", total);
@@ -314,4 +318,3 @@ macro_rules! count_shader {
         crate::profiler::count_shader($shader);
     };
 }
-

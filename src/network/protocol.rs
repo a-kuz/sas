@@ -1,7 +1,7 @@
 use super::NetMessage;
-use std::net::{UdpSocket, SocketAddr};
-use std::io;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use std::io;
+use std::net::{SocketAddr, UdpSocket};
 
 pub const MAX_PACKETLEN: usize = 1400;
 pub const FRAGMENT_SIZE: usize = MAX_PACKETLEN - 100;
@@ -73,17 +73,17 @@ impl NetChan {
         send_buf.extend_from_slice(data);
 
         socket.send_to(&send_buf, self.remote_address.addr)?;
-        
+
         self.last_sent_time = super::get_network_time();
         self.last_sent_size = send_buf.len();
         self.outgoing_sequence += 1;
 
         Ok(())
-}
+    }
 
     pub fn transmit_next_fragment(&mut self, socket: &UdpSocket) -> io::Result<()> {
         let mut send_buf = Vec::with_capacity(MAX_PACKETLEN);
-        
+
         let outgoing_sequence = self.outgoing_sequence | FRAGMENT_BIT;
         send_buf.write_u32::<LittleEndian>(outgoing_sequence)?;
         send_buf.write_u16::<LittleEndian>(self.qport)?;
@@ -97,7 +97,8 @@ impl NetChan {
         send_buf.write_u16::<LittleEndian>(self.unsent_fragment_start as u16)?;
         send_buf.write_u16::<LittleEndian>(fragment_length as u16)?;
         send_buf.extend_from_slice(
-            &self.unsent_buffer[self.unsent_fragment_start..self.unsent_fragment_start + fragment_length]
+            &self.unsent_buffer
+                [self.unsent_fragment_start..self.unsent_fragment_start + fragment_length],
         );
 
         socket.send_to(&send_buf, self.remote_address.addr)?;
@@ -113,7 +114,7 @@ impl NetChan {
         }
 
         Ok(())
-}
+    }
 
     pub fn process_packet(&mut self, data: &[u8]) -> Option<Vec<u8>> {
         if data.len() < 6 {
@@ -130,35 +131,48 @@ impl NetChan {
         }
 
         if sequence <= self.incoming_sequence {
-            eprintln!("[{:.3}] Out of order packet {} at {}", 
-                super::get_network_time(), sequence, self.incoming_sequence);
+            eprintln!(
+                "[{:.3}] Out of order packet {} at {}",
+                super::get_network_time(),
+                sequence,
+                self.incoming_sequence
+            );
             return None;
         }
 
         self.dropped = sequence - (self.incoming_sequence + 1);
         if self.dropped > 0 {
-            eprintln!("[{:.3}] Dropped {} packets at {}", 
-                super::get_network_time(), self.dropped, sequence);
+            eprintln!(
+                "[{:.3}] Dropped {} packets at {}",
+                super::get_network_time(),
+                self.dropped,
+                sequence
+            );
         }
 
         if is_fragment {
             let fragment_start = cursor.read_u16::<LittleEndian>().ok()? as usize;
             let fragment_length = cursor.read_u16::<LittleEndian>().ok()? as usize;
-            
+
             if sequence != self.fragment_sequence {
                 self.fragment_sequence = sequence;
                 self.fragment_length = 0;
             }
 
             if fragment_start != self.fragment_length {
-                eprintln!("[{:.3}] Missed fragment at {}, expected {}", 
-                    super::get_network_time(), fragment_start, self.fragment_length);
+                eprintln!(
+                    "[{:.3}] Missed fragment at {}, expected {}",
+                    super::get_network_time(),
+                    fragment_start,
+                    self.fragment_length
+                );
                 return None;
             }
 
             let position = cursor.position() as usize;
-            if position + fragment_length > data.len() 
-                || self.fragment_length + fragment_length > self.fragment_buffer.len() {
+            if position + fragment_length > data.len()
+                || self.fragment_length + fragment_length > self.fragment_buffer.len()
+            {
                 return None;
             }
 
@@ -174,7 +188,7 @@ impl NetChan {
             let complete_data = self.fragment_buffer[..self.fragment_length].to_vec();
             self.fragment_length = 0;
             self.incoming_sequence = sequence;
-            
+
             return Some(complete_data);
         }
 
@@ -203,7 +217,10 @@ impl UdpNetworking {
         if let Some(ref socket) = self.socket {
             socket.send_to(data, addr)
         } else {
-            Err(io::Error::new(io::ErrorKind::NotConnected, "Socket not bound"))
+            Err(io::Error::new(
+                io::ErrorKind::NotConnected,
+                "Socket not bound",
+            ))
         }
     }
 
@@ -211,7 +228,10 @@ impl UdpNetworking {
         if let Some(ref socket) = self.socket {
             socket.recv_from(buf)
         } else {
-            Err(io::Error::new(io::ErrorKind::NotConnected, "Socket not bound"))
+            Err(io::Error::new(
+                io::ErrorKind::NotConnected,
+                "Socket not bound",
+            ))
         }
     }
 
@@ -227,4 +247,3 @@ pub fn serialize_message(msg: &NetMessage) -> Result<Vec<u8>, String> {
 pub fn deserialize_message(data: &[u8]) -> Result<NetMessage, String> {
     bincode::deserialize(data).map_err(|e| e.to_string())
 }
-

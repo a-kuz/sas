@@ -102,8 +102,13 @@ impl NetDebug {
 
     pub fn log_packet_send(&mut self, sequence: u32, size: usize, message_type: &str) {
         if self.show_packets {
-            eprintln!("[{:.3}] [NET] send s={} size={} type={}", 
-                super::get_network_time(), sequence, size, message_type);
+            eprintln!(
+                "[{:.3}] [NET] send s={} size={} type={}",
+                super::get_network_time(),
+                sequence,
+                size,
+                message_type
+            );
         }
 
         let entry = PacketLogEntry {
@@ -122,8 +127,13 @@ impl NetDebug {
 
     pub fn log_packet_recv(&mut self, sequence: u32, size: usize, message_type: &str) {
         if self.show_packets {
-            eprintln!("[{:.3}] [NET] recv s={} size={} type={}", 
-                super::get_network_time(), sequence, size, message_type);
+            eprintln!(
+                "[{:.3}] [NET] recv s={} size={} type={}",
+                super::get_network_time(),
+                sequence,
+                size,
+                message_type
+            );
         }
 
         let entry = PacketLogEntry {
@@ -142,8 +152,12 @@ impl NetDebug {
 
     pub fn log_out_of_order(&mut self, sequence: u32, expected: u32) {
         if self.show_drop {
-            eprintln!("[{:.3}] [NET] Out of order packet {} (expected {})", 
-                super::get_network_time(), sequence, expected);
+            eprintln!(
+                "[{:.3}] [NET] Out of order packet {} (expected {})",
+                super::get_network_time(),
+                sequence,
+                expected
+            );
         }
 
         let error = SyncError {
@@ -160,8 +174,12 @@ impl NetDebug {
 
     pub fn log_dropped_packets(&mut self, count: u32, at_sequence: u32) {
         if self.show_drop {
-            eprintln!("[{:.3}] [NET] Dropped {} packets at sequence {}", 
-                super::get_network_time(), count, at_sequence);
+            eprintln!(
+                "[{:.3}] [NET] Dropped {} packets at sequence {}",
+                super::get_network_time(),
+                count,
+                at_sequence
+            );
         }
 
         let error = SyncError {
@@ -176,13 +194,15 @@ impl NetDebug {
         }
     }
 
-    pub fn log_position_mismatch(&mut self, 
-        player_id: u16, 
-        local_pos: (f32, f32), 
-        server_pos: (f32, f32)
+    pub fn log_position_mismatch(
+        &mut self,
+        player_id: u16,
+        local_pos: (f32, f32),
+        server_pos: (f32, f32),
     ) {
-        let distance = ((local_pos.0 - server_pos.0).powi(2) + (local_pos.1 - server_pos.1).powi(2)).sqrt();
-        
+        let distance =
+            ((local_pos.0 - server_pos.0).powi(2) + (local_pos.1 - server_pos.1).powi(2)).sqrt();
+
         if self.show_sync {
             eprintln!(
                 "[{:.3}] [SYNC] Position mismatch p{} local=({:.1},{:.1}) server=({:.1},{:.1}) dist={:.1}",
@@ -251,7 +271,7 @@ impl NetDebug {
     ) {
         let vel_diff = (
             (local_vel.0 - server_vel.0).abs(),
-            (local_vel.1 - server_vel.1).abs()
+            (local_vel.1 - server_vel.1).abs(),
         );
 
         if self.show_sync && (vel_diff.0 > 0.5 || vel_diff.1 > 0.5) {
@@ -286,7 +306,13 @@ impl NetDebug {
         if self.show_collision {
             eprintln!(
                 "[{:.3}] [COLL] p{} {} at ({:.1},{:.1}) normal=({:.2},{:.2})",
-                super::get_network_time(), player_id, collision_type, position.0, position.1, normal.0, normal.1
+                super::get_network_time(),
+                player_id,
+                collision_type,
+                position.0,
+                position.1,
+                normal.0,
+                normal.1
             );
         }
     }
@@ -331,51 +357,59 @@ impl NetDebug {
     }
 
     pub fn compare_physics_snapshots(&self, player_id: u16, input_seq: u32) -> Option<PhysicsDiff> {
-        let client = self.physics_snapshots.iter()
-            .rev()
-            .find(|s| s.player_id == player_id && 
-                     s.input_sequence == input_seq &&
-                     matches!(s.location, PhysicsLocation::Client))?;
+        let client = self.physics_snapshots.iter().rev().find(|s| {
+            s.player_id == player_id
+                && s.input_sequence == input_seq
+                && matches!(s.location, PhysicsLocation::Client)
+        })?;
 
-        let server = self.physics_snapshots.iter()
-            .rev()
-            .find(|s| s.player_id == player_id && 
-                     s.input_sequence == input_seq &&
-                     matches!(s.location, PhysicsLocation::Server))?;
+        let server = self.physics_snapshots.iter().rev().find(|s| {
+            s.player_id == player_id
+                && s.input_sequence == input_seq
+                && matches!(s.location, PhysicsLocation::Server)
+        })?;
 
         let pos_diff = (
             (client.position.0 - server.position.0).abs(),
-            (client.position.1 - server.position.1).abs()
+            (client.position.1 - server.position.1).abs(),
         );
 
         let vel_diff = (
             (client.velocity.0 - server.velocity.0).abs(),
-            (client.velocity.1 - server.velocity.1).abs()
+            (client.velocity.1 - server.velocity.1).abs(),
         );
 
         Some(PhysicsDiff {
             position_diff: pos_diff,
             velocity_diff: vel_diff,
             on_ground_mismatch: client.on_ground != server.on_ground,
-            collision_mismatch: client.collided_x != server.collided_x || 
-                              client.collided_y != server.collided_y,
+            collision_mismatch: client.collided_x != server.collided_x
+                || client.collided_y != server.collided_y,
         })
     }
 
     pub fn get_packet_stats(&self) -> PacketStats {
         let total_packets = self.packet_log.len();
-        let sent_packets = self.packet_log.iter()
+        let sent_packets = self
+            .packet_log
+            .iter()
             .filter(|p| matches!(p.direction, PacketDirection::Send))
             .count();
-        let recv_packets = self.packet_log.iter()
+        let recv_packets = self
+            .packet_log
+            .iter()
             .filter(|p| matches!(p.direction, PacketDirection::Recv))
             .count();
 
-        let dropped_count = self.sync_errors.iter()
+        let dropped_count = self
+            .sync_errors
+            .iter()
             .filter(|e| matches!(e.error_type, SyncErrorType::Dropped))
             .count();
 
-        let out_of_order_count = self.sync_errors.iter()
+        let out_of_order_count = self
+            .sync_errors
+            .iter()
             .filter(|e| matches!(e.error_type, SyncErrorType::OutOfOrder))
             .count();
 
@@ -389,11 +423,7 @@ impl NetDebug {
     }
 
     pub fn get_recent_errors(&self, count: usize) -> Vec<SyncError> {
-        self.sync_errors.iter()
-            .rev()
-            .take(count)
-            .cloned()
-            .collect()
+        self.sync_errors.iter().rev().take(count).cloned().collect()
     }
 
     pub fn clear_logs(&mut self) {
@@ -421,12 +451,12 @@ pub struct PhysicsDiff {
 
 impl PhysicsDiff {
     pub fn is_significant(&self) -> bool {
-        self.position_diff.0 > 1.0 || 
-        self.position_diff.1 > 1.0 ||
-        self.velocity_diff.0 > 0.5 ||
-        self.velocity_diff.1 > 0.5 ||
-        self.on_ground_mismatch ||
-        self.collision_mismatch
+        self.position_diff.0 > 1.0
+            || self.position_diff.1 > 1.0
+            || self.velocity_diff.0 > 0.5
+            || self.velocity_diff.1 > 0.5
+            || self.on_ground_mismatch
+            || self.collision_mismatch
     }
 
     pub fn max_position_error(&self) -> f32 {
@@ -443,4 +473,3 @@ impl Default for NetDebug {
         Self::new()
     }
 }
-

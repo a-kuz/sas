@@ -983,12 +983,6 @@
           "texture_id": 1
         },
         {
-          "x_start": 44,
-          "x_end": 50,
-          "solid": true,
-          "texture_id": 1
-        },
-        {
           "x_start": 51,
           "x_end": 51,
           "solid": true,
@@ -1008,12 +1002,6 @@
         {
           "x_start": 17,
           "x_end": 31,
-          "solid": true,
-          "texture_id": 1
-        },
-        {
-          "x_start": 44,
-          "x_end": 50,
           "solid": true,
           "texture_id": 1
         },
@@ -1043,12 +1031,6 @@
         {
           "x_start": 17,
           "x_end": 31,
-          "solid": true,
-          "texture_id": 1
-        },
-        {
-          "x_start": 44,
-          "x_end": 50,
           "solid": true,
           "texture_id": 1
         },
@@ -1528,18 +1510,18 @@
   ],
   "spawn_points": [
     {
-      "tile_x": 10.609375,
-      "tile_y": 53.73047,
+      "tile_x": 11.214966,
+      "tile_y": 51.770264,
       "team": 0
     },
     {
-      "tile_x": 19.347656,
-      "tile_y": 10.536621,
+      "tile_x": 20.422485,
+      "tile_y": 6.3535156,
       "team": 0
     },
     {
-      "tile_x": 42.34204,
-      "tile_y": 17.60913,
+      "tile_x": 41.215454,
+      "tile_y": 10.001465,
       "team": 0
     }
   ],
@@ -1603,6 +1585,11 @@
       "tile_x": 29.49939,
       "tile_y": 66.75,
       "item_type": "GrenadeLauncher"
+    },
+    {
+      "tile_x": 6.8033447,
+      "tile_y": 34.75,
+      "item_type": "LightningGun"
     }
   ],
   "jumppads": [
@@ -1611,7 +1598,7 @@
       "tile_y": 61.507812,
       "width_tiles": 2.0,
       "force_x": 0.0,
-      "force_y": -7.0
+      "force_y": -9.5
     },
     {
       "tile_x": 2.1905518,
@@ -1640,13 +1627,6 @@
       "width_tiles": 2.0,
       "force_x": 0.0,
       "force_y": -5.5
-    },
-    {
-      "tile_x": 44.100952,
-      "tile_y": 38.959717,
-      "width_tiles": 2.0,
-      "force_x": 0.0,
-      "force_y": -6.0
     },
     {
       "tile_x": 45.089844,
@@ -1917,17 +1897,6 @@
     },
     {
       "x": 288.0,
-      "y": 800.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 288.0,
       "y": 928.0,
       "width": 128.00002,
       "height": 128.00002,
@@ -2027,28 +1996,6 @@
     },
     {
       "x": 544.0,
-      "y": 31.999992,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 544.0,
-      "y": 160.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": false,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 544.0,
       "y": 288.0,
       "width": 128.00002,
       "height": 128.00002,
@@ -2533,40 +2480,7 @@
     },
     {
       "x": 1312.0,
-      "y": 160.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1312.0,
-      "y": 288.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1312.0,
       "y": 416.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1312.0,
-      "y": 544.0,
       "width": 128.00002,
       "height": 128.00002,
       "texture_name": "q3-resources/textures/base_support/surface2.png",
@@ -2687,17 +2601,6 @@
     },
     {
       "x": 1568.0,
-      "y": 544.0,
-      "width": 128.00002,
-      "height": 128.00002,
-      "texture_name": "q3-resources/textures/base_support/surface2.png",
-      "alpha": 0.5,
-      "additive": true,
-      "scale": 2.0000002,
-      "animation_speed": 0.0
-    },
-    {
-      "x": 1440.0,
       "y": 544.0,
       "width": 128.00002,
       "height": 128.00002,

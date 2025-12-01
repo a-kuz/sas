@@ -1,8 +1,8 @@
-use macroquad::prelude::*;
+use super::tile_shader_materials;
 use macroquad::miniquad;
+use macroquad::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
-use super::tile_shader_materials;
 
 static ADDITIVE_MATERIAL: OnceLock<Material> = OnceLock::new();
 static FILTER_MATERIAL: OnceLock<Material> = OnceLock::new();
@@ -55,7 +55,8 @@ fn get_additive_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -107,7 +108,8 @@ fn get_filter_material() -> &'static Material {
                 },
                 ..Default::default()
             },
-        ).unwrap()
+        )
+        .unwrap()
     })
 }
 
@@ -260,11 +262,11 @@ impl TileShaderRenderer {
             detail_overlays: std::collections::HashMap::new(),
         }
     }
-    
+
     pub fn set_detail_texture(&mut self, texture_id: u16, detail_path: String) {
         self.detail_overlays.insert(texture_id, detail_path);
     }
-    
+
     pub fn render_detail_overlay(
         &self,
         texture_id: u16,
@@ -279,14 +281,14 @@ impl TileShaderRenderer {
             if let Some(detail_tex) = self.loaded_textures.get(detail_path) {
                 let tex_w = detail_tex.width() * 2.0;
                 let tex_h = detail_tex.height() * 2.0;
-                
+
                 let src_x = (world_x % tex_w) / tex_w;
                 let src_y = (world_y % tex_h) / tex_h;
                 let src_w = width.min(tex_w) / tex_w;
                 let src_h = height.min(tex_h) / tex_h;
-                
+
                 gl_use_material(get_filter_material());
-                
+
                 draw_texture_ex(
                     detail_tex,
                     x,
@@ -303,31 +305,32 @@ impl TileShaderRenderer {
                         ..Default::default()
                     },
                 );
-                
+
                 gl_use_default_material();
             }
         }
     }
-    
+
     pub async fn load_texture(&mut self, path: &str) -> Option<Texture2D> {
         if let Some(tex) = self.loaded_textures.get(path) {
             return Some(tex.clone());
         }
-        
+
         if let Ok(image) = load_image(path).await {
             let texture = Texture2D::from_image(&image);
             texture.set_filter(FilterMode::Linear);
-            self.loaded_textures.insert(path.to_string(), texture.clone());
+            self.loaded_textures
+                .insert(path.to_string(), texture.clone());
             Some(texture)
         } else {
             None
         }
     }
-    
+
     pub fn add_shader(&mut self, shader: TileShader) {
         self.shaders.insert(shader.name.clone(), shader);
     }
-    
+
     pub fn render_tile_with_shader(
         &self,
         shader_name: &str,
@@ -344,12 +347,12 @@ impl TileShaderRenderer {
                 if let Some(base_tex) = self.loaded_textures.get(&shader.base_texture) {
                     let tex_w = base_tex.width();
                     let tex_h = base_tex.height();
-                    
+
                     let src_x = (world_x % tex_w) / tex_w;
                     let src_y = (world_y % tex_h) / tex_h;
                     let src_w = (width.min(tex_w)) / tex_w;
                     let src_h = (height.min(tex_h)) / tex_h;
-                    
+
                     draw_texture_ex(
                         base_tex,
                         x,
@@ -368,42 +371,47 @@ impl TileShaderRenderer {
                     );
                 }
             }
-            
+
             for stage in &shader.stages {
                 if stage.texture_path.is_empty() {
                     continue;
                 }
-                
+
                 if let Some(tex) = self.loaded_textures.get(&stage.texture_path) {
                     let u_offset = stage.scroll_x * time;
                     let v_offset = stage.scroll_y * time;
-                    
+
                     let use_wave_shader = stage.glow && stage.wave_func.is_some();
-                    
+
                     let tex_w = tex.width() * stage.scale_x;
                     let tex_h = tex.height() * stage.scale_y;
-                    
+
                     let src_x = ((world_x + u_offset) % tex_w) / tex_w;
                     let src_y = ((world_y + v_offset) % tex_h) / tex_h;
-                    
+
                     if use_wave_shader {
                         let material = tile_shader_materials::get_glow_wave_material();
                         gl_use_material(material);
-                        
+
                         static mut LAST_PRINT: f32 = 0.0;
                         unsafe {
                             if time - LAST_PRINT > 1.0 {
-                                println!("[Wave Shader] time={:.2} base={} amp={} freq={}", 
-                                    time, stage.wave_base, stage.wave_amplitude, stage.wave_frequency);
+                                println!(
+                                    "[Wave Shader] time={:.2} base={} amp={} freq={}",
+                                    time,
+                                    stage.wave_base,
+                                    stage.wave_amplitude,
+                                    stage.wave_frequency
+                                );
                                 LAST_PRINT = time;
                             }
                         }
-                        
+
                         material.set_uniform("time", time);
                         material.set_uniform("waveBase", stage.wave_base);
                         material.set_uniform("waveAmplitude", stage.wave_amplitude);
                         material.set_uniform("waveFrequency", stage.wave_frequency);
-                        
+
                         let wave_func_int = match stage.wave_func.as_ref().unwrap() {
                             WaveFunc::Sin => 0,
                             WaveFunc::Triangle => 1,
@@ -411,7 +419,7 @@ impl TileShaderRenderer {
                             WaveFunc::Sawtooth => 3,
                         };
                         material.set_uniform("waveFunc", wave_func_int);
-                        
+
                         draw_texture_ex(
                             tex,
                             x,
@@ -428,7 +436,7 @@ impl TileShaderRenderer {
                                 ..Default::default()
                             },
                         );
-                        
+
                         gl_use_default_material();
                     } else {
                         match stage.blend_mode {
@@ -440,7 +448,7 @@ impl TileShaderRenderer {
                             }
                             _ => {}
                         }
-                        
+
                         draw_texture_ex(
                             tex,
                             x,
@@ -457,7 +465,7 @@ impl TileShaderRenderer {
                                 ..Default::default()
                             },
                         );
-                        
+
                         gl_use_default_material();
                     }
                 }
@@ -465,4 +473,3 @@ impl TileShaderRenderer {
         }
     }
 }
-

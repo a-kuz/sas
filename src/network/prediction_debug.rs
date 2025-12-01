@@ -72,24 +72,14 @@ impl PredictionDebugRenderer {
             let screen_x = x - camera_x;
             let screen_y = y - camera_y;
             let alpha = (i as f32 / self.client_trail.len() as f32 * 255.0) as u8;
-            draw_circle(
-                screen_x,
-                screen_y,
-                2.0,
-                Color::from_rgba(0, 255, 0, alpha),
-            );
+            draw_circle(screen_x, screen_y, 2.0, Color::from_rgba(0, 255, 0, alpha));
         }
 
         for (i, (x, y)) in self.server_trail.iter().enumerate() {
             let screen_x = x - camera_x;
             let screen_y = y - camera_y;
             let alpha = (i as f32 / self.server_trail.len() as f32 * 255.0) as u8;
-            draw_circle(
-                screen_x,
-                screen_y,
-                3.0,
-                Color::from_rgba(255, 0, 0, alpha),
-            );
+            draw_circle(screen_x, screen_y, 3.0, Color::from_rgba(255, 0, 0, alpha));
         }
 
         if let (Some(client), Some(server)) = (self.client_trail.back(), self.server_trail.back()) {
@@ -117,10 +107,10 @@ impl PredictionDebugRenderer {
             if age < 2.0 {
                 let screen_x = error.position.0 - camera_x;
                 let screen_y = error.position.1 - camera_y;
-                
+
                 let alpha = ((1.0 - age / 2.0) * 255.0) as u8;
                 let radius = error.error_magnitude.min(20.0);
-                
+
                 draw_circle_lines(
                     screen_x,
                     screen_y,
@@ -153,13 +143,7 @@ impl Default for PredictionDebugRenderer {
     }
 }
 
-pub fn render_collision_debug(
-    x: f32,
-    y: f32,
-    collision_type: &str,
-    camera_x: f32,
-    camera_y: f32,
-) {
+pub fn render_collision_debug(x: f32, y: f32, collision_type: &str, camera_x: f32, camera_y: f32) {
     let show_collision = crate::cvar::get_cvar_bool("net_showCollision");
     if !show_collision {
         return;
@@ -250,14 +234,3 @@ pub fn render_physics_state_hud(
         Color::from_rgba(200, 200, 200, 255),
     );
 }
-
-
-
-
-
-
-
-
-
-
-

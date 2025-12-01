@@ -38,19 +38,19 @@ impl Smoke {
 
     pub fn update(&mut self) -> bool {
         self.life += 1;
-        
+
         self.x += self.vel_x;
         self.y += self.vel_y;
-        
+
         self.vel_x *= 0.98;
         self.vel_y *= 0.98;
-        
+
         self.radius += 0.1;
         self.rotation += 0.02;
-        
+
         let t = self.life as f32 / self.max_life as f32;
         self.alpha = 0.9 * (1.0 - t * t);
-        
+
         self.life < self.max_life
     }
 
@@ -59,10 +59,10 @@ impl Smoke {
         let screen_y = self.y - camera_y;
 
         let material = get_volumetric_smoke_material();
-        
+
         let t = self.life as f32 / self.max_life as f32;
         let time = get_time() as f32;
-        
+
         material.set_uniform("iTime", time + self.turbulence_offset);
         material.set_uniform("iResolution", (self.radius * 2.0, self.radius * 2.0));
         material.set_uniform("smokeAge", t);
@@ -70,9 +70,9 @@ impl Smoke {
         material.set_uniform("rotation", self.rotation);
         material.set_uniform("turbulenceOffset", self.turbulence_offset);
         material.set_uniform("densityMultiplier", self.density_multiplier);
-        
+
         gl_use_material(material);
-        
+
         let size = self.radius * 2.0;
         draw_rectangle(
             screen_x - self.radius,
@@ -81,7 +81,7 @@ impl Smoke {
             size,
             WHITE,
         );
-        
+
         gl_use_default_material();
     }
 }
@@ -250,4 +250,3 @@ fn get_volumetric_smoke_material() -> &'static Material {
         ).unwrap()
     })
 }
-

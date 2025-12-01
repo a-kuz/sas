@@ -83,11 +83,10 @@ impl Weapon {
             Weapon::Shotgun => Some(super::map::ItemType::Shotgun),
             Weapon::GrenadeLauncher => Some(super::map::ItemType::GrenadeLauncher),
             Weapon::RocketLauncher => Some(super::map::ItemType::RocketLauncher),
-            Weapon::Lightning => None,
+            Weapon::Lightning => Some(super::map::ItemType::LightningGun),
             Weapon::Railgun => Some(super::map::ItemType::Railgun),
             Weapon::Plasmagun => Some(super::map::ItemType::Plasmagun),
             Weapon::BFG => Some(super::map::ItemType::BFG),
         }
     }
 }
-

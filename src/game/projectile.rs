@@ -1,8 +1,8 @@
-use macroquad::prelude::*;
 use super::map::Map;
-use super::weapon::Weapon;
 use super::particle::Particle;
 use super::projectile_model_cache::ProjectileModelCache;
+use super::weapon::Weapon;
+use macroquad::prelude::*;
 
 #[derive(Clone, Debug)]
 pub struct Projectile {
@@ -27,31 +27,39 @@ pub struct Projectile {
 }
 
 impl Projectile {
-    pub fn new(x: f32, y: f32, angle: f32, owner_id: u16, weapon: Weapon, player_vel_x: f32, player_vel_y: f32) -> Self {
+    pub fn new(
+        x: f32,
+        y: f32,
+        angle: f32,
+        owner_id: u16,
+        weapon: Weapon,
+        player_vel_x: f32,
+        player_vel_y: f32,
+    ) -> Self {
         let (vel_x, vel_y) = match weapon {
             Weapon::RocketLauncher => {
                 let speed = 15.0;
                 (angle.cos() * speed, angle.sin() * speed)
-            },
+            }
             Weapon::GrenadeLauncher => {
                 let base_speed = 16.0;
                 let vx = angle.cos() * base_speed + player_vel_x * 0.5;
                 let mut vy = angle.sin() * base_speed + player_vel_y * 0.5;
                 vy -= 1.5;
                 (vx, vy)
-            },
+            }
             Weapon::Plasmagun => {
                 let speed = 33.0;
                 (angle.cos() * speed, angle.sin() * speed)
-            },
+            }
             Weapon::BFG => {
                 let speed = 33.0;
                 (angle.cos() * speed, angle.sin() * speed)
-            },
+            }
             Weapon::Railgun => {
                 let speed = 200.0;
                 (angle.cos() * speed, angle.sin() * speed)
-            },
+            }
             _ => (0.0, 0.0),
         };
 
@@ -79,7 +87,7 @@ impl Projectile {
 
     pub fn update(&mut self, dt: f32, map: &Map) -> bool {
         use super::constants::*;
-        
+
         if !self.active {
             return false;
         }
@@ -90,12 +98,13 @@ impl Projectile {
 
         if matches!(self.weapon_type, Weapon::GrenadeLauncher) {
             self.vel_y += 0.25 * dt_60fps;
-            
+
             let check_ground = ((self.y + 5.0) / 16.0) as i32;
-            let is_on_ground = map.is_solid((self.x / 32.0) as i32, check_ground) && self.vel_y.abs() < 0.5;
-            
+            let is_on_ground =
+                map.is_solid((self.x / 32.0) as i32, check_ground) && self.vel_y.abs() < 0.5;
+
             self.is_rolling = is_on_ground && self.vel_x.abs() > 0.1;
-            
+
             if is_on_ground {
                 self.vel_y = 0.0;
                 self.vel_x *= 0.98_f32.powf(dt_60fps);
@@ -103,25 +112,26 @@ impl Projectile {
                 self.vel_y *= 0.998_f32.powf(dt_60fps);
                 self.vel_x *= 0.998_f32.powf(dt_60fps);
             }
-            
+
             if self.vel_y.abs() < 0.1 && self.vel_x.abs() < 0.1 {
                 self.vel_x = 0.0;
                 self.vel_y = 0.0;
             }
-            
+
             let old_x = self.x;
             let old_y = self.y;
-            
+
             self.x += self.vel_x * dt_60fps;
-            
+
             let check_left = ((self.x - 4.0) / 32.0) as i32;
             let check_right = ((self.x + 4.0) / 32.0) as i32;
             let center_y = (self.y / 16.0) as i32;
-            
-            if (map.is_solid(check_left, center_y) && self.vel_x < 0.0) || 
-               (map.is_solid(check_right, center_y) && self.vel_x > 0.0) {
+
+            if (map.is_solid(check_left, center_y) && self.vel_x < 0.0)
+                || (map.is_solid(check_right, center_y) && self.vel_x > 0.0)
+            {
                 self.x = old_x;
-                
+
                 if self.vel_x.abs() < 1.0 {
                     self.vel_x = 0.0;
                 } else {
@@ -131,17 +141,18 @@ impl Projectile {
                     self.just_bounced = true;
                 }
             }
-            
+
             self.y += self.vel_y * dt_60fps;
-            
+
             let check_top = ((self.y - 4.0) / 16.0) as i32;
             let check_bottom = ((self.y + 4.0) / 16.0) as i32;
             let center_x = (self.x / 32.0) as i32;
-            
-            if (map.is_solid(center_x, check_top) && self.vel_y < 0.0) || 
-               (map.is_solid(center_x, check_bottom) && self.vel_y > 0.0) {
+
+            if (map.is_solid(center_x, check_top) && self.vel_y < 0.0)
+                || (map.is_solid(center_x, check_bottom) && self.vel_y > 0.0)
+            {
                 self.y = old_y;
-                
+
                 if self.vel_y.abs() < 1.5 {
                     self.vel_y = 0.0;
                     self.is_rolling = true;
@@ -152,16 +163,23 @@ impl Projectile {
                     self.just_bounced = true;
                 }
             }
-            
+
             if self.vel_x != 0.0 {
-                self.angle += if self.vel_x > 0.0 { -2.0 * dt_60fps } else { 2.0 * dt_60fps };
+                self.angle += if self.vel_x > 0.0 {
+                    -2.0 * dt_60fps
+                } else {
+                    2.0 * dt_60fps
+                };
             }
         } else {
             self.x += self.vel_x * dt_60fps;
             self.y += self.vel_y * dt_60fps;
         }
-        
-        if matches!(self.weapon_type, Weapon::RocketLauncher | Weapon::Plasmagun | Weapon::BFG) {
+
+        if matches!(
+            self.weapon_type,
+            Weapon::RocketLauncher | Weapon::Plasmagun | Weapon::BFG
+        ) {
             self.vel_x *= 0.999_f32.powf(dt_60fps);
         }
 
@@ -195,8 +213,9 @@ impl Projectile {
             self.active = false;
             return false;
         }
-        
-        if matches!(self.weapon_type, Weapon::GrenadeLauncher) && self.life_secs > GRENADE_FUSE_SECS {
+
+        if matches!(self.weapon_type, Weapon::GrenadeLauncher) && self.life_secs > GRENADE_FUSE_SECS
+        {
             self.active = false;
             return false;
         }
@@ -214,22 +233,30 @@ impl Projectile {
 
         match self.weapon_type {
             Weapon::RocketLauncher => {
-                let has_model = cache.get_model(super::projectile_model_cache::ProjectileModelType::Rocket).is_some();
+                let has_model = cache
+                    .get_model(super::projectile_model_cache::ProjectileModelType::Rocket)
+                    .is_some();
                 if !has_model {
-                    cache.get_or_load_model(super::projectile_model_cache::ProjectileModelType::Rocket);
+                    cache.get_or_load_model(
+                        super::projectile_model_cache::ProjectileModelType::Rocket,
+                    );
                 }
-                
-                let has_texture = cache.get_texture("q3-resources/models/ammo/rocket/rocket.png").is_some();
+
+                let has_texture = cache
+                    .get_texture("q3-resources/models/ammo/rocket/rocket.png")
+                    .is_some();
                 if !has_texture {
                     cache.get_or_load_texture("q3-resources/models/ammo/rocket/rocket.png");
                 }
-                
-                if let Some(model) = cache.get_model(super::projectile_model_cache::ProjectileModelType::Rocket) {
+
+                if let Some(model) =
+                    cache.get_model(super::projectile_model_cache::ProjectileModelType::Rocket)
+                {
                     let texture = cache.get_texture("q3-resources/models/ammo/rocket/rocket.png");
                     let angle = self.vel_y.atan2(self.vel_x);
                     let offset_x = angle.cos() * 8.0;
                     let offset_y = angle.sin() * 8.0;
-                    
+
                     for mesh in &model.meshes {
                         super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex(
                             mesh,
@@ -252,39 +279,71 @@ impl Projectile {
                     let angle = self.vel_y.atan2(self.vel_x);
                     let rocket_length = 12.0;
                     let rocket_width = 3.0;
-                    
+
                     let cos_a = angle.cos();
                     let sin_a = angle.sin();
-                    
+
                     let front_x = screen_x + cos_a * rocket_length * 0.5;
                     let front_y = screen_y + sin_a * rocket_length * 0.5;
                     let back_x = screen_x - cos_a * rocket_length * 0.5;
                     let back_y = screen_y - sin_a * rocket_length * 0.5;
-                    
-                    draw_line(back_x, back_y, front_x, front_y, rocket_width, Color::from_rgba(80, 80, 80, 255));
-                    draw_line(back_x, back_y, front_x, front_y, rocket_width - 1.0, Color::from_rgba(120, 120, 120, 255));
-                    
-                    draw_circle(front_x, front_y, rocket_width * 0.7, Color::from_rgba(200, 100, 50, 255));
-                    draw_circle(back_x, back_y, rocket_width * 0.5, Color::from_rgba(255, 150, 0, 255));
+
+                    draw_line(
+                        back_x,
+                        back_y,
+                        front_x,
+                        front_y,
+                        rocket_width,
+                        Color::from_rgba(80, 80, 80, 255),
+                    );
+                    draw_line(
+                        back_x,
+                        back_y,
+                        front_x,
+                        front_y,
+                        rocket_width - 1.0,
+                        Color::from_rgba(120, 120, 120, 255),
+                    );
+
+                    draw_circle(
+                        front_x,
+                        front_y,
+                        rocket_width * 0.7,
+                        Color::from_rgba(200, 100, 50, 255),
+                    );
+                    draw_circle(
+                        back_x,
+                        back_y,
+                        rocket_width * 0.5,
+                        Color::from_rgba(255, 150, 0, 255),
+                    );
                 }
             }
             Weapon::GrenadeLauncher => {
                 use super::constants::GRENADE_FUSE_SECS;
-                
-                let has_model = cache.get_model(super::projectile_model_cache::ProjectileModelType::Grenade).is_some();
+
+                let has_model = cache
+                    .get_model(super::projectile_model_cache::ProjectileModelType::Grenade)
+                    .is_some();
                 if !has_model {
-                    cache.get_or_load_model(super::projectile_model_cache::ProjectileModelType::Grenade);
+                    cache.get_or_load_model(
+                        super::projectile_model_cache::ProjectileModelType::Grenade,
+                    );
                 }
-                
-                let has_texture = cache.get_texture("q3-resources/models/ammo/grenade.png").is_some();
+
+                let has_texture = cache
+                    .get_texture("q3-resources/models/ammo/grenade.png")
+                    .is_some();
                 if !has_texture {
                     cache.get_or_load_texture("q3-resources/models/ammo/grenade.png");
                 }
-                
-                if let Some(model) = cache.get_model(super::projectile_model_cache::ProjectileModelType::Grenade) {
+
+                if let Some(model) =
+                    cache.get_model(super::projectile_model_cache::ProjectileModelType::Grenade)
+                {
                     let texture = cache.get_texture("q3-resources/models/ammo/grenade.png");
                     let angle = self.vel_y.atan2(self.vel_x);
-                    
+
                     for mesh in &model.meshes {
                         super::md3_render::render_md3_mesh_with_pivot_and_yaw_ex(
                             mesh,
@@ -303,9 +362,9 @@ impl Projectile {
                             0.0,
                         );
                     }
-                    
+
                     draw_circle(screen_x, screen_y, 8.0, Color::from_rgba(150, 255, 120, 60));
-                    
+
                     if self.life_secs > GRENADE_FUSE_SECS - 0.5 {
                         let blink = ((self.life / 5) % 2) == 0;
                         if blink {
@@ -314,14 +373,34 @@ impl Projectile {
                     }
                 } else {
                     let rotation = self.angle;
-                    draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(120, 200, 100, 180));
-                    draw_circle(screen_x, screen_y, 4.5, Color::from_rgba(170, 255, 130, 220));
-                    draw_circle(screen_x, screen_y, 3.0, Color::from_rgba(210, 255, 170, 255));
-                    
+                    draw_circle(
+                        screen_x,
+                        screen_y,
+                        6.0,
+                        Color::from_rgba(120, 200, 100, 180),
+                    );
+                    draw_circle(
+                        screen_x,
+                        screen_y,
+                        4.5,
+                        Color::from_rgba(170, 255, 130, 220),
+                    );
+                    draw_circle(
+                        screen_x,
+                        screen_y,
+                        3.0,
+                        Color::from_rgba(210, 255, 170, 255),
+                    );
+
                     let marker_x = screen_x + rotation.to_radians().cos() * 3.0;
                     let marker_y = screen_y + rotation.to_radians().sin() * 3.0;
-                    draw_circle(marker_x, marker_y, 1.8, Color::from_rgba(255, 255, 200, 255));
-                    
+                    draw_circle(
+                        marker_x,
+                        marker_y,
+                        1.8,
+                        Color::from_rgba(255, 255, 200, 255),
+                    );
+
                     if self.life_secs > GRENADE_FUSE_SECS - 0.5 {
                         let blink = ((self.life / 5) % 2) == 0;
                         if blink {
@@ -333,13 +412,28 @@ impl Projectile {
             Weapon::Plasmagun => {
                 draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(50, 150, 255, 120));
                 draw_circle(screen_x, screen_y, 5.0, Color::from_rgba(80, 180, 255, 200));
-                draw_circle(screen_x, screen_y, 3.5, Color::from_rgba(150, 220, 255, 255));
+                draw_circle(
+                    screen_x,
+                    screen_y,
+                    3.5,
+                    Color::from_rgba(150, 220, 255, 255),
+                );
             }
             Weapon::BFG => {
                 draw_circle(screen_x, screen_y, 10.0, Color::from_rgba(50, 255, 50, 100));
                 draw_circle(screen_x, screen_y, 8.0, Color::from_rgba(80, 255, 80, 180));
-                draw_circle(screen_x, screen_y, 6.0, Color::from_rgba(120, 255, 120, 255));
-                draw_circle(screen_x, screen_y, 4.0, Color::from_rgba(200, 255, 200, 255));
+                draw_circle(
+                    screen_x,
+                    screen_y,
+                    6.0,
+                    Color::from_rgba(120, 255, 120, 255),
+                );
+                draw_circle(
+                    screen_x,
+                    screen_y,
+                    4.0,
+                    Color::from_rgba(200, 255, 200, 255),
+                );
             }
             Weapon::Railgun => {
                 draw_line(
@@ -350,18 +444,28 @@ impl Projectile {
                     3.0,
                     Color::from_rgba(255, 255, 255, 200),
                 );
-                draw_circle(screen_x, screen_y, 3.0, Color::from_rgba(200, 255, 255, 255));
+                draw_circle(
+                    screen_x,
+                    screen_y,
+                    3.0,
+                    Color::from_rgba(200, 255, 255, 255),
+                );
             }
-            Weapon::Gauntlet | Weapon::MachineGun | Weapon::Shotgun | Weapon::Lightning => {
-            }
+            Weapon::Gauntlet | Weapon::MachineGun | Weapon::Shotgun | Weapon::Lightning => {}
         }
     }
 
-    pub fn check_collision(&self, target_x: f32, target_y: f32, target_w: f32, target_h: f32) -> bool {
+    pub fn check_collision(
+        &self,
+        target_x: f32,
+        target_y: f32,
+        target_w: f32,
+        target_h: f32,
+    ) -> bool {
         if !self.active {
             return false;
         }
-        
+
         let projectile_size = match self.weapon_type {
             Weapon::RocketLauncher => 8.0,
             Weapon::GrenadeLauncher => 10.0,
@@ -370,7 +474,7 @@ impl Projectile {
             Weapon::Railgun => 6.0,
             _ => 8.0,
         };
-        
+
         let rect1_x = self.x - projectile_size / 2.0;
         let rect1_y = self.y - projectile_size / 2.0;
         let rect1_w = projectile_size;
@@ -381,17 +485,17 @@ impl Projectile {
         let rect2_w = target_w;
         let rect2_h = target_h;
 
-        rect1_x < rect2_x + rect2_w &&
-        rect1_x + rect1_w > rect2_x &&
-        rect1_y < rect2_y + rect2_h &&
-        rect1_y + rect1_h > rect2_y
+        rect1_x < rect2_x + rect2_w
+            && rect1_x + rect1_w > rect2_x
+            && rect1_y < rect2_y + rect2_h
+            && rect1_y + rect1_h > rect2_y
     }
 
     pub fn create_explosion_particles(&self) -> Vec<Particle> {
         let mut particles = Vec::new();
-        
+
         use crate::compat_rand::*;
-        
+
         match self.weapon_type {
             Weapon::RocketLauncher => {
                 for _ in 0..8 {
@@ -406,7 +510,7 @@ impl Projectile {
                     );
                     particles.push(explosion_particle);
                 }
-                
+
                 for _ in 0..8 {
                     let angle = gen_range_f32(0.0, std::f32::consts::PI * 2.0);
                     let speed = gen_range_f32(2.0, 6.0);
@@ -420,7 +524,7 @@ impl Projectile {
                     );
                     particles.push(smoke_particle);
                 }
-                
+
                 for _ in 0..15 {
                     let angle = gen_range_f32(0.0, std::f32::consts::PI * 2.0);
                     let speed = gen_range_f32(4.0, 12.0);
@@ -447,7 +551,7 @@ impl Projectile {
                     );
                     particles.push(explosion_particle);
                 }
-                
+
                 for _ in 0..30 {
                     let angle = gen_range_f32(0.0, std::f32::consts::PI * 2.0);
                     let speed = gen_range_f32(2.0, 8.0);
@@ -507,17 +611,16 @@ impl Projectile {
 
     pub fn create_trail_particles(&mut self) -> Vec<Particle> {
         let mut particles = Vec::new();
-        
+
         if !self.should_create_trail() || !self.active {
             return particles;
         }
 
         const TRAIL_STEP: u32 = 3;
-        
+
         if self.trail_time % TRAIL_STEP == 0 {
-            
             use crate::compat_rand::*;
-            
+
             let smoke_particle = Particle::new_smoke(
                 self.x + gen_range_f32(-2.0, 2.0),
                 self.y + gen_range_f32(-2.0, 2.0),
@@ -527,24 +630,23 @@ impl Projectile {
                 2.0,
             );
             particles.push(smoke_particle);
-            
+
             self.last_trail_x = self.x;
             self.last_trail_y = self.y;
         }
 
         particles
     }
-    
+
     pub fn check_hit(&self, player_x: f32, player_y: f32) -> bool {
         if !self.active {
             return false;
         }
-        
+
         let dx = player_x - self.x;
         let dy = player_y - self.y;
         let dist = (dx * dx + dy * dy).sqrt();
-        
+
         dist < 20.0
     }
 }
-

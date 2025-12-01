@@ -19,17 +19,21 @@ impl UserCmd {
             server_time: 0,
         }
     }
-    
-    pub fn from_input(input: &crate::input::Input, _screen_width: f32, _screen_height: f32) -> Self {
+
+    pub fn from_input(
+        input: &crate::input::Input,
+        _screen_width: f32,
+        _screen_height: f32,
+    ) -> Self {
         let mut cmd = Self::new();
-        
+
         if input.move_left {
             cmd.right -= 1.0;
         }
         if input.move_right {
             cmd.right += 1.0;
         }
-        
+
         if input.jump {
             cmd.buttons |= BUTTON_JUMP;
         }
@@ -39,23 +43,27 @@ impl UserCmd {
         if input.shoot {
             cmd.buttons |= BUTTON_ATTACK;
         }
-        
+
         let angle = input.aim_angle;
         cmd.angles = (angle, 0.0);
-        
+
         cmd
     }
-    
-    pub fn from_player_input(input: &crate::input::PlayerInput, _player_x: f32, _player_y: f32) -> Self {
+
+    pub fn from_player_input(
+        input: &crate::input::PlayerInput,
+        _player_x: f32,
+        _player_y: f32,
+    ) -> Self {
         let mut cmd = Self::new();
-        
+
         if input.move_left {
             cmd.right -= 1.0;
         }
         if input.move_right {
             cmd.right += 1.0;
         }
-        
+
         if input.jump {
             cmd.buttons |= BUTTON_JUMP;
         }
@@ -65,11 +73,10 @@ impl UserCmd {
         if input.shoot {
             cmd.buttons |= BUTTON_ATTACK;
         }
-        
+
         let angle = input.aim_angle;
         cmd.angles = (angle, 0.0);
-        
+
         cmd
     }
 }
-
