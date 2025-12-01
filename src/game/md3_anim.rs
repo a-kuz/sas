@@ -88,7 +88,10 @@ impl AnimConfig {
         }
 
         if anims.len() < 13 {
-            return Err(format!("Not enough animation ranges in config: got {}, need at least 13", anims.len()));
+            return Err(format!(
+                "Not enough animation ranges in config: got {}, need at least 13",
+                anims.len()
+            ));
         }
 
         let skip = if anims.len() > 13 {
@@ -101,7 +104,11 @@ impl AnimConfig {
             anims[i].first_frame = anims[i].first_frame.saturating_sub(skip);
         }
 
-        println!("[MD3_ANIM] Loaded {} animations, skip={}", anims.len(), skip);
+        println!(
+            "[MD3_ANIM] Loaded {} animations, skip={}",
+            anims.len(),
+            skip
+        );
 
         Ok(AnimConfig {
             both_death1: anims[0].clone(),
@@ -128,7 +135,11 @@ impl AnimConfig {
             legs_landb: anims[21].clone(),
             legs_idle: anims[22].clone(),
             legs_idlecr: anims[23].clone(),
-            legs_turn: if anims.len() > 24 { anims[24].clone() } else { anims[22].clone() },
+            legs_turn: if anims.len() > 24 {
+                anims[24].clone()
+            } else {
+                anims[22].clone()
+            },
         })
     }
 }

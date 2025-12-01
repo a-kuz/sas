@@ -1,6 +1,6 @@
 [package]
 name = "sas3"
-version = "0.0.8"
+version = "0.1.1"
 edition = "2021"
 authors = ["Aleksandr Kuznetsov", "3d[Power]"]
 

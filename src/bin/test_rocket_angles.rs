@@ -185,5 +185,3 @@ async fn main() {
 
     println!("\nAll test images saved! Check the project directory.");
 }
-
-

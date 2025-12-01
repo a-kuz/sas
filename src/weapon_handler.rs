@@ -547,10 +547,7 @@ impl WeaponHandler {
         for (idx, corpse) in game_state.corpses.iter().enumerate() {
             let hitbox_height = PLAYER_HITBOX_HEIGHT_CROUCH;
             let hitbox_width = PLAYER_HITBOX_WIDTH;
-            let target_pos = Vec2::new(
-                corpse.player.x - hitbox_width / 2.0,
-                corpse.player.y,
-            );
+            let target_pos = Vec2::new(corpse.player.x - hitbox_width / 2.0, corpse.player.y);
             let target_size = Vec2::new(hitbox_width, hitbox_height);
 
             if crate::game::collision::line_rect_intersect(
@@ -662,8 +659,7 @@ impl WeaponHandler {
                             PLAYER_HITBOX_HEIGHT
                         };
                         let hitbox_width = PLAYER_HITBOX_WIDTH;
-                        let target_pos =
-                            Vec2::new(target.x - hitbox_width / 2.0, target.y);
+                        let target_pos = Vec2::new(target.x - hitbox_width / 2.0, target.y);
                         let target_size = Vec2::new(hitbox_width, hitbox_height);
 
                         if crate::game::collision::line_rect_intersect(
@@ -683,10 +679,8 @@ impl WeaponHandler {
                     for (idx, corpse) in game_state.corpses.iter().enumerate() {
                         let hitbox_height = PLAYER_HITBOX_HEIGHT_CROUCH;
                         let hitbox_width = PLAYER_HITBOX_WIDTH;
-                        let target_pos = Vec2::new(
-                            corpse.player.x - hitbox_width / 2.0,
-                            corpse.player.y,
-                        );
+                        let target_pos =
+                            Vec2::new(corpse.player.x - hitbox_width / 2.0, corpse.player.y);
                         let target_size = Vec2::new(hitbox_width, hitbox_height);
 
                         if crate::game::collision::line_rect_intersect(
@@ -824,8 +818,7 @@ impl WeaponHandler {
                             PLAYER_HITBOX_HEIGHT
                         };
                         let hitbox_width = PLAYER_HITBOX_WIDTH;
-                        let target_pos =
-                            Vec2::new(target.x - hitbox_width / 2.0, target.y);
+                        let target_pos = Vec2::new(target.x - hitbox_width / 2.0, target.y);
                         let target_size = Vec2::new(hitbox_width, hitbox_height);
 
                         if crate::game::collision::line_rect_intersect(
@@ -854,10 +847,8 @@ impl WeaponHandler {
                     for (idx, corpse) in game_state.corpses.iter().enumerate() {
                         let hitbox_height = PLAYER_HITBOX_HEIGHT_CROUCH;
                         let hitbox_width = PLAYER_HITBOX_WIDTH;
-                        let target_pos = Vec2::new(
-                            corpse.player.x - hitbox_width / 2.0,
-                            corpse.player.y,
-                        );
+                        let target_pos =
+                            Vec2::new(corpse.player.x - hitbox_width / 2.0, corpse.player.y);
                         let target_size = Vec2::new(hitbox_width, hitbox_height);
 
                         if crate::game::collision::line_rect_intersect(

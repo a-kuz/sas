@@ -1137,7 +1137,8 @@ impl GameState {
                             && macroquad::prelude::rand::gen_range(0, 10) == 0
                         {
                             player.somersault_time = 1.0;
-                            player.somersault_axis_y = macroquad::prelude::rand::gen_range(0, 2) == 0;
+                            player.somersault_axis_y =
+                                macroquad::prelude::rand::gen_range(0, 2) == 0;
                         }
                     }
                 }
@@ -1177,10 +1178,10 @@ impl GameState {
                     on_ground && player.vel_x.abs() > 0.5
                 };
                 let is_attacking = player.refire > 0.0;
-                
-                player.moving_backward = player.vel_x.abs() > 0.5 && 
-                    ((player.vel_x < 0.0 && player.direction == 0) || 
-                     (player.vel_x > 0.0 && player.direction == 1));
+
+                player.moving_backward = player.vel_x.abs() > 0.5
+                    && ((player.vel_x < 0.0 && player.direction == 0)
+                        || (player.vel_x > 0.0 && player.direction == 1));
 
                 if let Some(config) = &model.anim_config {
                     let (lf, uf, new_time) = player_model::PlayerModel::compute_frames(
@@ -2505,7 +2506,8 @@ impl GameState {
                         if player.vel_y < -4.0 && crate::compat_rand::gen_range_f32(0.0, 1.0) < 0.2
                         {
                             player.somersault_time = 1.0;
-                            player.somersault_axis_y = macroquad::prelude::rand::gen_range(0, 2) == 0;
+                            player.somersault_axis_y =
+                                macroquad::prelude::rand::gen_range(0, 2) == 0;
                         }
                     }
 
@@ -3083,28 +3085,28 @@ impl GameState {
                             player.shadow_lr =
                                 player.shadow_lr + (target_sr - player.shadow_lr) * lerp;
 
-                        model.render_shadow_with_light(
-                            screen_x,
-                            screen_y,
-                            player.shadow_lx,
-                            player.shadow_ly,
-                            player.shadow_lr.max(1.0),
-                            1.125,
-                            flip,
-                            pitch,
-                            aim_angle,
-                            player.lower_frame,
-                            player.upper_frame,
-                            weapon_model,
-                            model_yaw_offset,
-                            BLACK,
-                            if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun)
-                            {
-                                player.barrel_spin_angle
-                            } else {
-                                0.0
-                            },
-                        );
+                            model.render_shadow_with_light(
+                                screen_x,
+                                screen_y,
+                                player.shadow_lx,
+                                player.shadow_ly,
+                                player.shadow_lr.max(1.0),
+                                1.125,
+                                flip,
+                                pitch,
+                                aim_angle,
+                                player.lower_frame,
+                                player.upper_frame,
+                                weapon_model,
+                                model_yaw_offset,
+                                BLACK,
+                                if matches!(player.weapon, crate::game::weapon::Weapon::MachineGun)
+                                {
+                                    player.barrel_spin_angle
+                                } else {
+                                    0.0
+                                },
+                            );
                         }
                     }
                 }
@@ -3393,6 +3395,7 @@ impl GameState {
 
         {
             let _scope = crate::profiler::scope("render_players");
+            md3_render::enable_batching();
             let screen_w = screen_width();
             let screen_h = screen_height();
             let render_margin = 150.0;
@@ -3621,6 +3624,8 @@ impl GameState {
                     }
                 }
             }
+            md3_render::flush_orientation_batch(Some(&lighting_ctx));
+            md3_render::disable_batching();
         }
 
         {

@@ -12,6 +12,7 @@ use std::sync::OnceLock;
 thread_local! {
     static GLOBAL_BATCH: RefCell<MD3Batch> = RefCell::new(MD3Batch::new());
     static BATCH_ENABLED: RefCell<bool> = RefCell::new(false);
+    static GLOBAL_ORIENTATION_BATCH: RefCell<MD3OrientationBatch> = RefCell::new(MD3OrientationBatch::new());
 }
 
 pub fn enable_batching() {
@@ -28,6 +29,12 @@ pub fn flush_batch(lighting_context: Option<&LightingContext>) {
     });
 }
 
+pub fn flush_orientation_batch(lighting_context: Option<&LightingContext>) {
+    GLOBAL_ORIENTATION_BATCH.with(|batch| {
+        batch.borrow_mut().flush(lighting_context);
+    });
+}
+
 pub struct MD3BatchItem {
     pub mesh: *const Mesh,
     pub frame_idx: usize,
@@ -40,6 +47,38 @@ pub struct MD3BatchItem {
     pub pitch_angle: f32,
     pub yaw_angle: f32,
     pub roll_angle: f32,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+enum ShaderType {
+    Default,
+    Lit,
+    Additive,
+    Quad,
+    Fire,
+    Envmap,
+    AlphaTest,
+    DiffuseSpecular,
+}
+
+pub struct MD3OrientationBatchItem {
+    pub mesh: *const Mesh,
+    pub frame_idx: usize,
+    pub orientation: Orientation,
+    pub screen_x: f32,
+    pub screen_y: f32,
+    pub color: Color,
+    pub texture: Option<Texture2D>,
+    pub texture_path: Option<String>,
+    pub shader_textures: Option<Vec<Texture2D>>,
+    pub shader_type: ShaderType,
+    pub use_quad_shader: bool,
+}
+
+pub struct MD3OrientationBatch {
+    items: Vec<MD3OrientationBatchItem>,
+    vertices: Vec<Vertex>,
+    indices: Vec<u16>,
 }
 
 pub struct MD3Batch {
@@ -282,6 +321,377 @@ impl MD3Batch {
                 gl_use_material(material);
                 draw_mesh(&mesh_data);
                 count_shader!("md3_batched");
+                gl_use_default_material();
+            }
+        }
+    }
+}
+
+impl MD3OrientationBatch {
+    pub fn new() -> Self {
+        Self {
+            items: Vec::new(),
+            vertices: Vec::with_capacity(50000),
+            indices: Vec::with_capacity(25000),
+        }
+    }
+
+    fn determine_shader_type(
+        texture_path: Option<&str>,
+        shader_textures: Option<&[Texture2D]>,
+        use_quad_shader: bool,
+    ) -> ShaderType {
+        if use_quad_shader {
+            return ShaderType::Quad;
+        }
+        if let Some(path) = texture_path {
+            let path_lower = path.to_lowercase();
+            if path_lower.contains("_h.") || path_lower.contains("_h/") {
+                if shader_textures.is_some() {
+                    return ShaderType::Fire;
+                }
+            } else if path_lower.contains("_a.") || path_lower.contains("_a/") {
+                if shader_textures.is_some() {
+                    return ShaderType::Envmap;
+                }
+            } else if path_lower.contains("_q.") || path_lower.contains("_q/") {
+                return ShaderType::AlphaTest;
+            } else if (path_lower.contains("/xaero.")
+                || path_lower.contains("xaero.png")
+                || path_lower.contains("xaero.tga"))
+                && !path_lower.contains("_h")
+                && !path_lower.contains("_a")
+                && !path_lower.contains("_q")
+            {
+                return ShaderType::DiffuseSpecular;
+            } else if path_lower.contains("skate")
+                || path_lower.contains("null")
+                || path_lower.contains("_f.")
+                || path_lower.contains("/f_")
+            {
+                return ShaderType::Additive;
+            }
+        }
+        ShaderType::Lit
+    }
+
+    pub fn add_mesh_with_orientation(
+        &mut self,
+        mesh: &Mesh,
+        frame_idx: usize,
+        orientation: &Orientation,
+        screen_x: f32,
+        screen_y: f32,
+        color: Color,
+        texture: Option<&Texture2D>,
+        texture_path: Option<&str>,
+        shader_textures: Option<&[Texture2D]>,
+        use_quad_shader: bool,
+    ) {
+        let shader_type = Self::determine_shader_type(texture_path, shader_textures, use_quad_shader);
+        self.items.push(MD3OrientationBatchItem {
+            mesh: mesh as *const Mesh,
+            frame_idx,
+            orientation: *orientation,
+            screen_x,
+            screen_y,
+            color,
+            texture: texture.cloned(),
+            texture_path: texture_path.map(|s| s.to_string()),
+            shader_textures: shader_textures.map(|v| v.to_vec()),
+            shader_type,
+            use_quad_shader,
+        });
+    }
+
+    pub fn flush(&mut self, lighting_context: Option<&LightingContext>) {
+        if self.items.is_empty() {
+            return;
+        }
+
+        use std::collections::HashMap;
+        let mut groups: HashMap<(ShaderType, Option<usize>), Vec<&MD3OrientationBatchItem>> =
+            HashMap::new();
+
+        for item in &self.items {
+            let texture_ptr = item.texture.as_ref().map(|t| t as *const Texture2D as usize);
+            let key = (item.shader_type, texture_ptr);
+            groups.entry(key).or_insert_with(Vec::new).push(item);
+        }
+
+        for ((shader_type, _), items_vec) in groups {
+            self.vertices.clear();
+            self.indices.clear();
+
+            for item in &items_vec {
+                let mesh = unsafe { &*item.mesh };
+
+                if item.frame_idx >= mesh.vertices.len() {
+                    continue;
+                }
+
+                let frame_verts = &mesh.vertices[item.frame_idx];
+                if frame_verts.is_empty() || mesh.triangles.is_empty() {
+                    continue;
+                }
+
+                let axis = item.orientation.axis;
+                let origin = item.orientation.origin;
+                let scale = axis[0].length().max(1e-5);
+                let inv_scale = 1.0 / scale;
+                let normal_axis = [
+                    axis[0] * inv_scale,
+                    axis[1] * inv_scale,
+                    axis[2] * inv_scale,
+                ];
+
+                for triangle in &mesh.triangles {
+                    let v0_idx = triangle.vertex[0] as usize;
+                    let v1_idx = triangle.vertex[1] as usize;
+                    let v2_idx = triangle.vertex[2] as usize;
+
+                    if v0_idx >= frame_verts.len()
+                        || v1_idx >= frame_verts.len()
+                        || v2_idx >= frame_verts.len()
+                        || v0_idx >= mesh.tex_coords.len()
+                        || v1_idx >= mesh.tex_coords.len()
+                        || v2_idx >= mesh.tex_coords.len()
+                    {
+                        continue;
+                    }
+
+                    let v0 = &frame_verts[v0_idx];
+                    let v1 = &frame_verts[v1_idx];
+                    let v2 = &frame_verts[v2_idx];
+
+                    let transform_vertex = |vert: &super::md3::Vertex| -> (Vec3, Vec3) {
+                        let local = vec3(
+                            vert.vertex[0] as f32 / 64.0,
+                            vert.vertex[1] as f32 / 64.0,
+                            vert.vertex[2] as f32 / 64.0,
+                        );
+                        let mut world = origin;
+                        world += axis[0] * local.x;
+                        world += axis[1] * local.y;
+                        world += axis[2] * local.z;
+                        let pos = Vec3::new(
+                            item.screen_x + world.x,
+                            item.screen_y - world.z,
+                            -world.y / 1000.0,
+                        );
+                        let n = decode_md3_normal(vert.normal);
+                        let mut world_normal = Vec3::ZERO;
+                        world_normal.x =
+                            normal_axis[0].x * n.x + normal_axis[1].x * n.y + normal_axis[2].x * n.z;
+                        world_normal.y =
+                            normal_axis[0].y * n.x + normal_axis[1].y * n.y + normal_axis[2].y * n.z;
+                        world_normal.z =
+                            normal_axis[0].z * n.x + normal_axis[1].z * n.y + normal_axis[2].z * n.z;
+                        (pos, world_normal.normalize())
+                    };
+
+                    let (pos0, norm0) = transform_vertex(v0);
+                    let (pos1, norm1) = transform_vertex(v1);
+                    let (pos2, norm2) = transform_vertex(v2);
+
+                    let tc0 = &mesh.tex_coords[v0_idx];
+                    let tc1 = &mesh.tex_coords[v1_idx];
+                    let tc2 = &mesh.tex_coords[v2_idx];
+
+                    if self.vertices.len() + 3 > 30000 {
+                        let vertices = std::mem::take(&mut self.vertices);
+                        let indices = std::mem::take(&mut self.indices);
+                        self.draw_batch_group_internal(shader_type, &items_vec, vertices, indices, lighting_context);
+                        self.vertices.clear();
+                        self.indices.clear();
+                    }
+
+                    let base = self.vertices.len() as u16;
+
+                    self.vertices.push(Vertex {
+                        position: pos0,
+                        uv: Vec2::new(tc0.coord[0], tc0.coord[1]),
+                        color: [
+                            (item.color.r * 255.0) as u8,
+                            (item.color.g * 255.0) as u8,
+                            (item.color.b * 255.0) as u8,
+                            (item.color.a * 255.0) as u8,
+                        ],
+                        normal: Vec4::new(norm0.x, norm0.y, norm0.z, 0.0),
+                    });
+
+                    self.vertices.push(Vertex {
+                        position: pos1,
+                        uv: Vec2::new(tc1.coord[0], tc1.coord[1]),
+                        color: [
+                            (item.color.r * 255.0) as u8,
+                            (item.color.g * 255.0) as u8,
+                            (item.color.b * 255.0) as u8,
+                            (item.color.a * 255.0) as u8,
+                        ],
+                        normal: Vec4::new(norm1.x, norm1.y, norm1.z, 0.0),
+                    });
+
+                    self.vertices.push(Vertex {
+                        position: pos2,
+                        uv: Vec2::new(tc2.coord[0], tc2.coord[1]),
+                        color: [
+                            (item.color.r * 255.0) as u8,
+                            (item.color.g * 255.0) as u8,
+                            (item.color.b * 255.0) as u8,
+                            (item.color.a * 255.0) as u8,
+                        ],
+                        normal: Vec4::new(norm2.x, norm2.y, norm2.z, 0.0),
+                    });
+
+                    let area = (pos1.x - pos0.x) * (pos2.y - pos0.y)
+                        - (pos2.x - pos0.x) * (pos1.y - pos0.y);
+                    if area >= 0.0 {
+                        self.indices.push(base);
+                        self.indices.push(base + 1);
+                        self.indices.push(base + 2);
+                    } else {
+                        self.indices.push(base);
+                        self.indices.push(base + 2);
+                        self.indices.push(base + 1);
+                    }
+                }
+            }
+
+            let vertices = std::mem::take(&mut self.vertices);
+            let indices = std::mem::take(&mut self.indices);
+            self.draw_batch_group_internal(shader_type, &items_vec, vertices, indices, lighting_context);
+        }
+
+        self.items.clear();
+    }
+
+    fn draw_batch_group(
+        &mut self,
+        shader_type: ShaderType,
+        items: &[&MD3OrientationBatchItem],
+        lighting_context: Option<&LightingContext>,
+    ) {
+        if self.vertices.is_empty() {
+            return;
+        }
+
+        let vertices = std::mem::take(&mut self.vertices);
+        let indices = std::mem::take(&mut self.indices);
+        self.draw_batch_group_internal(shader_type, items, vertices, indices, lighting_context);
+    }
+
+    fn draw_batch_group_internal(
+        &self,
+        shader_type: ShaderType,
+        items: &[&MD3OrientationBatchItem],
+        vertices: Vec<Vertex>,
+        indices: Vec<u16>,
+        lighting_context: Option<&LightingContext>,
+    ) {
+        if vertices.is_empty() {
+            return;
+        }
+
+        let texture = items.first().and_then(|i| i.texture.as_ref()).cloned();
+        if texture.is_none() {
+            return;
+        }
+
+        let mesh_data = macroquad::models::Mesh {
+            vertices,
+            indices,
+            texture: texture.clone(),
+        };
+
+        let avg_x = items.iter().map(|i| i.screen_x).sum::<f32>() / items.len() as f32;
+        let avg_y = items.iter().map(|i| i.screen_y).sum::<f32>() / items.len() as f32;
+
+        match shader_type {
+            ShaderType::Quad => {
+                let material = shader::create_quad_damage_outline_material();
+                gl_use_material(material);
+                material.set_uniform("time", get_time() as f32);
+                material.set_uniform("outlineWidth", 2.5f32);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_quad_damage");
+                gl_use_default_material();
+            }
+            ShaderType::Fire => {
+                if let Some(shader_tex) = items
+                    .first()
+                    .and_then(|i| i.shader_textures.as_ref())
+                    .and_then(|v| v.first())
+                {
+                    let material = super::model_shader::get_fire_shader_material();
+                    gl_use_material(material);
+                    material.set_uniform("time", get_time() as f32);
+                    material.set_texture("_fire_tex", shader_tex.clone());
+                    draw_mesh(&mesh_data);
+                    count_shader!("md3_fire_shader");
+                    gl_use_default_material();
+                }
+            }
+            ShaderType::Envmap => {
+                if let Some(env_tex) = items
+                    .first()
+                    .and_then(|i| i.shader_textures.as_ref())
+                    .and_then(|v| v.first())
+                {
+                    let material = super::model_shader::get_envmap_shader_material();
+                    gl_use_material(material);
+                    material.set_uniform("time", get_time() as f32);
+                    material.set_texture("_env_map", env_tex.clone());
+                    draw_mesh(&mesh_data);
+                    count_shader!("md3_envmap_shader");
+                    gl_use_default_material();
+                }
+            }
+            ShaderType::AlphaTest => {
+                let material = super::model_shader::get_alpha_test_shader_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_alpha_test");
+                gl_use_default_material();
+            }
+            ShaderType::DiffuseSpecular => {
+                let material = super::model_shader::get_diffuse_specular_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_diffuse_specular");
+                gl_use_default_material();
+            }
+            ShaderType::Additive => {
+                let material = shader::create_model_additive_material();
+                gl_use_material(material);
+                if let Some(ctx) = lighting_context {
+                    apply_lighting_uniforms(material, ctx, avg_x + ctx.camera_x, avg_y + ctx.camera_y);
+                }
+                draw_mesh(&mesh_data);
+                count_shader!("md3_additive");
+                gl_use_default_material();
+            }
+            ShaderType::Lit => {
+                if let Some(ctx) = lighting_context {
+                    let material = get_model_lit_material();
+                    gl_use_material(material);
+                    apply_lighting_uniforms(material, ctx, avg_x + ctx.camera_x, avg_y + ctx.camera_y);
+                    draw_mesh(&mesh_data);
+                    count_shader!("md3_gpu_lit");
+                    gl_use_default_material();
+                } else {
+                    let material = get_model_default_material();
+                    gl_use_material(material);
+                    draw_mesh(&mesh_data);
+                    count_shader!("md3_gpu_default");
+                    gl_use_default_material();
+                }
+            }
+            ShaderType::Default => {
+                let material = get_model_default_material();
+                gl_use_material(material);
+                draw_mesh(&mesh_data);
+                count_shader!("md3_gpu_default");
                 gl_use_default_material();
             }
         }
@@ -1103,19 +1513,36 @@ pub fn render_md3_mesh_with_orientation(
     shader_textures: Option<&[Texture2D]>,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_with_orientation_internal(
-        mesh,
-        frame_idx,
-        orientation,
-        screen_x,
-        screen_y,
-        color,
-        texture,
-        texture_path,
-        shader_textures,
-        lighting_context,
-        false,
-    );
+    if BATCH_ENABLED.with(|enabled| *enabled.borrow()) {
+        GLOBAL_ORIENTATION_BATCH.with(|batch| {
+            batch.borrow_mut().add_mesh_with_orientation(
+                mesh,
+                frame_idx,
+                orientation,
+                screen_x,
+                screen_y,
+                color,
+                texture,
+                texture_path,
+                shader_textures,
+                false,
+            );
+        });
+    } else {
+        render_md3_mesh_with_orientation_internal(
+            mesh,
+            frame_idx,
+            orientation,
+            screen_x,
+            screen_y,
+            color,
+            texture,
+            texture_path,
+            shader_textures,
+            lighting_context,
+            false,
+        );
+    }
 }
 
 pub fn render_md3_mesh_with_orientation_quad(
@@ -1130,19 +1557,36 @@ pub fn render_md3_mesh_with_orientation_quad(
     shader_textures: Option<&[Texture2D]>,
     lighting_context: Option<&LightingContext>,
 ) {
-    render_md3_mesh_with_orientation_internal(
-        mesh,
-        frame_idx,
-        orientation,
-        screen_x,
-        screen_y,
-        color,
-        texture,
-        texture_path,
-        shader_textures,
-        lighting_context,
-        true,
-    );
+    if BATCH_ENABLED.with(|enabled| *enabled.borrow()) {
+        GLOBAL_ORIENTATION_BATCH.with(|batch| {
+            batch.borrow_mut().add_mesh_with_orientation(
+                mesh,
+                frame_idx,
+                orientation,
+                screen_x,
+                screen_y,
+                color,
+                texture,
+                texture_path,
+                shader_textures,
+                true,
+            );
+        });
+    } else {
+        render_md3_mesh_with_orientation_internal(
+            mesh,
+            frame_idx,
+            orientation,
+            screen_x,
+            screen_y,
+            color,
+            texture,
+            texture_path,
+            shader_textures,
+            lighting_context,
+            true,
+        );
+    }
 }
 
 fn render_md3_mesh_with_orientation_internal(

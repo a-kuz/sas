@@ -482,8 +482,7 @@ impl GameResults {
                                 legs_frame_in_anim
                                     .min(config.legs_idle.num_frames.saturating_sub(1))
                             };
-                            let lower =
-                                (config.legs_idle.first_frame + legs_frame_offset).min(190);
+                            let lower = (config.legs_idle.first_frame + legs_frame_offset).min(190);
 
                             let torso_fps = config.torso_stand.fps as f32;
                             let torso_frame_in_anim = (time_elapsed * torso_fps) as usize;
