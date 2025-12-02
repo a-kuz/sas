@@ -31,7 +31,7 @@ impl DefragCheckpoint {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
 
-        let time = get_time() as f32;
+        let time = crate::time::get_time() as f32;
         let pulse = (time * 2.0 + self.index as f32).sin() * 0.3 + 0.7;
 
         if self.triggered {
@@ -104,7 +104,7 @@ impl DefragFinish {
         let screen_x = self.x - camera_x;
         let screen_y = self.y - camera_y;
 
-        let time = get_time() as f32;
+        let time = crate::time::get_time() as f32;
         let pulse = (time * 3.0).sin() * 0.5 + 0.5;
 
         for i in 0..3 {

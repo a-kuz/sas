@@ -53,8 +53,8 @@ impl DeferredRenderer {
     }
 
     pub fn new_with_scale(map: &Map, render_scale: f32) -> Self {
-        let screen_w = screen_width() as u32;
-        let screen_h = screen_height() as u32;
+        let screen_w = 1920u32;
+        let screen_h = 1080u32;
 
         let target_w = (screen_w as f32 * render_scale) as u32;
         let target_h = (screen_h as f32 * render_scale) as u32;
@@ -187,8 +187,8 @@ impl DeferredRenderer {
     }
 
     pub fn begin_scene_with_scale(&mut self, render_scale: f32, zoom: f32) {
-        let current_w = screen_width() as u32;
-        let current_h = screen_height() as u32;
+        let current_w = 1920u32;
+        let current_h = 1080u32;
 
         if current_w != self.last_screen_w
             || current_h != self.last_screen_h
@@ -227,10 +227,10 @@ impl DeferredRenderer {
             set_camera(&Camera2D {
                 render_target: Some(target.clone()),
                 zoom: vec2(
-                    (2.0 * zoom) / screen_width(),
-                    (2.0 * zoom) / screen_height(),
+                    (2.0 * zoom) / 1920.0,
+                    (2.0 * zoom) / 1080.0,
                 ),
-                target: vec2(screen_width() / 2.0, screen_height() / 2.0),
+                target: vec2(1920.0 / 2.0, 1080.0 / 2.0),
                 offset: vec2(0.0, 0.0),
                 ..Default::default()
             });
@@ -272,7 +272,9 @@ impl DeferredRenderer {
                     "[Lightmap] Building lightmap for {} static lights...",
                     static_lights.len()
                 );
-                self.lightmap = Some(Lightmap::new(map, static_lights, ambient));
+                let mut lightmap = Lightmap::new(map, static_lights, ambient);
+                lightmap.create_macroquad_texture();
+                self.lightmap = Some(lightmap);
                 self.light_grid.rebuild(static_lights, map);
                 self.static_lights_dirty = false;
                 println!("[Lightmap] Done!");
@@ -293,8 +295,8 @@ impl DeferredRenderer {
         };
 
         let material = get_hybrid_lighting_material();
-        let screen_w = screen_width();
-        let screen_h = screen_height();
+        let screen_w = 1920.0;
+        let screen_h = 1080.0;
 
         let map_w = self.map_width as f32 * 32.0;
         let map_h = self.map_height as f32 * 16.0;
@@ -341,7 +343,7 @@ impl DeferredRenderer {
             material.set_texture("sceneTexture", scene_texture);
             material.set_texture(
                 "lightmapTexture",
-                self.lightmap.as_ref().unwrap().texture.clone(),
+                self.lightmap.as_ref().unwrap().texture.as_ref().unwrap().clone(),
             );
             material.set_texture(
                 "dynamicLightData",
@@ -370,7 +372,7 @@ impl DeferredRenderer {
 
             material.set_uniform("screenToWorld", [screen_w / zoom, screen_h / zoom]);
             material.set_uniform("cameraPos", [adjusted_x, adjusted_y]);
-            material.set_uniform("time", get_time() as f32);
+            material.set_uniform("time", crate::time::get_time() as f32);
 
             if disable_dynamic_lights {
                 material.set_uniform("numDynamicLights", 0);
@@ -442,12 +444,12 @@ impl DeferredRenderer {
         zoom: f32,
         _ambient: f32,
     ) {
-        let screen_w = screen_width();
-        let screen_h = screen_height();
+        let screen_w = 1920.0;
+        let screen_h = 1080.0;
         let map_w = self.map_width as f32 * 32.0;
         let map_h = self.map_height as f32 * 16.0;
 
-        let lightmap_tex = self.lightmap.as_ref().unwrap().texture.clone();
+        let lightmap_tex = self.lightmap.as_ref().unwrap().texture.as_ref().unwrap().clone();
 
         let dynamic_lights: Vec<LightSource> = all_lights
             .iter()
@@ -499,7 +501,7 @@ impl DeferredRenderer {
         material.set_uniform("cameraPos", [camera_x, camera_y]);
         material.set_uniform("mapSize", [map_w, map_h]);
         material.set_uniform("tileSize", [32.0 as f32, 16.0 as f32]);
-        material.set_uniform("time", get_time() as f32);
+        material.set_uniform("time", crate::time::get_time() as f32);
         material.set_uniform("numLights", active_lights.len() as i32);
         material.set_uniform("numLinearLights", linear_lights.len().min(4) as i32);
         material.set_uniform("rectOrigin", [0.0f32, 0.0f32]);

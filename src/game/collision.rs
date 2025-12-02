@@ -1,6 +1,6 @@
 use super::constants::*;
 use super::map::Map;
-use macroquad::prelude::Vec2;
+use glam::Vec2;
 
 pub struct CollisionResult {
     pub new_x: f32,

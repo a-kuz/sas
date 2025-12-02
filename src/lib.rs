@@ -1,9 +1,11 @@
 pub mod audio;
-mod compat_rand;
+pub mod compat_rand;
 pub mod game;
 pub mod input;
 pub mod network;
 pub mod render;
+pub mod time;
+pub mod wgpu_renderer;
 
 pub mod app;
 pub mod bot_handler;

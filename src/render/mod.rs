@@ -626,10 +626,12 @@ impl Camera {
     }
 
     pub fn follow(&mut self, target_x: f32, target_y: f32) {
+        self.follow_with_size(target_x, target_y, screen_width(), screen_height());
+    }
+    
+    pub fn follow_with_size(&mut self, target_x: f32, target_y: f32, view_w: f32, view_h: f32) {
         const HUD_HEIGHT: f32 = 80.0;
 
-        let view_w = screen_width();
-        let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
 
         let center_y_offset = effective_view_h * 0.5;
@@ -707,10 +709,12 @@ impl Camera {
     }
 
     pub fn follow_projectile_with_zoom(&mut self, projectile_x: f32, projectile_y: f32) {
+        self.follow_projectile_with_zoom_size(projectile_x, projectile_y, screen_width(), screen_height());
+    }
+    
+    pub fn follow_projectile_with_zoom_size(&mut self, projectile_x: f32, projectile_y: f32, view_w: f32, view_h: f32) {
         const HUD_HEIGHT: f32 = 80.0;
 
-        let view_w = screen_width();
-        let view_h = screen_height();
         let effective_view_h = view_h - HUD_HEIGHT;
 
         self.target_x = projectile_x - view_w * 0.5;
@@ -719,6 +723,10 @@ impl Camera {
     }
 
     pub fn update(&mut self, dt: f32, map_width: f32, map_height: f32) {
+        self.update_with_size(dt, map_width, map_height, screen_width(), screen_height());
+    }
+    
+    pub fn update_with_size(&mut self, dt: f32, map_width: f32, map_height: f32, screen_w: f32, screen_h: f32) {
         const SMOOTHNESS: f32 = 3.0;
         const HUD_HEIGHT: f32 = 80.0;
 
@@ -726,25 +734,17 @@ impl Camera {
         self.y += (self.target_y - self.y) * SMOOTHNESS * dt;
         self.zoom += (self.target_zoom - self.zoom) * 2.0 * dt;
 
-        let screen_w = screen_width();
-        let screen_h = screen_height();
         let map_w_pixels = map_width * 32.0;
         let map_h_pixels = map_height * 16.0;
 
         let effective_view_h = screen_h - HUD_HEIGHT;
 
         self.x = self.x.clamp(0.0, (map_w_pixels - screen_w).max(0.0));
-
-        if map_h_pixels < effective_view_h {
-            self.y = map_h_pixels - effective_view_h;
-        } else {
-            self.y = self.y.clamp(0.0, map_h_pixels - effective_view_h);
-        }
+        self.y = self.y.clamp(0.0, (map_h_pixels - effective_view_h).max(0.0));
 
         if self.shake_intensity > 0.1 {
-            use macroquad::rand::gen_range;
-            self.shake_x = gen_range(-self.shake_intensity, self.shake_intensity);
-            self.shake_y = gen_range(-self.shake_intensity, self.shake_intensity);
+            self.shake_x = fastrand::f32() * self.shake_intensity * 2.0 - self.shake_intensity;
+            self.shake_y = fastrand::f32() * self.shake_intensity * 2.0 - self.shake_intensity;
             self.shake_intensity *= 0.85;
         } else {
             self.shake_x = 0.0;

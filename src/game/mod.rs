@@ -55,6 +55,7 @@ pub mod usercmd;
 pub mod weapon;
 pub mod weapon_hit_effect;
 pub mod weapon_model_cache;
+mod wgpu_render;
 
 use crate::audio::events::AudioEventQueue;
 use crate::network::{NetHud, NetworkClient, NetworkConfig};
@@ -102,6 +103,8 @@ pub struct GameState {
     pub debug_test_pitch: f32,
     pub debug_test_roll: f32,
     pub deferred_renderer: Option<deferred_renderer::DeferredRenderer>,
+    pub wgpu_render_context: Option<crate::wgpu_renderer::integration::WgpuRenderContext>,
+    pub use_wgpu: bool,
     pub ambient_light: f32,
     pub is_local_multiplayer: bool,
     pub railgun_effects: railgun::RailgunEffects,
@@ -293,7 +296,7 @@ impl GameState {
         ) {
             println!(
                 "[{:.3}] [CLIENT] Received: {:?}",
-                macroquad::prelude::get_time(),
+                crate::time::get_time(),
                 match &msg {
                     NetMessage::PlayerDied {
                         player_id,
@@ -439,7 +442,7 @@ impl GameState {
 
                         println!(
                             "[{:.3}] [CLIENT] Knockback applied: ({:.2},{:.2}) -> ({:.2},{:.2})",
-                            macroquad::prelude::get_time(),
+                            crate::time::get_time(),
                             vel_before.0,
                             vel_before.1,
                             player.vel_x,
@@ -509,7 +512,7 @@ impl GameState {
             } => {
                 println!(
                     "[{:.3}] Player {} was killed by {} (gibbed: {})",
-                    macroquad::prelude::get_time(),
+                    crate::time::get_time(),
                     player_id,
                     killer_id,
                     gibbed
@@ -517,7 +520,7 @@ impl GameState {
 
                 if let Some(player) = self.players.iter_mut().find(|p| p.id == player_id) {
                     println!("[{:.3}] [CLIENT] Setting player {} dead=true, gibbed={}, pos=({:.1},{:.1}), vel=({:.2},{:.2})", 
-                        macroquad::prelude::get_time(), player_id, gibbed, position.0, position.1, velocity.0, velocity.1);
+                        crate::time::get_time(), player_id, gibbed, position.0, position.1, velocity.0, velocity.1);
 
                     if !gibbed {
                         let corpse_player = player.clone();
@@ -568,7 +571,7 @@ impl GameState {
             } => {
                 println!(
                     "[{:.3}] Player {} was gibbed at ({:.1}, {:.1})",
-                    macroquad::prelude::get_time(),
+                    crate::time::get_time(),
                     player_id,
                     position.0,
                     position.1
@@ -596,7 +599,7 @@ impl GameState {
             NetMessage::Disconnect { player_id, reason } => {
                 println!(
                     "[{:.3}] Player {} disconnected: {}",
-                    macroquad::prelude::get_time(),
+                    crate::time::get_time(),
                     player_id,
                     reason
                 );
@@ -605,7 +608,7 @@ impl GameState {
 
                 println!(
                     "[{:.3}] Removed player {}, {} players remain",
-                    macroquad::prelude::get_time(),
+                    crate::time::get_time(),
                     player_id,
                     self.players.len()
                 );
@@ -698,17 +701,17 @@ impl GameState {
     ) {
         static mut LAST_SYNC_CALL: f64 = 0.0;
         unsafe {
-            if macroquad::prelude::get_time() - LAST_SYNC_CALL > 2.0 {
+            if crate::time::get_time() - LAST_SYNC_CALL > 2.0 {
                 println!(
                     "[SYNC] sync_projectiles called with {} network projectiles, have {} local",
                     network_projectiles.len(),
                     self.projectiles.len()
                 );
-                LAST_SYNC_CALL = macroquad::prelude::get_time();
+                LAST_SYNC_CALL = crate::time::get_time();
             }
         }
 
-        let current_time = (macroquad::prelude::get_time() * 1000.0) as u32;
+        let current_time = (crate::time::get_time() * 1000.0) as u32;
         let local_player_id = self
             .network_client
             .as_ref()
@@ -745,10 +748,10 @@ impl GameState {
 
                 static mut LAST_CREATE_PRINT: f64 = 0.0;
                 unsafe {
-                    if macroquad::prelude::get_time() - LAST_CREATE_PRINT > 1.0 {
+                    if crate::time::get_time() - LAST_CREATE_PRINT > 1.0 {
                         println!("[SYNC] Creating NEW projectile {} from snapshot (owner={} weapon={:?})", 
                             proj.id, net_proj.owner_id, weapon);
-                        LAST_CREATE_PRINT = macroquad::prelude::get_time();
+                        LAST_CREATE_PRINT = crate::time::get_time();
                     }
                 }
 
@@ -765,9 +768,9 @@ impl GameState {
             if !keep {
                 static mut LAST_REMOVE_PRINT: f64 = 0.0;
                 unsafe {
-                    if macroquad::prelude::get_time() - LAST_REMOVE_PRINT > 1.0 {
+                    if crate::time::get_time() - LAST_REMOVE_PRINT > 1.0 {
                         println!("[SYNC] Removing projectile {} (not in snapshot)", p.id);
-                        LAST_REMOVE_PRINT = macroquad::prelude::get_time();
+                        LAST_REMOVE_PRINT = crate::time::get_time();
                     }
                 }
             }
@@ -778,14 +781,14 @@ impl GameState {
         if before_count != after_count {
             static mut LAST_SYNC_PRINT: f64 = 0.0;
             unsafe {
-                if macroquad::prelude::get_time() - LAST_SYNC_PRINT > 1.0 {
+                if crate::time::get_time() - LAST_SYNC_PRINT > 1.0 {
                     println!(
                         "[SYNC] Projectiles: {} -> {} (removed {})",
                         before_count,
                         after_count,
                         before_count - after_count
                     );
-                    LAST_SYNC_PRINT = macroquad::prelude::get_time();
+                    LAST_SYNC_PRINT = crate::time::get_time();
                 }
             }
         }
@@ -831,6 +834,8 @@ impl GameState {
             border_renderer: tile_borders::TileBorderRenderer::new(),
             audio_events: AudioEventQueue::new(),
             deferred_renderer: None,
+            wgpu_render_context: None,
+            use_wgpu: true,
             ambient_light: 0.15,
             is_local_multiplayer: false,
             railgun_effects: railgun::RailgunEffects::new(),
@@ -911,6 +916,8 @@ impl GameState {
             border_renderer: tile_borders::TileBorderRenderer::new(),
             audio_events: AudioEventQueue::new(),
             deferred_renderer: None,
+            wgpu_render_context: None,
+            use_wgpu: true,
             ambient_light: 0.06,
             is_local_multiplayer: false,
             railgun_effects: railgun::RailgunEffects::new(),
@@ -1023,7 +1030,7 @@ impl GameState {
                         if self.frame % 60 == 0 && player.dead {
                             println!(
                                 "[{:.3}] [DEATH DEBUG] p{} dead={} gibbed={} can_interp={}",
-                                macroquad::prelude::get_time(),
+                                crate::time::get_time(),
                                 player.id,
                                 player.dead,
                                 player.gibbed,
@@ -1036,7 +1043,7 @@ impl GameState {
 
                             if self.frame % 60 == 0 {
                                 println!("[{:.3}] [CORPSE PHYSICS] p{} dead, applying gravity at ({:.1},{:.1}) vel=({:.2},{:.2})", 
-                                    macroquad::prelude::get_time(), player.id, player.x, player.y, player.vel_x, player.vel_y);
+                                    crate::time::get_time(), player.id, player.x, player.y, player.vel_x, player.vel_y);
                             }
 
                             let state = PmoveState {
@@ -1067,7 +1074,7 @@ impl GameState {
                             if debug_interp && self.frame % 60 == 0 {
                                 println!(
                                     "[{:.3}] [INTERP] p{} pos=({:.1},{:.1}) vel=({:.2},{:.2})",
-                                    macroquad::prelude::get_time(),
+                                    crate::time::get_time(),
                                     player.id,
                                     interpolated.position.0,
                                     interpolated.position.1,
@@ -1089,7 +1096,7 @@ impl GameState {
                             if debug_interp && self.frame % 60 == 0 {
                                 println!(
                                     "[{:.3}] [INTERP] p{} - NO DATA",
-                                    macroquad::prelude::get_time(),
+                                    crate::time::get_time(),
                                     player.id
                                 );
                             }
@@ -1134,11 +1141,11 @@ impl GameState {
                 for jumppad in &self.map.jumppads {
                     if jumppad.check_collision(player.x, player.y) && player.vel_y >= -1.0 {
                         if player.somersault_time <= 0.0
-                            && macroquad::prelude::rand::gen_range(0, 10) == 0
+                            && crate::compat_rand::gen_range(0, 10) == 0
                         {
                             player.somersault_time = 1.0;
                             player.somersault_axis_y =
-                                macroquad::prelude::rand::gen_range(0, 2) == 0;
+                                crate::compat_rand::gen_range(0, 2) == 0;
                         }
                     }
                 }
@@ -1950,7 +1957,7 @@ impl GameState {
                                     p.active = false;
 
                                     println!("[{:.3}] [COLLISION] Non-explosive projectile [{}] {:?} direct hit player {} for {} damage", 
-                                        macroquad::prelude::get_time(), p.id, proj.weapon_type, player.id, proj.damage);
+                                        crate::time::get_time(), p.id, proj.weapon_type, player.id, proj.damage);
 
                                     let was_alive = !player.dead;
 
@@ -2208,7 +2215,7 @@ impl GameState {
                                 let y = p.y;
 
                                 println!("[{:.3}] [CORPSE HIT] Explosive projectile hit corpse, adding explosion", 
-                                    macroquad::prelude::get_time());
+                                    crate::time::get_time());
                                 exploded_projectiles.push((
                                     x,
                                     y,
@@ -2507,7 +2514,7 @@ impl GameState {
                         {
                             player.somersault_time = 1.0;
                             player.somersault_axis_y =
-                                macroquad::prelude::rand::gen_range(0, 2) == 0;
+                                crate::compat_rand::gen_range(0, 2) == 0;
                         }
                     }
 
@@ -2924,7 +2931,7 @@ impl GameState {
     }
 
     pub fn render(&mut self, camera_x: f32, camera_y: f32, zoom: f32) {
-        let _t_total_start = get_time();
+        let _t_total_start = crate::time::get_time();
         let _render_total = crate::profiler::scope("render_total");
 
         {
@@ -2936,7 +2943,7 @@ impl GameState {
             md3_render::clear_light_cache();
         }
 
-        let _t_before_begin = get_time();
+        let _t_before_begin = crate::time::get_time();
         let renderer = self.deferred_renderer.as_mut().unwrap();
 
         renderer.begin_scene_with_scale(self.render_scale, zoom);
@@ -3582,7 +3589,7 @@ impl GameState {
                             .is_some();
 
                         if is_boss {
-                            let pulse = ((get_time() * 4.0).sin() * 0.5 + 0.5) as f32;
+                            let pulse = ((crate::time::get_time() * 4.0).sin() * 0.5 + 0.5) as f32;
                             let glow_size = 50.0 + pulse * 15.0;
                             draw_circle(
                                 screen_x,
@@ -3723,7 +3730,7 @@ impl GameState {
             }
         }
 
-        let _t_before_end = get_time();
+        let _t_before_end = crate::time::get_time();
         {
             let _scope = crate::profiler::scope("render_end_scene");
             renderer.end_scene();
@@ -3835,7 +3842,7 @@ impl GameState {
                     lights
                 };
 
-                let _t_before_lighting = get_time();
+                let _t_before_lighting = crate::time::get_time();
                 {
                     let _scope = crate::profiler::scope("lighting_apply");
                     renderer.apply_lighting(
@@ -3880,7 +3887,7 @@ impl GameState {
                 if is_local_award {
                     if let Some(texture) = self.award_icon_cache.get(&award.award_type) {
                         let size = 96.0 * award.scale;
-                        let screen_w = macroquad::prelude::screen_width();
+                        let screen_w = 1920.0;
                         let x = screen_w / 2.0 - size / 2.0;
                         let y = 100.0;
                         let bounce = (award.lifetime * 6.0).sin() * 8.0 * award.scale;

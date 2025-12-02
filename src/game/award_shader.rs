@@ -85,3 +85,4 @@ pub fn get_award_shader_material() -> &'static Material {
         .unwrap()
     })
 }
+

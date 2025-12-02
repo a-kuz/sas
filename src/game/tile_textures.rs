@@ -1,8 +1,8 @@
-use macroquad::prelude::*;
 use std::collections::HashMap;
+use image::DynamicImage;
 
 pub struct TileTextureCache {
-    textures: HashMap<u8, Texture2D>,
+    textures: HashMap<u8, DynamicImage>,
 }
 
 impl TileTextureCache {
@@ -25,22 +25,25 @@ impl TileTextureCache {
                 "q3-resources/textures/gothic_floor/metalfloor_wall_10a.png",
             ),
             (8, "q3-resources/textures/base_wall/atech2_c.png"),
-            (9, "q3-resources/textures/gothic_block/blocks15c.png"),
+            (9, "q3-resources/textures/gothic_block/blocks15_c.png"),
         ];
 
         for (id, path) in texture_paths {
-            if let Some(texture) = load_texture_file(path).await {
+            if let Some(image) = load_texture_file(path) {
                 println!("[Tiles] ✓ Loaded texture {}: {}", id, path);
-                texture.set_filter(FilterMode::Linear);
-                self.textures.insert(id, texture);
+                self.textures.insert(id, image);
             } else {
                 println!("[Tiles] ✗ Failed to load texture {}: {}", id, path);
             }
         }
     }
+
+    pub fn get(&self, texture_id: u16) -> Option<&DynamicImage> {
+        self.textures.get(&(texture_id as u8))
+    }
 }
 
-async fn load_texture_file(path: &str) -> Option<Texture2D> {
+fn load_texture_file(path: &str) -> Option<DynamicImage> {
     let mut candidates: Vec<String> = Vec::new();
     let path_lower = path.to_lowercase();
     if let Some(dot) = path_lower.rfind('.') {
@@ -67,9 +70,8 @@ async fn load_texture_file(path: &str) -> Option<Texture2D> {
     }
 
     for candidate in candidates {
-        if let Ok(image) = load_image(&candidate).await {
-            let texture = Texture2D::from_image(&image);
-            return Some(texture);
+        if let Ok(image) = image::open(&candidate) {
+            return Some(image);
         }
     }
 

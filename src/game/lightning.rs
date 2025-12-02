@@ -598,3 +598,4 @@ pub fn create_lightning_beam_material() -> Material {
     )
     .unwrap()
 }
+

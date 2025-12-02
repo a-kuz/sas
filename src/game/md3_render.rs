@@ -611,7 +611,7 @@ impl MD3OrientationBatch {
             ShaderType::Quad => {
                 let material = shader::create_quad_damage_outline_material();
                 gl_use_material(material);
-                material.set_uniform("time", get_time() as f32);
+                material.set_uniform("time", crate::time::get_time() as f32);
                 material.set_uniform("outlineWidth", 2.5f32);
                 draw_mesh(&mesh_data);
                 count_shader!("md3_quad_damage");
@@ -625,7 +625,7 @@ impl MD3OrientationBatch {
                 {
                     let material = super::model_shader::get_fire_shader_material();
                     gl_use_material(material);
-                    material.set_uniform("time", get_time() as f32);
+                    material.set_uniform("time", crate::time::get_time() as f32);
                     material.set_texture("_fire_tex", shader_tex.clone());
                     draw_mesh(&mesh_data);
                     count_shader!("md3_fire_shader");
@@ -640,7 +640,7 @@ impl MD3OrientationBatch {
                 {
                     let material = super::model_shader::get_envmap_shader_material();
                     gl_use_material(material);
-                    material.set_uniform("time", get_time() as f32);
+                    material.set_uniform("time", crate::time::get_time() as f32);
                     material.set_texture("_env_map", env_tex.clone());
                     draw_mesh(&mesh_data);
                     count_shader!("md3_envmap_shader");
@@ -1393,7 +1393,7 @@ fn render_md3_mesh_internal(
             if use_quad_shader {
                 let material = shader::create_quad_damage_outline_material();
                 gl_use_material(material);
-                material.set_uniform("time", get_time() as f32);
+                material.set_uniform("time", crate::time::get_time() as f32);
                 material.set_uniform("outlineWidth", 2.5f32);
                 draw_mesh(&mesh_data);
                 count_shader!("md3_quad_damage");
@@ -1408,7 +1408,7 @@ fn render_md3_mesh_internal(
                         if let Some(shader_tex) = shader_textures.and_then(|t| t.first()) {
                             let material = super::model_shader::get_fire_shader_material();
                             gl_use_material(material);
-                            material.set_uniform("time", get_time() as f32);
+                            material.set_uniform("time", crate::time::get_time() as f32);
                             material.set_texture("_fire_tex", shader_tex.clone());
                             draw_mesh(&mesh_data);
                             count_shader!("md3_fire_shader");
@@ -1419,7 +1419,7 @@ fn render_md3_mesh_internal(
                         if let Some(env_tex) = shader_textures.and_then(|t| t.first()) {
                             let material = super::model_shader::get_envmap_shader_material();
                             gl_use_material(material);
-                            material.set_uniform("time", get_time() as f32);
+                            material.set_uniform("time", crate::time::get_time() as f32);
                             material.set_texture("_env_map", env_tex.clone());
                             draw_mesh(&mesh_data);
                             count_shader!("md3_envmap_shader");
@@ -1734,7 +1734,7 @@ fn render_md3_mesh_with_orientation_internal(
                 if let Some(shader_tex) = shader_textures.and_then(|t| t.first()) {
                     let material = super::model_shader::get_fire_shader_material();
                     gl_use_material(material);
-                    material.set_uniform("time", get_time() as f32);
+                    material.set_uniform("time", crate::time::get_time() as f32);
                     material.set_texture("_fire_tex", shader_tex.clone());
                     draw_mesh(&mesh_data);
                     count_shader!("md3_fire_shader");
@@ -1745,7 +1745,7 @@ fn render_md3_mesh_with_orientation_internal(
                 if let Some(env_tex) = shader_textures.and_then(|t| t.first()) {
                     let material = super::model_shader::get_envmap_shader_material();
                     gl_use_material(material);
-                    material.set_uniform("time", get_time() as f32);
+                    material.set_uniform("time", crate::time::get_time() as f32);
                     material.set_texture("_env_map", env_tex.clone());
                     draw_mesh(&mesh_data);
                     count_shader!("md3_envmap_shader");
@@ -2776,7 +2776,7 @@ fn render_md3_mesh_with_pivot_and_yaw_internal(
             if use_quad_shader {
                 let material = shader::create_quad_damage_outline_material();
                 gl_use_material(material);
-                material.set_uniform("time", get_time() as f32);
+                material.set_uniform("time", crate::time::get_time() as f32);
                 material.set_uniform("outlineWidth", 2.5f32);
                 draw_mesh(&mesh_data);
                 count_shader!("md3_quad_pivot");

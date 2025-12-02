@@ -73,7 +73,7 @@ impl ProfileScope {
             #[cfg(not(target_arch = "wasm32"))]
             start: Instant::now(),
             #[cfg(target_arch = "wasm32")]
-            start: macroquad::time::get_time(),
+            start: crate::time::get_time(),
         }
     }
 
@@ -84,7 +84,7 @@ impl ProfileScope {
             #[cfg(not(target_arch = "wasm32"))]
             start: Instant::now(),
             #[cfg(target_arch = "wasm32")]
-            start: macroquad::time::get_time(),
+            start: crate::time::get_time(),
         }
     }
 }
@@ -94,7 +94,7 @@ impl Drop for ProfileScope {
         #[cfg(not(target_arch = "wasm32"))]
         let elapsed = self.start.elapsed().as_secs_f64() * 1000.0;
         #[cfg(target_arch = "wasm32")]
-        let elapsed = (macroquad::time::get_time() - self.start) * 1000.0;
+        let elapsed = (crate::time::get_time() - self.start) * 1000.0;
 
         #[cfg(not(target_arch = "wasm32"))]
         PROFILER.with(|p| {

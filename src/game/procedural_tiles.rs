@@ -596,7 +596,7 @@ fn render_grass_top(
     _world_y: f32,
 ) {
     let hash = |n: f32| -> f32 { (n.sin() * 43758.5453).fract() };
-    let time = macroquad::time::get_time() as f32;
+    let time = crate::time::get_time() as f32;
 
     let num_blades = (width / 5.0) as i32;
     for i in 0..num_blades {

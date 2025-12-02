@@ -153,7 +153,7 @@ impl WeaponHitEffect {
             _ => (HitEffectType::Bullet, 3, 4, 1.0),
         };
 
-        let rotation = rand::gen_range(0.0, 360.0);
+        let rotation = crate::compat_rand::gen_range_f32(0.0, 360.0);
 
         Self {
             x,
@@ -170,7 +170,7 @@ impl WeaponHitEffect {
     }
 
     pub fn new_blood(x: f32, y: f32) -> Self {
-        let rotation = rand::gen_range(0.0, 360.0);
+        let rotation = crate::compat_rand::gen_range_f32(0.0, 360.0);
         Self {
             x,
             y,
@@ -316,14 +316,10 @@ impl WeaponHitTextureCache {
     }
 
     pub async fn load_all(&mut self) {
-        self.load_bullet_textures().await;
-        self.load_plasma_textures().await;
-        self.load_rail_textures().await;
-        self.load_rocket_textures().await;
-        self.load_grenade_textures().await;
-        self.load_bfg_textures().await;
-        self.load_lightning_textures().await;
-        self.load_blood_textures().await;
+        // NOTE: This uses macroquad's load_texture which requires macroquad context.
+        // This is legacy rendering code not used in the wgpu rendering path.
+        // Disabled to prevent runtime panic.
+        // TODO: Implement wgpu-compatible texture loading if weapon hit effects are needed
     }
 
     async fn load_bullet_textures(&mut self) {

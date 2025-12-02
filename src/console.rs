@@ -1,9 +1,14 @@
 use crate::cvar;
-use crate::game::tile_shader::{TileShader, TileShaderRenderer};
-use macroquad::prelude::*;
+use crate::time;
+use crate::input::winit_input::KeyCode;
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
+use std::sync::{OnceLock, Mutex};
+use crate::wgpu_renderer::ui_renderer::UIRenderer;
+use crate::wgpu_renderer::WgpuRenderer;
+use crate::wgpu_renderer::texture::WgpuTexture;
+use std::sync::Arc;
 
 const CON_TEXTSIZE: usize = 32768;
 const NUM_CON_TIMES: usize = 4;
@@ -25,7 +30,6 @@ pub struct Console {
     history: Vec<String>,
     history_line: i32,
     times: [f64; NUM_CON_TIMES],
-    shader_renderer: Option<TileShaderRenderer>,
     pub bot_add_request: Option<String>,
     pub bot_remove_request: bool,
     pub bot_afk_request: bool,
@@ -62,7 +66,6 @@ impl Console {
             history: Vec::new(),
             history_line: 0,
             times: [0.0; NUM_CON_TIMES],
-            shader_renderer: None,
             bot_add_request: None,
             bot_remove_request: false,
             bot_afk_request: false,
@@ -112,50 +115,11 @@ impl Console {
         }
     }
 
-    pub async fn load_texture(&mut self) {
-        let mut renderer = TileShaderRenderer::new();
-
-        renderer.load_texture("gfx/misc/console01.tga").await;
-        renderer.load_texture("gfx/misc/console02.tga").await;
-
-        use crate::game::tile_shader::{BlendMode, ShaderStage};
-
-        let console_shader = TileShader {
-            name: "console".to_string(),
-            base_texture: String::new(),
-            stages: vec![
-                ShaderStage {
-                    texture_path: "gfx/misc/console01.tga".to_string(),
-                    blend_mode: BlendMode::None,
-                    scroll_x: 0.02,
-                    scroll_y: 0.0,
-                    scale_x: 2.0,
-                    scale_y: 1.0,
-                    alpha: 1.0,
-                    ..Default::default()
-                },
-                ShaderStage {
-                    texture_path: "gfx/misc/console02.tga".to_string(),
-                    blend_mode: BlendMode::Add,
-                    scroll_x: 0.2,
-                    scroll_y: 0.1,
-                    scale_x: 2.0,
-                    scale_y: 1.0,
-                    alpha: 0.5,
-                    ..Default::default()
-                },
-            ],
-            ..Default::default()
-        };
-
-        renderer.add_shader(console_shader);
-        self.shader_renderer = Some(renderer);
-    }
-
     fn check_resize(&mut self) {
-        let width = screen_width() as i32;
+        let width = 1920.0;
         let char_width = 8;
-        let new_linewidth = (width / char_width - 2).max(20);
+        let new_linewidth = ((width / char_width as f32) - 2.0) as i32;
+        let new_linewidth = new_linewidth.max(20);
 
         if new_linewidth == self.linewidth {
             return;
@@ -200,7 +164,7 @@ impl Console {
         }
 
         if self.current >= 0 {
-            self.times[self.current as usize % NUM_CON_TIMES] = get_time();
+            self.times[self.current as usize % NUM_CON_TIMES] = time::get_time();
         }
     }
 
@@ -558,96 +522,203 @@ impl Console {
         }
     }
 
-    pub fn draw(&self) {
+    pub fn render_wgpu(&self, renderer: &mut WgpuRenderer) {
         if self.display_frac <= 0.0 {
             return;
         }
 
-        let screen_w = screen_width();
-        let screen_h = screen_height();
-        let y = (self.display_frac * screen_h).round();
+        static UI_RENDERER: OnceLock<Mutex<UIRenderer>> = OnceLock::new();
+        static FONT_TEXTURE: OnceLock<Arc<WgpuTexture>> = OnceLock::new();
+        
+        let (width, height) = renderer.get_viewport_size();
+        let w = width as f32;
+        let h = height as f32;
+        let y_limit = (self.display_frac * h).round();
 
-        if y < 1.0 {
+        if y_limit < 1.0 {
             return;
         }
 
-        if let Some(ref renderer) = self.shader_renderer {
-            let time = get_time() as f32;
-            renderer.render_tile_with_shader("console", 0.0, 0.0, screen_w, y, 0.0, 0.0, time);
-        } else {
-            draw_rectangle(0.0, 0.0, screen_w, y, Color::from_rgba(0, 0, 0, 200));
-        }
+        if let Some(frame) = renderer.begin_frame() {
+            let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+            let mut encoder = renderer.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Console Render Encoder"),
+            });
 
-        draw_rectangle(0.0, y, screen_w, 2.0, Color::from_rgba(255, 0, 0, 255));
+            let ui_renderer_mutex = UI_RENDERER.get_or_init(|| {
+                Mutex::new(UIRenderer::new(
+                    renderer.device.clone(),
+                    renderer.queue.clone(),
+                    renderer.surface_config.format,
+                ))
+            });
 
-        let char_height = 12.0;
-        let char_width = 8.0;
-        let rows = ((y - char_height * 2.5) / char_height) as i32;
+            let mut ui_renderer = ui_renderer_mutex.lock().unwrap();
 
-        let mut text_y = y - char_height * 2.5;
-        let mut row = self.display;
-
-        if self.x == 0 {
-            row -= 1;
-        }
-
-        for _ in 0..rows {
-            if row < 0 {
-                break;
+            if ui_renderer.font_texture.is_none() {
+                if let Ok(img) = image::open("q3-resources/gfx/2d/bigchars.png") {
+                    let dyn_img = img.to_rgba8();
+                    let wgpu_texture = Arc::new(
+                        WgpuTexture::from_image(
+                            &renderer.device,
+                            &renderer.queue,
+                            &image::DynamicImage::ImageRgba8(dyn_img),
+                        )
+                    );
+                    ui_renderer.set_font_texture(wgpu_texture.clone());
+                    let _ = FONT_TEXTURE.set(wgpu_texture);
+                }
             }
-            if self.current - row >= self.totallines {
+
+            let mut text_buffers = Vec::new();
+            
+            // Background
+            // For now, just a dark overlay. We can't easily draw a rect with UIRenderer without a white texture.
+            // Assuming UIRenderer can handle colored quads if we provide a white pixel texture or similar.
+            // For now, let's skip background or try to use a space char with background color?
+            // UIRenderer seems designed for text. Let's focus on text first.
+
+            let char_height = 12.0;
+            let char_width = 8.0;
+            let rows = ((y_limit - char_height * 2.5) / char_height) as i32;
+
+            let mut text_y = y_limit - char_height * 2.5;
+            let mut row = self.display;
+
+            if self.x == 0 {
                 row -= 1;
-                text_y -= char_height;
-                continue;
             }
 
-            let text_row = (row % self.totallines) as usize;
-            let start_idx = text_row * self.linewidth as usize;
-
-            for x in 0..self.linewidth {
-                let idx = start_idx + x as usize;
-                if idx >= self.text.len() {
+            for _ in 0..rows {
+                if row < 0 {
                     break;
                 }
+                if self.current - row >= self.totallines {
+                    row -= 1;
+                    text_y -= char_height;
+                    continue;
+                }
 
-                let con_char = self.text[idx];
-                if con_char.ch != b' ' {
-                    crate::render::draw_q3_small_char(
-                        (x + 1) as f32 * char_width,
-                        text_y,
-                        char_height,
-                        con_char.ch,
-                        Color::from_rgba(255, 255, 255, 255),
-                    );
+                let text_row = (row % self.totallines) as usize;
+                let start_idx = text_row * self.linewidth as usize;
+
+                for x in 0..self.linewidth {
+                    let idx = start_idx + x as usize;
+                    if idx >= self.text.len() {
+                        break;
+                    }
+
+                    let con_char = self.text[idx];
+                    if con_char.ch != b' ' {
+                        let (vb, ib) = ui_renderer.create_text_char_buffers(
+                            (x + 1) as f32 * char_width,
+                            text_y,
+                            char_height,
+                            w,
+                            h,
+                            con_char.ch,
+                            [1.0, 1.0, 1.0, 1.0],
+                        );
+                        text_buffers.push(((vb, ib), con_char.ch));
+                    }
+                }
+
+                row -= 1;
+                text_y -= char_height;
+            }
+
+            let input_y = y_limit - char_height * 1.5;
+            let (vb, ib) = ui_renderer.create_text_char_buffers(char_width, input_y, char_height, w, h, b']', [1.0, 1.0, 1.0, 1.0]);
+            text_buffers.push(((vb, ib), b']'));
+
+            for (i, ch) in self.input_line.chars().enumerate() {
+                let (vb, ib) = ui_renderer.create_text_char_buffers(
+                    (i as f32 + 2.0) * char_width,
+                    input_y,
+                    char_height,
+                    w,
+                    h,
+                    ch as u8,
+                    [1.0, 1.0, 1.0, 1.0],
+                );
+                text_buffers.push(((vb, ib), ch as u8));
+            }
+
+            let cursor_time = (time::get_time() * 2.0) as i32;
+            if cursor_time % 2 == 0 {
+                let (vb, ib) = ui_renderer.create_text_char_buffers(
+                    (self.cursor_pos as f32 + 2.0) * char_width,
+                    input_y,
+                    char_height,
+                    w,
+                    h,
+                    b'_',
+                    [1.0, 1.0, 0.0, 1.0],
+                );
+                text_buffers.push(((vb, ib), b'_'));
+            }
+
+            let text_bind_group = if !text_buffers.is_empty() {
+                if let Some(ref font_texture) = ui_renderer.font_texture {
+                    if let Some(ref bind_group_layout) = ui_renderer.text_bind_group_layout {
+                        Some(renderer.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                            label: Some("Console Text Bind Group"),
+                            layout: bind_group_layout,
+                            entries: &[
+                                wgpu::BindGroupEntry {
+                                    binding: 0,
+                                    resource: wgpu::BindingResource::TextureView(&font_texture.view),
+                                },
+                                wgpu::BindGroupEntry {
+                                    binding: 1,
+                                    resource: wgpu::BindingResource::Sampler(&font_texture.sampler),
+                                },
+                            ],
+                        }))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            } else {
+                None
+            };
+
+            {
+                let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: Some("Console Render Pass"),
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Load, // Load existing content (game)
+                            store: wgpu::StoreOp::Store,
+                        },
+                    })],
+                    depth_stencil_attachment: None,
+                    occlusion_query_set: None,
+                    timestamp_writes: None,
+                });
+
+                if let Some(ref text_pipeline) = ui_renderer.text_pipeline {
+                    if let Some(ref bind_group) = text_bind_group {
+                        render_pass.set_pipeline(text_pipeline);
+                        render_pass.set_bind_group(0, bind_group, &[]);
+
+                        for ((vb, ib), _ch) in text_buffers.iter() {
+                            if vb.size() > 0 && ib.size() > 0 {
+                                render_pass.set_vertex_buffer(0, vb.slice(..));
+                                render_pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint16);
+                                render_pass.draw_indexed(0..6, 0, 0..1);
+                            }
+                        }
+                    }
                 }
             }
 
-            row -= 1;
-            text_y -= char_height;
-        }
-
-        let input_y = y - char_height * 1.5;
-        crate::render::draw_q3_small_char(char_width, input_y, char_height, b']', WHITE);
-
-        for (i, ch) in self.input_line.chars().enumerate() {
-            crate::render::draw_q3_small_char(
-                (i as f32 + 2.0) * char_width,
-                input_y,
-                char_height,
-                ch as u8,
-                WHITE,
-            );
-        }
-
-        let cursor_time = (get_time() * 2.0) as i32;
-        if cursor_time % 2 == 0 {
-            crate::render::draw_q3_small_char(
-                (self.cursor_pos as f32 + 2.0) * char_width,
-                input_y,
-                char_height,
-                b'_',
-                Color::from_rgba(255, 255, 0, 255),
-            );
+            renderer.queue.submit(std::iter::once(encoder.finish()));
+            renderer.end_frame(frame);
         }
     }
 }

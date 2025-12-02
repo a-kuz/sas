@@ -2,12 +2,12 @@ use crate::audio;
 use crate::bot_handler::BotHandler;
 use crate::game::{player::Player, weapon::Weapon, GameState};
 use crate::hud_scoreboard::HudScoreboard;
-use crate::input::{Input, LocalMultiplayerInput};
+use crate::input::{Input, LocalMultiplayerInput, winit_input::{WinitInputState, KeyCode}};
 use crate::profiler;
 use crate::profiler_display;
 use crate::render::Camera;
+use crate::time;
 use crate::weapon_handler::WeaponHandler;
-use macroquad::prelude::*;
 
 pub struct GameLoop {
     pub game_state: GameState,
@@ -25,9 +25,15 @@ pub struct GameLoop {
     pub fps_samples: Vec<f64>,
     pub last_fps_log: f64,
     pub fps_display_samples: Vec<f64>,
+    pub wgpu_renderer: Option<crate::wgpu_renderer::WgpuRenderer>,
 }
 
 impl GameLoop {
+    pub fn set_wgpu_renderer(&mut self, renderer: crate::wgpu_renderer::WgpuRenderer) {
+        self.wgpu_renderer = Some(renderer);
+        eprintln!("[GameLoop] ✓ Wgpu renderer set!");
+    }
+    
     pub async fn new(
         game_state: GameState,
         selected_model_idx: usize,
@@ -49,21 +55,32 @@ impl GameLoop {
             available_models,
             frame_count: 0,
             fps_display: 0,
-            last_profiler_print: get_time(),
-            last_time: get_time(),
+            last_profiler_print: time::get_time(),
+            last_time: time::get_time(),
             fps_samples: Vec::with_capacity(100),
-            last_fps_log: get_time(),
+            last_fps_log: time::get_time(),
             fps_display_samples: Vec::with_capacity(200),
+            wgpu_renderer: None,
         }
     }
 
     pub async fn initialize_game(&mut self) {
         eprintln!("[INIT] Starting game initialization...");
-        self.game_state.weapon_hit_texture_cache.load_all().await;
-        self.game_state.muzzle_flash_cache.load_all().await;
+        if !self.game_state.use_wgpu {
+            self.game_state.weapon_hit_texture_cache.load_all().await;
+            self.game_state.muzzle_flash_cache.load_all().await;
+        } else {
+            eprintln!("[INIT] Skipping macroquad texture loading (using wgpu)");
+        }
         self.setup_players().await;
         eprintln!("[INIT] About to preload assets...");
         self.preload_assets().await;
+        
+        if self.game_state.use_wgpu {
+            eprintln!("[INIT] Wgpu renderer must be set via GameLoop::set_wgpu_renderer()");
+            eprintln!("[INIT] Use main_wgpu_full.rs for direct winit integration");
+        }
+        
         eprintln!("[INIT] Game initialization complete!");
     }
 
@@ -182,7 +199,7 @@ impl GameLoop {
         for i in 0..num_bots {
             let mut skin;
             loop {
-                let idx = rand::gen_range(0, all_bot_skins.len());
+                let idx = crate::compat_rand::gen_range(0, all_bot_skins.len());
                 skin = all_bot_skins[idx];
                 if !used_skins.contains(&skin) {
                     used_skins.push(skin);
@@ -226,10 +243,14 @@ impl GameLoop {
             }
         }
 
-        for model_name in unique_models.iter() {
-            if let Some(model) = self.game_state.model_cache.get_mut(model_name) {
-                model.load_textures(model_name, env_skin).await;
+        if !self.game_state.use_wgpu {
+            for model_name in unique_models.iter() {
+                if let Some(model) = self.game_state.model_cache.get_mut(model_name) {
+                    model.load_textures(model_name, env_skin).await;
+                }
             }
+        } else {
+            eprintln!("[PRELOAD] Skipping player model texture loading (using wgpu)");
         }
 
         for model_name in unique_models.iter() {
@@ -238,18 +259,23 @@ impl GameLoop {
     }
 
     async fn preload_assets(&mut self) {
-        self.preload_item_models().await;
-        self.preload_projectile_models().await;
-        self.preload_weapon_models().await;
+        if !self.game_state.use_wgpu {
+            self.preload_item_models().await;
+            self.preload_projectile_models().await;
+            self.preload_weapon_models().await;
+            
+            eprintln!("[PRELOAD] Loading tile shaders...");
+            self.load_tile_shaders().await;
+            eprintln!("[PRELOAD] ✓ Tile shaders loaded!");
+
+            eprintln!("[PRELOAD] Loading border textures...");
+            self.game_state.border_renderer.load_border_textures().await;
+            eprintln!("[PRELOAD] ✓ Border textures loaded!");
+        } else {
+            eprintln!("[PRELOAD] Skipping macroquad asset loading (using wgpu)");
+        }
+        
         self.game_state.tile_textures.load_default_textures().await;
-
-        eprintln!("[PRELOAD] Loading tile shaders...");
-        self.load_tile_shaders().await;
-        eprintln!("[PRELOAD] ✓ Tile shaders loaded!");
-
-        eprintln!("[PRELOAD] Loading border textures...");
-        self.game_state.border_renderer.load_border_textures().await;
-        eprintln!("[PRELOAD] ✓ Border textures loaded!");
     }
 
     async fn preload_item_models(&mut self) {
@@ -382,6 +408,7 @@ impl GameLoop {
         &mut self,
         console: &mut crate::console::Console,
         ignore_mouse_delta: bool,
+        input_state: &WinitInputState,
     ) -> bool {
         console.is_connected_to_server = self.game_state.is_connected_to_server();
 
@@ -441,14 +468,14 @@ impl GameLoop {
 
         self.game_state.update_network();
 
-        let current_time = get_time();
+        let current_time = time::get_time();
         let mut dt = (current_time - self.last_time) as f32;
         self.last_time = current_time;
         if dt > 0.05 {
             dt = 0.05;
         }
 
-        let t_frame_start = get_time();
+        let t_frame_start = time::get_time();
 
         //self.fps_samples.push(current_time);
         self.fps_display_samples.push(current_time);
@@ -464,23 +491,26 @@ impl GameLoop {
         }
 
         if !console.is_open() {
-            self.handle_input(dt, ignore_mouse_delta);
+            self.input.set_input_state(input_state);
+            self.input.update(ignore_mouse_delta);
+            self.local_mp_input.update(ignore_mouse_delta, input_state);
+            self.handle_input(dt, ignore_mouse_delta, input_state);
         }
 
-        if is_key_pressed(KeyCode::Escape) && !console.is_open() {
+        if input_state.is_key_pressed(KeyCode::Escape) && !console.is_open() {
             return false;
         }
 
-        if is_key_pressed(KeyCode::GraveAccent) {
+        if input_state.is_key_pressed(KeyCode::GraveAccent) {
             return true;
         }
 
         if !console.is_open() {
-            self.handle_defrag_keys();
-            self.handle_debug_keys().await;
+            self.handle_defrag_keys(input_state);
+            self.handle_debug_keys(input_state).await;
         }
 
-        self.handle_camera(dt);
+        self.handle_camera(dt, input_state);
 
         let shoot_actions = if !self.game_state.game_results.show {
             if self.game_state.is_multiplayer {
@@ -578,9 +608,9 @@ impl GameLoop {
         true
     }
 
-    fn handle_defrag_keys(&mut self) {
+    fn handle_defrag_keys(&mut self, input_state: &WinitInputState) {
         if let Some(defrag) = &mut self.game_state.defrag_mode {
-            if is_key_pressed(KeyCode::R) {
+            if input_state.is_key_pressed(KeyCode::R) {
                 defrag.reset();
                 println!("[Defrag] Run reset!");
 
@@ -596,7 +626,7 @@ impl GameLoop {
                 }
             }
 
-            if is_key_pressed(KeyCode::Backspace) && !defrag.run_finished {
+            if input_state.is_key_pressed(KeyCode::Backspace) && !defrag.run_finished {
                 if let Some(player) = self.game_state.players.get_mut(0) {
                     let (spawn_x, spawn_y) = defrag.get_respawn_position();
                     player.x = spawn_x;
@@ -609,15 +639,15 @@ impl GameLoop {
         }
     }
 
-    fn handle_input(&mut self, dt: f32, ignore_mouse_delta: bool) {
+    fn handle_input(&mut self, dt: f32, ignore_mouse_delta: bool, input_state: &WinitInputState) {
         let _scope = profiler::scope("input");
 
         if self.game_state.is_multiplayer {
             self.input.update(ignore_mouse_delta);
             let cmd = crate::game::usercmd::UserCmd::from_input(
                 &self.input,
-                screen_width(),
-                screen_height(),
+                input_state.screen_width(),
+                input_state.screen_height(),
             );
 
             if let Some(ref mut network_client) = self.game_state.network_client {
@@ -648,13 +678,13 @@ impl GameLoop {
                     static mut LAST_NONZERO_INPUT: f64 = 0.0;
                     unsafe {
                         if move_right.abs() > 0.1 || buttons != 0 {
-                            LAST_NONZERO_INPUT = macroquad::prelude::get_time();
+                            LAST_NONZERO_INPUT = time::get_time();
                         }
-                        if macroquad::prelude::get_time() - LAST_INPUT_PRINT > 2.0
-                            && macroquad::prelude::get_time() - LAST_NONZERO_INPUT < 0.5
+                        if time::get_time() - LAST_INPUT_PRINT > 2.0
+                            && time::get_time() - LAST_NONZERO_INPUT < 0.5
                         {
                             println!("[INPUT] right={:.1} buttons={}", move_right, buttons);
-                            LAST_INPUT_PRINT = macroquad::prelude::get_time();
+                            LAST_INPUT_PRINT = time::get_time();
                         }
                     }
 
@@ -715,7 +745,7 @@ impl GameLoop {
 
         if !self.game_state.game_results.show {
             if self.game_state.is_local_multiplayer {
-                self.local_mp_input.update(ignore_mouse_delta);
+                self.local_mp_input.update(ignore_mouse_delta, input_state);
 
                 for (player_idx, player_input) in
                     [&self.local_mp_input.player1, &self.local_mp_input.player2]
@@ -739,8 +769,8 @@ impl GameLoop {
                 self.input.update(ignore_mouse_delta);
                 let cmd = crate::game::usercmd::UserCmd::from_input(
                     &self.input,
-                    screen_width(),
-                    screen_height(),
+                    input_state.screen_width(),
+                    input_state.screen_height(),
                 );
 
                 if let Some(player) = self.game_state.players.get_mut(0) {
@@ -753,48 +783,48 @@ impl GameLoop {
         }
     }
 
-    async fn handle_debug_keys(&mut self) {
-        if is_key_pressed(KeyCode::F9) {
+    async fn handle_debug_keys(&mut self, input_state: &WinitInputState) {
+        if input_state.is_key_pressed(KeyCode::F9) {
             self.perf_mode = !self.perf_mode;
         }
 
-        if is_key_pressed(KeyCode::F7) {
+        if input_state.is_key_pressed(KeyCode::F7) {
             self.game_state.debug_md3 = !self.game_state.debug_md3;
         }
 
-        if is_key_down(KeyCode::U) {
+        if input_state.is_key_down(KeyCode::U) {
             self.game_state.debug_test_yaw -= 0.05;
         }
-        if is_key_down(KeyCode::O) {
+        if input_state.is_key_down(KeyCode::O) {
             self.game_state.debug_test_yaw += 0.05;
         }
-        if is_key_down(KeyCode::I) {
+        if input_state.is_key_down(KeyCode::I) {
             self.game_state.debug_test_pitch -= 0.05;
         }
-        if is_key_down(KeyCode::K) {
+        if input_state.is_key_down(KeyCode::K) {
             self.game_state.debug_test_pitch += 0.05;
         }
-        if is_key_down(KeyCode::J) {
+        if input_state.is_key_down(KeyCode::J) {
             self.game_state.debug_test_roll -= 0.05;
         }
-        if is_key_down(KeyCode::L) {
+        if input_state.is_key_down(KeyCode::L) {
             self.game_state.debug_test_roll += 0.05;
         }
-        if is_key_down(KeyCode::B) {
+        if input_state.is_key_down(KeyCode::B) {
             self.game_state.debug_test_yaw = 0.0;
         }
-        if is_key_down(KeyCode::N) {
+        if input_state.is_key_down(KeyCode::N) {
             self.game_state.debug_test_pitch = 0.0;
         }
-        if is_key_down(KeyCode::M) {
+        if input_state.is_key_down(KeyCode::M) {
             self.game_state.debug_test_roll = 0.0;
         }
 
-        if is_key_pressed(KeyCode::F8) {
+        if input_state.is_key_pressed(KeyCode::F8) {
             profiler::toggle();
         }
 
-        if is_key_pressed(KeyCode::F3) {
+        if input_state.is_key_pressed(KeyCode::F3) {
             self.game_state.debug_hitboxes = !self.game_state.debug_hitboxes;
             println!(
                 "[Debug] Hitbox debug: {}",
@@ -806,11 +836,11 @@ impl GameLoop {
             );
         }
 
-        if is_key_pressed(KeyCode::F4) {
+        if input_state.is_key_pressed(KeyCode::F4) {
             self.decrease_bot_count();
         }
 
-        if is_key_pressed(KeyCode::F10) {
+        if input_state.is_key_pressed(KeyCode::F10) {
             self.game_state.use_item_icons = !self.game_state.use_item_icons;
             println!(
                 "[Debug] Item icons mode: {}",
@@ -822,7 +852,7 @@ impl GameLoop {
             );
         }
 
-        if is_key_pressed(KeyCode::F11) {
+        if input_state.is_key_pressed(KeyCode::F11) {
             self.game_state.disable_shadows = !self.game_state.disable_shadows;
             println!(
                 "[Perf] Shadows: {}",
@@ -834,7 +864,7 @@ impl GameLoop {
             );
         }
 
-        if is_key_pressed(KeyCode::F12) {
+        if input_state.is_key_pressed(KeyCode::F12) {
             self.game_state.disable_dynamic_lights = !self.game_state.disable_dynamic_lights;
             println!(
                 "[Perf] Dynamic lights: {}",
@@ -846,7 +876,7 @@ impl GameLoop {
             );
         }
 
-        if is_key_pressed(KeyCode::F6) {
+        if input_state.is_key_pressed(KeyCode::F6) {
             self.game_state.disable_particles = !self.game_state.disable_particles;
             println!(
                 "[Perf] Particles: {}",
@@ -858,7 +888,7 @@ impl GameLoop {
             );
         }
 
-        if is_key_pressed(KeyCode::F2) {
+        if input_state.is_key_pressed(KeyCode::F2) {
             self.game_state.disable_deferred = !self.game_state.disable_deferred;
             println!(
                 "[Perf] Deferred rendering: {}",
@@ -870,7 +900,7 @@ impl GameLoop {
             );
         }
 
-        if is_key_pressed(KeyCode::F1) {
+        if input_state.is_key_pressed(KeyCode::F1) {
             self.game_state.render_scale = if self.game_state.render_scale > 1.5 {
                 1.0
             } else {
@@ -879,8 +909,8 @@ impl GameLoop {
             println!("[Perf] Render scale: {}x", self.game_state.render_scale);
         }
 
-        if is_key_pressed(KeyCode::Key1)
-            && (is_key_down(KeyCode::LeftShift) || is_key_down(KeyCode::RightShift))
+        if input_state.is_key_pressed(KeyCode::Key1)
+            && (input_state.is_key_down(KeyCode::LeftShift) || input_state.is_key_down(KeyCode::RightShift))
         {
             self.game_state.cartoon_shader = !self.game_state.cartoon_shader;
             println!(
@@ -893,7 +923,7 @@ impl GameLoop {
             );
         }
 
-        if let Some(new_model) = self.handle_model_switching() {
+        if let Some(new_model) = self.handle_model_switching(input_state) {
             if let Some(p) = self.game_state.players.get_mut(0) {
                 p.model = new_model.clone();
             }
@@ -920,13 +950,13 @@ impl GameLoop {
         }
     }
 
-    fn handle_model_switching(&mut self) -> Option<String> {
-        if is_key_pressed(KeyCode::F6) && !self.available_models.is_empty() {
+    fn handle_model_switching(&mut self, input_state: &WinitInputState) -> Option<String> {
+        if input_state.is_key_pressed(KeyCode::F6) && !self.available_models.is_empty() {
             self.selected_model_idx = (self.selected_model_idx + 1) % self.available_models.len();
             return self.available_models.get(self.selected_model_idx).cloned();
         }
 
-        if is_key_pressed(KeyCode::F5) && !self.available_models.is_empty() {
+        if input_state.is_key_pressed(KeyCode::F5) && !self.available_models.is_empty() {
             self.selected_model_idx = if self.selected_model_idx == 0 {
                 self.available_models.len() - 1
             } else {
@@ -938,7 +968,8 @@ impl GameLoop {
         None
     }
 
-    fn handle_camera(&mut self, dt: f32) {
+    fn handle_camera(&mut self, dt: f32, input_state: &WinitInputState) {
+        let (screen_w, screen_h) = (input_state.window_size.0 as f32, input_state.window_size.1 as f32);
         if self.game_state.is_local_multiplayer && self.game_state.players.len() >= 2 {
             self.camera.tracking_projectile_id = None;
             self.camera.follow_two_players(
@@ -957,7 +988,7 @@ impl GameLoop {
                         .find(|p| p.id == tracking_id && p.active)
                     {
                         self.camera
-                            .follow_projectile_with_zoom(projectile.x, projectile.y);
+                            .follow_projectile_with_zoom_size(projectile.x, projectile.y, screen_w, screen_h);
                     } else {
                         self.camera.tracking_projectile_id = None;
                     }
@@ -975,24 +1006,25 @@ impl GameLoop {
                     if let Some(projectile) = player_projectile {
                         self.camera.tracking_projectile_id = Some(projectile.id);
                         self.camera
-                            .follow_projectile_with_zoom(projectile.x, projectile.y);
+                            .follow_projectile_with_zoom_size(projectile.x, projectile.y, screen_w, screen_h);
                     } else {
-                        self.camera.follow(player.x, player.y);
+                        self.camera.follow_with_size(player.x, player.y, screen_w, screen_h);
                     }
                 }
             } else {
                 if self.camera.tracking_projectile_id.is_some() {
-                    // Player alive, clear tracking
                 }
                 self.camera.tracking_projectile_id = None;
-                self.camera.follow(player.x, player.y);
+                self.camera.follow_with_size(player.x, player.y, screen_w, screen_h);
             }
         }
 
-        self.camera.update(
+        self.camera.update_with_size(
             dt,
             self.game_state.map.width as f32,
             self.game_state.map.height as f32,
+            screen_w,
+            screen_h,
         );
     }
 
@@ -1035,11 +1067,24 @@ impl GameLoop {
             }
         }
 
-        self.game_state
-            .render(self.camera.x, self.camera.y, self.camera.zoom);
+        if self.game_state.use_wgpu {
+            let wgpu_renderer = self.wgpu_renderer.as_mut().expect("wgpu_renderer must be set when use_wgpu is true");
+            if self.game_state.wgpu_render_context.is_none() {
+                self.game_state.init_wgpu_renderer(wgpu_renderer);
+                self.game_state.load_tile_textures_to_wgpu(wgpu_renderer);
+            }
+            self.game_state.render_wgpu(
+                wgpu_renderer,
+                self.camera.x,
+                self.camera.y,
+                self.camera.zoom,
+            );
+        } else {
+            panic!("use_wgpu must be true - macroquad fallback removed");
+        }
         self.game_state.render_messages();
 
-        {
+        if !self.game_state.use_wgpu {
             let _scope = profiler::scope("render_hud");
             HudScoreboard::render_hud(&self.game_state);
             HudScoreboard::render_crosshair(&self.game_state, &self.camera, &self.input);
@@ -1061,9 +1106,9 @@ impl GameLoop {
 
         profiler::end_frame();
 
-        let frame_time = (get_time() - t_frame_start) * 1000.0;
+        let frame_time = (time::get_time() - t_frame_start) * 1000.0;
 
-        {
+        if !self.game_state.use_wgpu {
             let _scope = profiler::scope("render_debug_ui");
             let show_fps = crate::cvar::get_cvar_bool("cg_drawFPS");
             HudScoreboard::render_debug_info(
@@ -1170,7 +1215,7 @@ impl GameLoop {
     }
 
     fn render_profiler_output(&mut self) {
-        let current_time = get_time();
+        let current_time = time::get_time();
         if profiler::is_enabled() && current_time - self.last_profiler_print >= 1.0 {
             self.last_profiler_print = current_time;
             let samples = profiler::get_samples();

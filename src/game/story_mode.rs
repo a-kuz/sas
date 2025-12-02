@@ -518,7 +518,7 @@ impl StoryMode {
     }
 
     fn create_enemy_from_spawn(spawn: &EnemySpawn) -> Player {
-        let enemy_id = (2000 + rand::gen_range(0, 1000)) as u16;
+        let enemy_id = (2000 + crate::compat_rand::gen_range(0, 1000)) as u16;
         let mut enemy = Player::new(enemy_id, spawn.model.clone(), true);
         enemy.model = spawn.model.clone();
         enemy.x = spawn.x;
@@ -667,7 +667,7 @@ impl StoryMode {
         };
 
         let obj_color = if self.level_complete {
-            let pulse = ((get_time() * 2.0).sin() * 0.3 + 0.7) as f32;
+            let pulse = ((crate::time::get_time() * 2.0).sin() * 0.3 + 0.7) as f32;
             Color::from_rgba(100, 255, 100, (pulse * 255.0) as u8)
         } else {
             WHITE
@@ -688,7 +688,7 @@ impl StoryMode {
             } else {
                 "!!! MULTIPLE BOSSES !!!"
             };
-            let pulse = ((get_time() * 4.0).sin() * 0.5 + 0.5) as f32;
+            let pulse = ((crate::time::get_time() * 4.0).sin() * 0.5 + 0.5) as f32;
             let alpha = (100.0 + pulse * 155.0) as u8;
             let color = Color::from_rgba(255, 50, 50, alpha);
             draw_text(boss_text, screen_w / 2.0 - 150.0, 100.0, 20.0, color);
@@ -711,7 +711,7 @@ impl StoryMode {
 
         draw_rectangle(0.0, 0.0, screen_w, screen_h, Color::from_rgba(0, 0, 0, 240));
 
-        let pulse = ((get_time() * 2.0).sin() * 0.2 + 0.8) as f32;
+        let pulse = ((crate::time::get_time() * 2.0).sin() * 0.2 + 0.8) as f32;
 
         let title = "CAMPAIGN COMPLETE";
         draw_text(
@@ -787,7 +787,7 @@ impl StoryMode {
         let screen_y = level.exit_y - camera_y;
 
         if !self.level_complete {
-            let marker_pulse = ((get_time() * 2.0).sin() * 0.5 + 0.5) as f32;
+            let marker_pulse = ((crate::time::get_time() * 2.0).sin() * 0.5 + 0.5) as f32;
             let marker_alpha = (100.0 + marker_pulse * 100.0) as u8;
             draw_circle(
                 screen_x,
@@ -805,7 +805,7 @@ impl StoryMode {
             return;
         }
 
-        let time = get_time() as f32;
+        let time = crate::time::get_time() as f32;
         let pulse = (time * 3.0).sin() * 0.3 + 0.7;
         let radius = level.exit_radius * pulse;
 

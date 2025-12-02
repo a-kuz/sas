@@ -19,8 +19,7 @@ struct MD3Header {
 
 fn main() {
     let paths = vec![
-        "q3-resources/models/weapons2/machinegun/machinegun.md3",
-        "q3-resources/models/weapons2/machinegun/machinegun_barrel.md3",
+        "q3-resources/models/weapons2/rocketl/rocketl.md3",
     ];
     
     for path in paths {
@@ -84,29 +83,73 @@ fn main() {
         }
         
         for mesh_idx in 0..header.num_meshes {
+            let mesh_start = file.stream_position().expect("Failed to get position") as i64;
+
             let mut mesh_header_bytes = [0u8; 108];
             file.read_exact(&mut mesh_header_bytes).expect("Failed to read mesh header");
-            
+
             let mut name = [0u8; 68];
             name.copy_from_slice(&mesh_header_bytes[4..72]);
             let mesh_name = std::str::from_utf8(&name)
                 .unwrap_or("invalid")
                 .trim_end_matches('\0');
-            
+
+            let num_frames = i32::from_le_bytes([
+                mesh_header_bytes[72], mesh_header_bytes[73],
+                mesh_header_bytes[74], mesh_header_bytes[75],
+            ]);
+            let num_shaders = i32::from_le_bytes([
+                mesh_header_bytes[76], mesh_header_bytes[77],
+                mesh_header_bytes[78], mesh_header_bytes[79],
+            ]);
             let num_vertices = i32::from_le_bytes([
-                mesh_header_bytes[80], mesh_header_bytes[81], 
-                mesh_header_bytes[82], mesh_header_bytes[83]
+                mesh_header_bytes[80], mesh_header_bytes[81],
+                mesh_header_bytes[82], mesh_header_bytes[83],
             ]);
             let num_triangles = i32::from_le_bytes([
-                mesh_header_bytes[84], mesh_header_bytes[85], 
-                mesh_header_bytes[86], mesh_header_bytes[87]
+                mesh_header_bytes[84], mesh_header_bytes[85],
+                mesh_header_bytes[86], mesh_header_bytes[87],
             ]);
-            
+            let tri_start = i32::from_le_bytes([
+                mesh_header_bytes[88], mesh_header_bytes[89],
+                mesh_header_bytes[90], mesh_header_bytes[91],
+            ]);
+            let shader_start = i32::from_le_bytes([
+                mesh_header_bytes[92], mesh_header_bytes[93],
+                mesh_header_bytes[94], mesh_header_bytes[95],
+            ]);
+
             println!("\n  Mesh {}: '{}'", mesh_idx, mesh_name);
+            println!("    Frames: {}", num_frames);
+            println!("    Shaders: {}", num_shaders);
             println!("    Vertices: {}", num_vertices);
             println!("    Triangles: {}", num_triangles);
-            
-            break;
+
+            if num_shaders > 0 {
+                file.seek(std::io::SeekFrom::Start((mesh_start + shader_start as i64) as u64))
+                    .expect("Failed to seek to shaders");
+                for shader_idx in 0..num_shaders {
+                    let mut shader_bytes = [0u8; 72];
+                    file.read_exact(&mut shader_bytes).expect("Failed to read shader");
+                    let mut shader_name = [0u8; 64];
+                    shader_name.copy_from_slice(&shader_bytes[0..64]);
+                    let shader_name_str = std::str::from_utf8(&shader_name)
+                        .unwrap_or("invalid")
+                        .trim_end_matches('\0');
+                    let shader_index = i32::from_le_bytes([
+                        shader_bytes[64], shader_bytes[65],
+                        shader_bytes[66], shader_bytes[67],
+                    ]);
+                    println!("      Shader {}: '{}' (index {})", shader_idx, shader_name_str, shader_index);
+                }
+            }
+
+            file.seek(std::io::SeekFrom::Start((mesh_start + tri_start as i64) as u64))
+                .expect("Failed to seek to triangles");
+            for _ in 0..num_triangles {
+                let mut tri_bytes = [0u8; 12];
+                file.read_exact(&mut tri_bytes).expect("Failed to read triangle");
+            }
         }
     }
 }

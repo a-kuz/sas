@@ -157,7 +157,7 @@ impl MuzzleFlash {
             roll,
             life: 0,
             weapon,
-            birth_time: get_time(),
+            birth_time: crate::time::get_time(),
         }
     }
 

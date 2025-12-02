@@ -28,3 +28,4 @@ echo "To test the app, run:"
 echo "  open \"target/release/bundle/osx/SAS III.app\""
 
 
+

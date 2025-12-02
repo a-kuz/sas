@@ -4,9 +4,10 @@ use macroquad::prelude::*;
 const LIGHTMAP_SCALE: usize = 2;
 
 pub struct Lightmap {
-    pub texture: Texture2D,
+    pub texture: Option<Texture2D>,
     pub width: usize,
     pub height: usize,
+    pub pixels: Vec<u8>,
 }
 
 impl Lightmap {
@@ -58,18 +59,24 @@ impl Lightmap {
             }
         }
 
-        let image = Image {
-            bytes: pixels,
-            width: width as u16,
-            height: height as u16,
-        };
-        let texture = Texture2D::from_image(&image);
-        texture.set_filter(FilterMode::Linear);
-
         Self {
-            texture,
+            texture: None,
             width,
             height,
+            pixels,
+        }
+    }
+    
+    pub fn create_macroquad_texture(&mut self) {
+        if self.texture.is_none() {
+            let image = Image {
+                bytes: self.pixels.clone(),
+                width: self.width as u16,
+                height: self.height as u16,
+            };
+            let tex = Texture2D::from_image(&image);
+            tex.set_filter(FilterMode::Linear);
+            self.texture = Some(tex);
         }
     }
 

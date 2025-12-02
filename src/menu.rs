@@ -1,7 +1,5 @@
+use crate::input::winit_input::{WinitInputState, KeyCode};
 use crate::game::GameState;
-use crate::render;
-use macroquad::audio::{play_sound, PlaySoundParams, Sound};
-use macroquad::prelude::*;
 
 pub struct MenuState {
     pub current_menu: String,
@@ -10,10 +8,10 @@ pub struct MenuState {
     pub model_menu_selected: usize,
     pub available_maps: Vec<String>,
     pub available_models: Vec<String>,
-    pub menu_move_sound: Option<Sound>,
-    pub menu_select_sound: Option<Sound>,
     pub time: f32,
-    pub logo_texture: Option<Texture2D>,
+    pub menu_move_sound: Option<()>,
+    pub menu_select_sound: Option<()>,
+    pub logo_texture: Option<()>,
 }
 
 impl MenuState {
@@ -25,9 +23,9 @@ impl MenuState {
             model_menu_selected: 0,
             available_maps: Vec::new(),
             available_models: Vec::new(),
+            time: 0.0,
             menu_move_sound: None,
             menu_select_sound: None,
-            time: 0.0,
             logo_texture: None,
         }
     }
@@ -43,131 +41,88 @@ impl MenuState {
             .position(|m| m == &env_model)
             .unwrap_or(0);
 
-        self.menu_move_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu1.wav")
-            .await
-            .ok();
-        self.menu_select_sound = macroquad::audio::load_sound("q3-resources/sound/misc/menu2.wav")
-            .await
-            .ok();
+        self.menu_move_sound = None;
+        self.menu_select_sound = None;
 
-        // Load logo
-        self.logo_texture = load_texture("assets/logo-alfa.png").await.ok();
+        self.logo_texture = None;
     }
 
-    pub async fn handle_input(&mut self) -> Option<GameState> {
+    pub fn handle_input(&mut self, input_state: &WinitInputState) -> Option<GameState> {
         let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
 
         match self.current_menu.as_str() {
             "main" => {
-                if is_key_pressed(KeyCode::Down) {
+                if input_state.is_key_pressed(KeyCode::Down) {
                     self.main_menu_selected = (self.main_menu_selected + 1) % main_menu_items.len();
-                    self.play_move_sound();
                 }
-                if is_key_pressed(KeyCode::Up) {
+                if input_state.is_key_pressed(KeyCode::Up) {
                     self.main_menu_selected = if self.main_menu_selected == 0 {
                         main_menu_items.len() - 1
                     } else {
                         self.main_menu_selected - 1
                     };
-                    self.play_move_sound();
                 }
 
-                if let Some(clicked_idx) = self.check_menu_click(main_menu_items.len()) {
-                    self.main_menu_selected = clicked_idx;
-                    self.play_select_sound();
+                if input_state.is_key_pressed(KeyCode::Enter) || input_state.is_key_pressed(KeyCode::KpEnter) {
                     match self.main_menu_selected {
-                        0 => self.current_menu = "map_select".to_string(),
-                        1 => self.current_menu = "1v1_map_select".to_string(),
-                        2 => std::process::exit(0),
-                        _ => {}
-                    }
-                } else if is_key_pressed(KeyCode::Enter) {
-                    self.play_select_sound();
-                    match self.main_menu_selected {
-                        0 => self.current_menu = "map_select".to_string(),
-                        1 => self.current_menu = "1v1_map_select".to_string(),
-                        2 => std::process::exit(0),
+                        0 => {
+                            self.current_menu = "map_select".to_string();
+                        }
+                        1 => {
+                            self.current_menu = "1v1_map_select".to_string();
+                        }
+                        2 => {
+                            std::process::exit(0);
+                        }
                         _ => {}
                     }
                 }
             }
             "map_select" => {
-                if is_key_pressed(KeyCode::Down) {
-                    self.map_menu_selected =
-                        (self.map_menu_selected + 1) % self.available_maps.len();
+                if input_state.is_key_pressed(KeyCode::Down) {
+                    if !self.available_maps.is_empty() {
+                        self.map_menu_selected = (self.map_menu_selected + 1) % self.available_maps.len();
+                    }
                 }
-                if is_key_pressed(KeyCode::Up) {
-                    self.map_menu_selected = if self.map_menu_selected == 0 {
-                        self.available_maps.len() - 1
-                    } else {
-                        self.map_menu_selected - 1
-                    };
+                if input_state.is_key_pressed(KeyCode::Up) {
+                    if !self.available_maps.is_empty() {
+                        self.map_menu_selected = if self.map_menu_selected == 0 {
+                            self.available_maps.len() - 1
+                        } else {
+                            self.map_menu_selected - 1
+                        };
+                    }
                 }
-
-                if let Some(clicked_idx) = self.check_menu_click(self.available_maps.len()) {
-                    self.map_menu_selected = clicked_idx;
-                    let map_name = &self.available_maps[self.map_menu_selected];
-                    println!("[Menu] Selected map: {}", map_name);
-                    return Some(GameState::new_async(map_name).await);
-                } else if is_key_pressed(KeyCode::Enter) {
-                    let map_name = &self.available_maps[self.map_menu_selected];
-                    println!("[Menu] Selected map: {}", map_name);
-                    return Some(GameState::new_async(map_name).await);
-                } else if is_key_pressed(KeyCode::Escape) {
+                if input_state.is_key_pressed(KeyCode::Enter) || input_state.is_key_pressed(KeyCode::KpEnter) {
+                    if let Some(map_name) = self.available_maps.get(self.map_menu_selected) {
+                        return Some(GameState::new(map_name));
+                    }
+                }
+                if input_state.is_key_pressed(KeyCode::Escape) {
                     self.current_menu = "main".to_string();
                 }
             }
             "1v1_map_select" => {
-                if is_key_pressed(KeyCode::Down) {
-                    self.map_menu_selected =
-                        (self.map_menu_selected + 1) % self.available_maps.len();
-                }
-                if is_key_pressed(KeyCode::Up) {
-                    self.map_menu_selected = if self.map_menu_selected == 0 {
-                        self.available_maps.len() - 1
-                    } else {
-                        self.map_menu_selected - 1
-                    };
-                }
-
-                if let Some(clicked_idx) = self.check_1v1_menu_click() {
-                    self.map_menu_selected = clicked_idx;
-                    let map_name = &self.available_maps[self.map_menu_selected];
-                    println!("[Menu] Selected 1v1 map: {}", map_name);
-                    let mut gs = GameState::new_async(map_name).await;
-                    gs.is_local_multiplayer = true;
-                    return Some(gs);
-                } else if is_key_pressed(KeyCode::Enter) {
-                    let map_name = &self.available_maps[self.map_menu_selected];
-                    println!("[Menu] Selected 1v1 map: {}", map_name);
-                    let mut gs = GameState::new_async(map_name).await;
-                    gs.is_local_multiplayer = true;
-                    return Some(gs);
-                } else if is_key_pressed(KeyCode::Escape) {
-                    self.current_menu = "main".to_string();
-                }
-            }
-            "settings" => {
-                if !self.available_models.is_empty() {
-                    if is_key_pressed(KeyCode::Down) {
-                        self.model_menu_selected =
-                            (self.model_menu_selected + 1) % self.available_models.len();
+                if input_state.is_key_pressed(KeyCode::Down) {
+                    if !self.available_maps.is_empty() {
+                        self.map_menu_selected = (self.map_menu_selected + 1) % self.available_maps.len();
                     }
-                    if is_key_pressed(KeyCode::Up) {
-                        self.model_menu_selected = if self.model_menu_selected == 0 {
-                            self.available_models.len() - 1
+                }
+                if input_state.is_key_pressed(KeyCode::Up) {
+                    if !self.available_maps.is_empty() {
+                        self.map_menu_selected = if self.map_menu_selected == 0 {
+                            self.available_maps.len() - 1
                         } else {
-                            self.model_menu_selected - 1
+                            self.map_menu_selected - 1
                         };
                     }
-
-                    if let Some(clicked_idx) = self.check_settings_menu_click() {
-                        self.model_menu_selected = clicked_idx;
-                        self.play_select_sound();
+                }
+                if input_state.is_key_pressed(KeyCode::Enter) || input_state.is_key_pressed(KeyCode::KpEnter) {
+                    if let Some(map_name) = self.available_maps.get(self.map_menu_selected) {
+                        return Some(GameState::new(map_name));
                     }
                 }
-
-                if is_key_pressed(KeyCode::Escape) {
+                if input_state.is_key_pressed(KeyCode::Escape) {
                     self.current_menu = "main".to_string();
                 }
             }
@@ -181,389 +136,385 @@ impl MenuState {
         self.time += dt;
     }
 
-    pub fn render(&self) {
-        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
-        let hover_idx = self.get_hovered_item_index();
-
-        // Draw background for all menus
-        render::menu_shader::draw_menu_background(self.time);
-
-        match self.current_menu.as_str() {
-            "main" => {
-                render::menu_shader::draw_menu_items(
-                    self.main_menu_selected,
-                    &main_menu_items,
-                    self.logo_texture.as_ref(),
-                );
-            }
-            "map_select" => {
-                let map_names: Vec<&str> = self.available_maps.iter().map(|s| s.as_str()).collect();
-                render::draw_map_select_menu(self.map_menu_selected, &map_names, hover_idx);
-            }
-            "1v1_map_select" => {
-                let map_names: Vec<&str> = self.available_maps.iter().map(|s| s.as_str()).collect();
-                render::draw_1v1_map_select_menu(self.map_menu_selected, &map_names, hover_idx);
-            }
-            "settings" => {
-                let model_names: Vec<&str> =
-                    self.available_models.iter().map(|s| s.as_str()).collect();
-                let selected_model_name = self
-                    .available_models
-                    .get(self.model_menu_selected)
-                    .map(|s| s.as_str())
-                    .unwrap_or("sarge");
-                render::draw_settings_menu(
-                    self.model_menu_selected,
-                    &model_names,
-                    selected_model_name,
-                    hover_idx,
-                );
-            }
-            _ => {}
-        }
-    }
-
-    fn get_hovered_item_index(&self) -> Option<usize> {
-        let mouse_pos = mouse_position();
-        let w = screen_width();
-        let h = screen_height();
-
-        match self.current_menu.as_str() {
-            "main" => {
-                let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
-                let item_h = 54.0;
-                let start_y = h * 0.5 - (main_menu_items.len() as f32 * (item_h + 12.0)) * 0.5;
-                let right_margin = 100.0;
-
-                for i in 0..main_menu_items.len() {
-                    let y = start_y + (i as f32) * (item_h + 12.0);
-                    let size = if i == self.main_menu_selected {
-                        36.0
-                    } else {
-                        30.0
-                    };
-                    let text_width = crate::render::measure_q3_banner_string(
-                        &main_menu_items[i].to_uppercase(),
-                        size,
-                    );
-                    let x = w - text_width - right_margin;
-
-                    if mouse_pos.0 >= x
-                        && mouse_pos.0 <= w - right_margin
-                        && mouse_pos.1 >= y
-                        && mouse_pos.1 <= y + item_h
-                    {
-                        return Some(i);
-                    }
-                }
-            }
-            "map_select" => {
-                let num_items = self.available_maps.len();
-                let item_h = 54.0;
-                let item_w = 400.0;
-                let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5;
-
-                for i in 0..num_items {
-                    let y = start_y + (i as f32) * (item_h + 12.0);
-                    let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x
-                        && mouse_pos.0 <= x + item_w
-                        && mouse_pos.1 >= y
-                        && mouse_pos.1 <= y + item_h
-                    {
-                        return Some(i);
-                    }
-                }
-            }
-            "1v1_map_select" => {
-                let num_items = self.available_maps.len();
-                let item_h = 54.0;
-                let item_w = 400.0;
-                let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5 + 20.0;
-
-                for i in 0..num_items {
-                    let y = start_y + (i as f32) * (item_h + 12.0);
-                    let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x
-                        && mouse_pos.0 <= x + item_w
-                        && mouse_pos.1 >= y
-                        && mouse_pos.1 <= y + item_h
-                    {
-                        return Some(i);
-                    }
-                }
-            }
-            "settings" => {
-                let max_visible = 6;
-                let item_h = 54.0;
-                let item_w = 400.0;
-
-                let scroll_offset = if self.model_menu_selected >= max_visible {
-                    self.model_menu_selected - max_visible + 1
-                } else {
-                    0
-                };
-
-                let num_visible = (self.available_models.len() - scroll_offset).min(max_visible);
-                let start_y = h * 0.5 - (num_visible as f32 * (item_h + 12.0)) * 0.5 + 40.0;
-
-                for idx in 0..num_visible {
-                    let orig_i = scroll_offset + idx;
-                    let y = start_y + (idx as f32) * (item_h + 12.0);
-                    let x = w * 0.5 - item_w * 0.5;
-                    if mouse_pos.0 >= x
-                        && mouse_pos.0 <= x + item_w
-                        && mouse_pos.1 >= y
-                        && mouse_pos.1 <= y + item_h
-                    {
-                        return Some(orig_i);
-                    }
-                }
-            }
-            _ => {}
-        }
-
-        None
-    }
-
-    fn play_move_sound(&self) {
-        if let Some(sound) = &self.menu_move_sound {
-            play_sound(sound, PlaySoundParams::default());
-        }
-    }
-
-    fn play_select_sound(&self) {
-        if let Some(sound) = &self.menu_select_sound {
-            play_sound(sound, PlaySoundParams::default());
-        }
-    }
-
     pub fn get_selected_model_index(&self) -> usize {
         self.model_menu_selected
     }
 
-    fn check_menu_click(&self, num_items: usize) -> Option<usize> {
-        if !is_mouse_button_pressed(MouseButton::Left) {
-            return None;
-        }
+    pub fn render_wgpu(&self, renderer: &mut crate::wgpu_renderer::WgpuRenderer) {
+        use std::sync::OnceLock;
+        use std::sync::Mutex;
+        static UI_RENDERER: OnceLock<Mutex<crate::wgpu_renderer::ui_renderer::UIRenderer>> = OnceLock::new();
+        static FONT_TEXTURE: OnceLock<std::sync::Arc<crate::wgpu_renderer::texture::WgpuTexture>> = OnceLock::new();
+        
+        let (width, height) = renderer.get_viewport_size();
+        let w = width as f32;
+        let h = height as f32;
 
-        let mouse_pos = mouse_position();
-        let w = screen_width();
-        let h = screen_height();
+        if let Some(frame) = renderer.begin_frame() {
+            let view = frame.texture.create_view(&wgpu::TextureViewDescriptor::default());
+            let mut encoder = renderer.device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                label: Some("Menu Render Encoder"),
+            });
 
-        let main_menu_items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
-        let item_h = 54.0;
-        let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5;
-        let right_margin = 100.0;
+            let ui_renderer_mutex = UI_RENDERER.get_or_init(|| {
+                Mutex::new(crate::wgpu_renderer::ui_renderer::UIRenderer::new(
+                    renderer.device.clone(),
+                    renderer.queue.clone(),
+                    renderer.surface_config.format,
+                ))
+            });
 
-        for i in 0..num_items {
-            let y = start_y + (i as f32) * (item_h + 12.0);
-            let size = if i == self.main_menu_selected {
-                36.0
+            let mut ui_renderer = ui_renderer_mutex.lock().unwrap();
+
+            if ui_renderer.font_texture.is_none() {
+                if let Ok(img) = image::open("q3-resources/menu/art/font2_prop.png") {
+                    let dyn_img = img.to_rgba8();
+                    let wgpu_texture = std::sync::Arc::new(
+                        crate::wgpu_renderer::texture::WgpuTexture::from_image(
+                            &renderer.device,
+                            &renderer.queue,
+                            &image::DynamicImage::ImageRgba8(dyn_img),
+                        )
+                    );
+                    ui_renderer.set_font_texture(wgpu_texture.clone());
+                    let _ = FONT_TEXTURE.set(wgpu_texture);
+                }
+            }
+
+            let mut text_buffers = Vec::new();
+            match self.current_menu.as_str() {
+                "main" => {
+                    let items = ["DEATHMATCH", "HOTSEAT", "QUIT"];
+                    let item_h = 54.0;
+                    let start_y = h * 0.5 - (items.len() as f32 * (item_h + 12.0)) * 0.5;
+                    let right_margin = 100.0;
+
+                    for (i, item) in items.iter().enumerate() {
+                        let y = start_y + (i as f32) * (item_h + 12.0);
+                        let text_y = y + 10.0;
+                        
+                        let size = if i == self.main_menu_selected { 36.0 } else { 30.0 };
+                        let text_color = if i == self.main_menu_selected {
+                            [1.0, 0.25, 0.25, 1.0]
+                        } else {
+                            [0.82, 0.86, 0.90, 1.0]
+                        };
+                        
+                        let mut text_width = 0.0;
+                        for ch in item.chars() {
+                            let upper = ch.to_ascii_uppercase();
+                            if upper == ' ' {
+                                const PROPB_SPACE_WIDTH: f32 = 12.0;
+                                const PROPB_GAP_WIDTH: f32 = 4.0;
+                                const PROPB_HEIGHT: f32 = 36.0;
+                                let size_scale = size / PROPB_HEIGHT;
+                                text_width += (PROPB_SPACE_WIDTH + PROPB_GAP_WIDTH) * size_scale;
+                            } else if ('A'..='Z').contains(&upper) {
+                                const PROPB_MAP: [(u16, u16, u16); 26] = [
+                                    (11, 12, 33), (49, 12, 31), (85, 12, 31), (120, 12, 30),
+                                    (156, 12, 21), (183, 12, 21), (207, 12, 32), (13, 55, 30),
+                                    (49, 55, 13), (66, 55, 29), (101, 55, 31), (135, 55, 21),
+                                    (158, 55, 40), (204, 55, 32), (12, 97, 31), (48, 97, 31),
+                                    (82, 97, 30), (118, 97, 30), (153, 97, 30), (185, 97, 25),
+                                    (213, 97, 30), (11, 139, 32), (42, 139, 51), (93, 139, 32),
+                                    (126, 139, 31), (158, 139, 25),
+                                ];
+                                const PROPB_GAP_WIDTH: f32 = 4.0;
+                                const PROPB_HEIGHT: f32 = 36.0;
+                                let idx = (upper as u8 - b'A') as usize;
+                                let (_sx, _sy, w) = PROPB_MAP[idx];
+                                let size_scale = size / PROPB_HEIGHT;
+                                let aw = (w as f32) * size_scale;
+                                text_width += (aw + PROPB_GAP_WIDTH * size_scale).round();
+                            } else {
+                                text_width += size.round();
+                            }
+                        }
+                        
+                        let mut text_x = w - text_width - right_margin;
+
+                        for ch in item.chars() {
+                            let (vb, ib, advance) = ui_renderer.create_prop_char_buffers(
+                                text_x,
+                                text_y,
+                                size,
+                                w,
+                                h,
+                                ch,
+                                text_color,
+                            );
+                            text_buffers.push(((vb, ib), ch as u8));
+                            text_x += advance;
+                        }
+                    }
+                }
+                "map_select" | "1v1_map_select" => {
+                    let title_text = "SELECT MAP";
+                    let title_size = 40.0;
+                    let title_y = 80.0;
+                    let title_color = [1.0, 0.69, 0.0, 1.0];
+                    
+                    let mut title_width = 0.0;
+                    for ch in title_text.chars() {
+                        let upper = ch.to_ascii_uppercase();
+                        if upper == ' ' {
+                            const PROPB_SPACE_WIDTH: f32 = 12.0;
+                            const PROPB_GAP_WIDTH: f32 = 4.0;
+                            const PROPB_HEIGHT: f32 = 36.0;
+                            let size_scale = title_size / PROPB_HEIGHT;
+                            title_width += (PROPB_SPACE_WIDTH + PROPB_GAP_WIDTH) * size_scale;
+                        } else if ('A'..='Z').contains(&upper) {
+                            const PROPB_MAP: [(u16, u16, u16); 26] = [
+                                (11, 12, 33), (49, 12, 31), (85, 12, 31), (120, 12, 30),
+                                (156, 12, 21), (183, 12, 21), (207, 12, 32), (13, 55, 30),
+                                (49, 55, 13), (66, 55, 29), (101, 55, 31), (135, 55, 21),
+                                (158, 55, 40), (204, 55, 32), (12, 97, 31), (48, 97, 31),
+                                (82, 97, 30), (118, 97, 30), (153, 97, 30), (185, 97, 25),
+                                (213, 97, 30), (11, 139, 32), (42, 139, 51), (93, 139, 32),
+                                (126, 139, 31), (158, 139, 25),
+                            ];
+                            const PROPB_GAP_WIDTH: f32 = 4.0;
+                            const PROPB_HEIGHT: f32 = 36.0;
+                            let idx = (upper as u8 - b'A') as usize;
+                            let (_sx, _sy, w) = PROPB_MAP[idx];
+                            let size_scale = title_size / PROPB_HEIGHT;
+                            let aw = (w as f32) * size_scale;
+                            title_width += (aw + PROPB_GAP_WIDTH * size_scale).round();
+                        } else {
+                            title_width += title_size.round();
+                        }
+                    }
+                    
+                    let mut title_x = w * 0.5 - title_width * 0.5;
+                    for ch in title_text.chars() {
+                        let (vb, ib, advance) = ui_renderer.create_prop_char_buffers(
+                            title_x,
+                            title_y,
+                            title_size,
+                            w,
+                            h,
+                            ch,
+                            title_color,
+                        );
+                        text_buffers.push(((vb, ib), ch as u8));
+                        title_x += advance;
+                    }
+                    
+                    if self.available_maps.is_empty() {
+                        let no_maps_text = "NO MAPS FOUND";
+                        let no_maps_size = 32.0;
+                        let no_maps_y = h * 0.5;
+                        let no_maps_color = [1.0, 0.39, 0.39, 1.0];
+                        
+                        let mut no_maps_width = 0.0;
+                        for ch in no_maps_text.chars() {
+                            let upper = ch.to_ascii_uppercase();
+                            if upper == ' ' {
+                                const PROPB_SPACE_WIDTH: f32 = 12.0;
+                                const PROPB_GAP_WIDTH: f32 = 4.0;
+                                const PROPB_HEIGHT: f32 = 36.0;
+                                let size_scale = no_maps_size / PROPB_HEIGHT;
+                                no_maps_width += (PROPB_SPACE_WIDTH + PROPB_GAP_WIDTH) * size_scale;
+                            } else if ('A'..='Z').contains(&upper) {
+                                const PROPB_MAP: [(u16, u16, u16); 26] = [
+                                    (11, 12, 33), (49, 12, 31), (85, 12, 31), (120, 12, 30),
+                                    (156, 12, 21), (183, 12, 21), (207, 12, 32), (13, 55, 30),
+                                    (49, 55, 13), (66, 55, 29), (101, 55, 31), (135, 55, 21),
+                                    (158, 55, 40), (204, 55, 32), (12, 97, 31), (48, 97, 31),
+                                    (82, 97, 30), (118, 97, 30), (153, 97, 30), (185, 97, 25),
+                                    (213, 97, 30), (11, 139, 32), (42, 139, 51), (93, 139, 32),
+                                    (126, 139, 31), (158, 139, 25),
+                                ];
+                                const PROPB_GAP_WIDTH: f32 = 4.0;
+                                const PROPB_HEIGHT: f32 = 36.0;
+                                let idx = (upper as u8 - b'A') as usize;
+                                let (_sx, _sy, w) = PROPB_MAP[idx];
+                                let size_scale = no_maps_size / PROPB_HEIGHT;
+                                let aw = (w as f32) * size_scale;
+                                no_maps_width += (aw + PROPB_GAP_WIDTH * size_scale).round();
+                            } else {
+                                no_maps_width += no_maps_size.round();
+                            }
+                        }
+                        
+                        let mut no_maps_x = w * 0.5 - no_maps_width * 0.5;
+                        for ch in no_maps_text.chars() {
+                            let (vb, ib, advance) = ui_renderer.create_prop_char_buffers(
+                                no_maps_x,
+                                no_maps_y,
+                                no_maps_size,
+                                w,
+                                h,
+                                ch,
+                                no_maps_color,
+                            );
+                            text_buffers.push(((vb, ib), ch as u8));
+                            no_maps_x += advance;
+                        }
+                    } else {
+                        let item_h = 54.0;
+                        let start_y = h * 0.5 - (self.available_maps.len() as f32 * (item_h + 12.0)) * 0.5;
+                        let start_x = w * 0.5 - 200.0;
+
+                        for (i, map) in self.available_maps.iter().enumerate() {
+                            let y = start_y + (i as f32) * (item_h + 12.0);
+                            let text_y = y + 10.0;
+                            
+                            let size = if i == self.map_menu_selected { 36.0 } else { 30.0 };
+                            let text_color = if i == self.map_menu_selected {
+                                [1.0, 0.25, 0.25, 1.0]
+                            } else {
+                                [0.82, 0.86, 0.90, 1.0]
+                            };
+                            
+                            let mut text_x = start_x + 18.0;
+                            for ch in map.chars() {
+                                let (vb, ib, advance) = ui_renderer.create_prop_char_buffers(
+                                    text_x,
+                                    text_y,
+                                    size,
+                                    w,
+                                    h,
+                                    ch,
+                                    text_color,
+                                );
+                                text_buffers.push(((vb, ib), ch as u8));
+                                text_x += advance;
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+
+            let text_bind_group = if !text_buffers.is_empty() {
+                if let Some(ref font_texture) = ui_renderer.font_texture {
+                    if let Some(ref bind_group_layout) = ui_renderer.text_bind_group_layout {
+                        Some(renderer.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                            label: Some("UI Text Bind Group"),
+                            layout: bind_group_layout,
+                            entries: &[
+                                wgpu::BindGroupEntry {
+                                    binding: 0,
+                                    resource: wgpu::BindingResource::TextureView(&font_texture.view),
+                                },
+                                wgpu::BindGroupEntry {
+                                    binding: 1,
+                                    resource: wgpu::BindingResource::Sampler(&font_texture.sampler),
+                                },
+                            ],
+                        }))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
             } else {
-                30.0
+                None
             };
-            let text_width =
-                crate::render::measure_q3_banner_string(&main_menu_items[i].to_uppercase(), size);
-            let x = w - text_width - right_margin;
 
-            if mouse_pos.0 >= x
-                && mouse_pos.0 <= w - right_margin
-                && mouse_pos.1 >= y
-                && mouse_pos.1 <= y + item_h
             {
-                return Some(i);
-            }
-        }
+                let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                    label: Some("Menu Render Pass"),
+                    color_attachments: &[Some(wgpu::RenderPassColorAttachment {
+                        view: &view,
+                        resolve_target: None,
+                        ops: wgpu::Operations {
+                            load: wgpu::LoadOp::Clear(wgpu::Color {
+                                r: 0.07,
+                                g: 0.09,
+                                b: 0.11,
+                                a: 1.0,
+                            }),
+                            store: wgpu::StoreOp::Store,
+                        },
+                    })],
+                    depth_stencil_attachment: None,
+                    occlusion_query_set: None,
+                    timestamp_writes: None,
+                });
 
-        None
-    }
+                if let Some(ref text_pipeline) = ui_renderer.text_pipeline {
+                    if let Some(ref bind_group) = text_bind_group {
+                        render_pass.set_pipeline(text_pipeline);
+                        render_pass.set_bind_group(0, bind_group, &[]);
 
-    fn check_1v1_menu_click(&self) -> Option<usize> {
-        if !is_mouse_button_pressed(MouseButton::Left) {
-            return None;
-        }
-
-        let mouse_pos = mouse_position();
-        let w = screen_width();
-        let h = screen_height();
-
-        let num_items = self.available_maps.len();
-        let item_h = 54.0;
-        let item_w = 400.0;
-        let start_y = h * 0.5 - (num_items as f32 * (item_h + 12.0)) * 0.5 + 20.0;
-
-        for i in 0..num_items {
-            let y = start_y + (i as f32) * (item_h + 12.0);
-            let x = w * 0.5 - item_w * 0.5;
-
-            if mouse_pos.0 >= x
-                && mouse_pos.0 <= x + item_w
-                && mouse_pos.1 >= y
-                && mouse_pos.1 <= y + item_h
-            {
-                return Some(i);
-            }
-        }
-
-        None
-    }
-
-    fn check_settings_menu_click(&self) -> Option<usize> {
-        if !is_mouse_button_pressed(MouseButton::Left) {
-            return None;
-        }
-
-        let mouse_pos = mouse_position();
-        let w = screen_width();
-        let h = screen_height();
-
-        let max_visible = 6;
-        let item_h = 54.0;
-        let item_w = 400.0;
-
-        let scroll_offset = if self.model_menu_selected >= max_visible {
-            self.model_menu_selected - max_visible + 1
-        } else {
-            0
-        };
-
-        let num_visible = (self.available_models.len() - scroll_offset).min(max_visible);
-        let start_y = h * 0.5 - (num_visible as f32 * (item_h + 12.0)) * 0.5 + 40.0;
-
-        for idx in 0..num_visible {
-            let orig_i = scroll_offset + idx;
-            let y = start_y + (idx as f32) * (item_h + 12.0);
-            let x = w * 0.5 - item_w * 0.5;
-
-            if mouse_pos.0 >= x
-                && mouse_pos.0 <= x + item_w
-                && mouse_pos.1 >= y
-                && mouse_pos.1 <= y + item_h
-            {
-                return Some(orig_i);
-            }
-        }
-
-        None
-    }
-}
-
-fn list_available_models() -> Vec<String> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        vec![
-            "anarki".to_string(),
-            "biker".to_string(),
-            "bones".to_string(),
-            "crash".to_string(),
-            "doom".to_string(),
-            "grunt".to_string(),
-            "hunter".to_string(),
-            "keel".to_string(),
-            "klesk".to_string(),
-            "lucy".to_string(),
-            "major".to_string(),
-            "mynx".to_string(),
-            "orbb".to_string(),
-            "ranger".to_string(),
-            "razor".to_string(),
-            "sarge".to_string(),
-            "slash".to_string(),
-            "sorlag".to_string(),
-            "tankjr".to_string(),
-            "uriel".to_string(),
-            "visor".to_string(),
-            "xaero".to_string(),
-        ]
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let base = "q3-resources/models/players";
-        let mut out = Vec::new();
-        if let Ok(dir) = std::fs::read_dir(base) {
-            for entry in dir.flatten() {
-                if let Ok(ft) = entry.file_type() {
-                    if ft.is_dir() {
-                        let name = entry.file_name().to_string_lossy().to_string();
-                        let lower = format!("{}/{}/lower.md3", base, name);
-                        let upper = format!("{}/{}/upper.md3", base, name);
-                        let head = format!("{}/{}/head.md3", base, name);
-                        if std::path::Path::new(&lower).exists()
-                            && std::path::Path::new(&upper).exists()
-                            && std::path::Path::new(&head).exists()
-                        {
-                            out.push(name);
+                        for ((vb, ib), _ch) in text_buffers.iter() {
+                            if vb.size() > 0 && ib.size() > 0 {
+                                render_pass.set_vertex_buffer(0, vb.slice(..));
+                                render_pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint16);
+                                render_pass.draw_indexed(0..6, 0, 0..1);
+                            }
                         }
                     }
                 }
             }
+
+            renderer.queue.submit(std::iter::once(encoder.finish()));
+            renderer.end_frame(frame);
         }
-        out.sort();
-        out
     }
 }
 
 fn list_available_maps() -> Vec<String> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        vec![
-            "0-arena".to_string(),
-            "1-arena".to_string(),
-            "2-arena".to_string(),
-            "my_arena".to_string(),
-            "new_map".to_string(),
-        ]
-    }
+    let maps_dir = std::path::Path::new("maps");
+    let mut maps = Vec::new();
 
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let maps_dir = "maps";
-        let mut maps = Vec::new();
-
-        println!("[MENU] Scanning maps directory: {}", maps_dir);
-
-        match std::fs::read_dir(maps_dir) {
-            Ok(dir) => {
-                let mut file_count = 0;
-                for entry in dir.flatten() {
-                    file_count += 1;
-                    if let Ok(ft) = entry.file_type() {
-                        let file_name = entry.file_name().to_string_lossy().to_string();
-                        println!(
-                            "[MENU] Found file: {} (is_file: {})",
-                            file_name,
-                            ft.is_file()
-                        );
-
-                        if ft.is_file() {
-                            if file_name.ends_with(".json")
-                                && !file_name.ends_with("_navgraph.json")
-                                && !file_name.ends_with("_defrag.json")
+    if maps_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(maps_dir) {
+            for entry in entries.flatten() {
+                if let Ok(file_type) = entry.file_type() {
+                    if file_type.is_file() {
+                        if let Some(name) = entry.file_name().to_str() {
+                            if name.ends_with(".json")
+                                && !name.ends_with("_navgraph.json")
+                                && !name.ends_with("_defrag.json")
                             {
-                                let map_name = file_name.trim_end_matches(".json").to_string();
-                                println!("[MENU] Added map: {}", map_name);
+                                let map_name = name.trim_end_matches(".json").to_string();
                                 maps.push(map_name);
                             }
                         }
                     }
                 }
-                println!("[MENU] Total files scanned: {}", file_count);
-            }
-            Err(e) => {
-                println!("[MENU] ERROR: Failed to read maps directory: {}", e);
             }
         }
-
-        if maps.is_empty() {
-            println!("[MENU] No maps found, using defaults");
-            maps.push("soldat".to_string());
-            maps.push("q3dm6".to_string());
-        }
-
-        maps.sort();
-        println!("[MENU] Total maps loaded: {} - {:?}", maps.len(), maps);
-        maps
     }
+    
+    if maps.is_empty() {
+        maps.push("soldat".to_string());
+        maps.push("q3dm6".to_string());
+    }
+    
+    maps.sort();
+    println!("[MENU] Total maps loaded: {} - {:?}", maps.len(), maps);
+    maps
+}
+
+fn list_available_models() -> Vec<String> {
+    let mut models = Vec::new();
+    let models_dir = std::path::Path::new("models/players");
+    
+    if models_dir.exists() {
+        if let Ok(entries) = std::fs::read_dir(models_dir) {
+            for entry in entries.flatten() {
+                if let Ok(file_type) = entry.file_type() {
+                    if file_type.is_dir() {
+                        if let Some(name) = entry.file_name().to_str() {
+                            models.push(name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if models.is_empty() {
+        models.push("sarge".to_string());
+        models.push("visor".to_string());
+        models.push("grunt".to_string());
+    }
+    
+    models.sort();
+    models
 }

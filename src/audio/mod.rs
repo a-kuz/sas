@@ -1,25 +1,34 @@
 pub mod events;
 
 use events::AudioEvent;
-use macroquad::audio::{load_sound, play_sound, PlaySoundParams, Sound};
+use rodio::{Decoder, OutputStream, Sink};
 use std::collections::HashMap;
 
 pub struct AudioSystem {
-    sounds: HashMap<String, Sound>,
+    sounds: HashMap<String, Vec<u8>>,
     enabled: bool,
+    _stream: OutputStream,
+    _stream_handle: rodio::OutputStreamHandle,
 }
 
 impl AudioSystem {
     pub fn new() -> Self {
+        let (stream, stream_handle) = OutputStream::try_default().unwrap_or_else(|_| {
+            eprintln!("[AUDIO] Failed to create audio output stream");
+            panic!("Audio initialization failed");
+        });
+
         Self {
             sounds: HashMap::new(),
             enabled: true,
+            _stream: stream,
+            _stream_handle: stream_handle,
         }
     }
 
     pub async fn load_sound(&mut self, name: &str, path: &str) {
-        if let Ok(sound) = load_sound(path).await {
-            self.sounds.insert(name.to_string(), sound);
+        if let Ok(file) = std::fs::read(path) {
+            self.sounds.insert(name.to_string(), file);
         }
     }
 
@@ -62,14 +71,17 @@ impl AudioSystem {
             return;
         }
 
-        if let Some(sound) = self.sounds.get(name) {
-            play_sound(
-                sound,
-                PlaySoundParams {
-                    looped: false,
-                    volume,
-                },
-            );
+        if let Some(sound_data) = self.sounds.get(name) {
+            let cursor = std::io::Cursor::new(sound_data.clone());
+            if let Ok(source) = Decoder::new(cursor) {
+                if let Ok(sink) = Sink::try_new(&self._stream_handle) {
+                    sink.set_volume(volume);
+                    sink.append(source);
+                    sink.detach();
+                } else {
+                    eprintln!("[AUDIO] Failed to create sink for sound: {}", name);
+                }
+            }
         }
     }
 
@@ -202,8 +214,7 @@ impl AudioSystem {
                 self.play_positional("railgun_hit", 0.6, *x, listener_x);
             }
             AudioEvent::GrenadeBounce { x } => {
-                use macroquad::rand::gen_range;
-                let sound_name = if gen_range(0, 2) == 0 {
+                let sound_name = if crate::compat_rand::gen_range(0, 2) == 0 {
                     "grenade_bounce1"
                 } else {
                     "grenade_bounce2"

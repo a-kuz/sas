@@ -1,7 +1,7 @@
 use crate::audio;
 use crate::game::{constants::*, weapon::Weapon, GameState};
 use crate::input::{Input, LocalMultiplayerInput};
-use macroquad::prelude::*;
+use glam::Vec2;
 
 pub struct WeaponHandler;
 
@@ -582,8 +582,8 @@ impl WeaponHandler {
                             .push(crate::game::particle::Particle::new(
                                 gib_x,
                                 gib_y,
-                                rand::gen_range(-6.0, 6.0),
-                                rand::gen_range(-9.0, -3.0),
+                                crate::compat_rand::gen_range_f32(-6.0, 6.0),
+                                crate::compat_rand::gen_range_f32(-9.0, -3.0),
                                 true,
                             ));
                     }
@@ -595,8 +595,8 @@ impl WeaponHandler {
                         gib_x,
                         gib_y,
                         3.0,
-                        rand::gen_range(-2.0, 2.0),
-                        rand::gen_range(-1.0, 1.0),
+                        crate::compat_rand::gen_range_f32(-2.0, 2.0),
+                        crate::compat_rand::gen_range_f32(-1.0, 1.0),
                     );
                     game_state.corpses.remove(idx);
                     break;
@@ -708,8 +708,8 @@ impl WeaponHandler {
                                     .push(crate::game::particle::Particle::new(
                                         gib_x,
                                         gib_y,
-                                        rand::gen_range(-6.0, 6.0),
-                                        rand::gen_range(-9.0, -3.0),
+                                        crate::compat_rand::gen_range_f32(-6.0, 6.0),
+                                        crate::compat_rand::gen_range_f32(-9.0, -3.0),
                                         true,
                                     ));
                             }
@@ -718,8 +718,8 @@ impl WeaponHandler {
                                 gib_x,
                                 gib_y,
                                 3.0,
-                                rand::gen_range(-2.0, 2.0),
-                                rand::gen_range(-1.0, 1.0),
+                                crate::compat_rand::gen_range_f32(-2.0, 2.0),
+                                crate::compat_rand::gen_range_f32(-1.0, 1.0),
                             );
                             game_state
                                 .gibs
@@ -876,8 +876,8 @@ impl WeaponHandler {
                                     .push(crate::game::particle::Particle::new(
                                         gib_x,
                                         gib_y,
-                                        rand::gen_range(-6.0, 6.0),
-                                        rand::gen_range(-9.0, -3.0),
+                                        crate::compat_rand::gen_range_f32(-6.0, 6.0),
+                                        crate::compat_rand::gen_range_f32(-9.0, -3.0),
                                         true,
                                     ));
                             }
@@ -885,8 +885,8 @@ impl WeaponHandler {
                                 gib_x,
                                 gib_y,
                                 3.0,
-                                rand::gen_range(-2.0, 2.0),
-                                rand::gen_range(-1.0, 1.0),
+                                crate::compat_rand::gen_range_f32(-2.0, 2.0),
+                                crate::compat_rand::gen_range_f32(-1.0, 1.0),
                             );
 
                             game_state
@@ -990,8 +990,8 @@ impl WeaponHandler {
                         .push(crate::game::particle::Particle::new(
                             hit_x,
                             hit_y,
-                            rand::gen_range(-3.0, 3.0),
-                            rand::gen_range(-3.0, 1.0),
+                            crate::compat_rand::gen_range_f32(-3.0, 3.0),
+                            crate::compat_rand::gen_range_f32(-3.0, 1.0),
                             false,
                         ));
                 }
@@ -999,8 +999,8 @@ impl WeaponHandler {
                     hit_x,
                     hit_y,
                     1.0,
-                    rand::gen_range(-1.0, 1.0),
-                    rand::gen_range(-0.5, 0.5),
+                    crate::compat_rand::gen_range_f32(-1.0, 1.0),
+                    crate::compat_rand::gen_range_f32(-0.5, 0.5),
                 );
             }
         }

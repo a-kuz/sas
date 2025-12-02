@@ -88,3 +88,4 @@ pub fn apply_local_rotation(orientation: &mut Orientation, rotation: Mat3) {
     let rot_axis = axis_from_mat3(rotation);
     orientation.axis = matrix_multiply_axis(rot_axis, orientation.axis);
 }
+

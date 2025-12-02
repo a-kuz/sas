@@ -113,7 +113,7 @@ impl JumpPad {
         let screen_y = self.y - camera_y;
         let width = self.width;
 
-        let time = macroquad::time::get_time() as f32;
+        let time = crate::time::get_time() as f32;
         let pulse = (time * 1.5).sin() * 0.5 + 0.5;
 
         let height = 10.0;
@@ -223,6 +223,10 @@ pub enum ItemType {
 
 impl Map {
     pub fn new(name: &str) -> Self {
+        if let Ok(map) = Self::load_from_file(name) {
+            return map;
+        }
+        
         match name {
             "soldat" => Self::soldat_map(),
             "q3dm6" => Self::q3dm6(),
@@ -1144,13 +1148,13 @@ impl Map {
             }
         }
 
-        let time = get_time() as f32;
+        let time = crate::time::get_time() as f32;
 
         for teleporter in &self.teleporters {
             let screen_x = teleporter.x - camera_x;
             let screen_y = teleporter.y - camera_y;
 
-            let time = get_time() as f32;
+            let time = crate::time::get_time() as f32;
             let left = screen_x;
             let right = screen_x + teleporter.width;
 

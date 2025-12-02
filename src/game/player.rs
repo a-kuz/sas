@@ -267,7 +267,7 @@ impl Player {
                     && result.new_y <= teleporter.y + teleporter.height
                 {
                     println!("[{:.3}] [TELEPORT] p{} from ({:.1},{:.1}) to ({:.1},{:.1}) vel=({:.2},{:.2})",
-                        macroquad::prelude::get_time(), self.id,
+                        crate::time::get_time(), self.id,
                         result.new_x, result.new_y,
                         teleporter.dest_x, teleporter.dest_y,
                         result.new_vel_x, result.new_vel_y);
@@ -309,9 +309,9 @@ impl Player {
             );
             events.push(AudioEvent::JumpPad { x: result.new_x });
 
-            if macroquad::prelude::rand::gen_range(0, 10) == 0 {
+            if crate::compat_rand::gen_range(0, 10) == 0 {
                 self.somersault_time = 1.0;
-                self.somersault_axis_y = macroquad::prelude::rand::gen_range(0, 2) == 0;
+                self.somersault_axis_y = crate::compat_rand::gen_range(0, 2) == 0;
             }
         }
 
