@@ -38,3 +38,7 @@ This project provides the code; id Software provided the fun part 25 years ago.
 ---
 
 [📸 Gallery](GALLERY.md)
+
+## Continuation
+
+Продолжение разработки: [a-kuz/sas2](https://github.com/a-kuz/sas2)
